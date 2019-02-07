@@ -1,6 +1,6 @@
 language: python
 python:
-  - "3.7"
+  - "3.6"
 # command to install dependencies
 script: 
   - python test/test_class_initialization.py
