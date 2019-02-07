@@ -1,9 +1,10 @@
 language: python
 python:
-  - "3.6"
+  - "3.7"
 # command to install dependencies
-script: 
-  - python test/test_class_initialization.py
+script:
+  - cd test
+  - python test_class_initialization.py
 branches:
   only:
     - master
