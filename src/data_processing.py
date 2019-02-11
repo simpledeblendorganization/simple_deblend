@@ -10,6 +10,18 @@ from astrobase.periodbase.zgls import pgen_lsp
 
 
 class lc_collection_for_processing(lc_objects):
+    '''This is the "master class", as it were, of this package.  The methods
+    of this class are what actually lead to periods being found, checked,
+    calculated, removed, etc.
+
+    Subclasses light_curve_class.lc_objects
+
+    The initialization takes one argument and one optional argument:
+     radius  - the circular radius, in pixels, for objects to be in 
+               sufficient proximity to be regarded as neighbors
+    nworkers - (optional; default None) the number of workers to use in the
+               parallel calculation
+    '''
     def __init__(self,radius_,nworkers_=None):
         lc_objects.__init__(radius_)
         if (not nworkers_) or (nworkers > cpu_count()):
