@@ -7,7 +7,6 @@ import unittest
 import sys, os
 sys.path.insert(1,os.path.abspath('../src'))
 print(os.path.abspath('../src'))
-print(sys.path)
 import light_curve_class as lcclass
 
 class test_light_curve_objects(unittest.TestCase):
