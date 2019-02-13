@@ -1,6 +1,6 @@
 from scipy.special import gammaln
 import numpy as np
-from astropy.stats import LombScargle
+#from astropy.stats import LombScargle
 
 
 

@@ -4,7 +4,8 @@ python:
 # command to install dependencies
 install:
   - pip install scipy
-  - pip install astropy
+  #- pip install astropy
+  - pip install astrobase
 script:
   - cd test
   - python test_lc_class_initialization.py
