@@ -1,7 +1,9 @@
 language: python
 python:
-  - "3.6"
+  - 3.6
 # command to install dependencies
+install:
+  - pip install scipy
 script:
   - cd test
   - python test_lc_class_initialization.py
