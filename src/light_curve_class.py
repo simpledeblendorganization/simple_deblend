@@ -18,15 +18,15 @@ class light_curve():
         # First, make sure that times_, mags_, and errs_ all have
         # a len attribute and are the same length
         if not hasattr(times_,'__len__'):
-            raise RuntimeError("times does not have a len attribute")
+            raise AttributeError("times does not have a len attribute")
         if not hasattr(mags_,'__len__'):
-            raise RuntimeError("mags does not have a len attribute")
+            raise AttributeError("mags does not have a len attribute")
         if not hasattr(errs_,'__len__'):
-            raise RuntimeError("errs does not have a len attribute")
+            raise AttributeError("errs does not have a len attribute")
         if len(times_) != len(mags_):
-            raise RuntimeError("The lengths of times and mags are not the same")
+            raise ValueError("The lengths of times and mags are not the same")
         if len(mags_) != len(errs_):
-            raise RuntimeError("The lengths of mags and errs are not the same")
+            raise ValueError("The lengths of mags and errs are not the same")
         
         self.times = times_
         self.mags = mags_
@@ -78,10 +78,10 @@ class lc_objects():
     def add_object(self,object):
         # Make sure it is a single_lc_object
         if not isinstance(object,single_lc_object):
-            raise RuntimeError("Was not given an instance of single_lc_object")
+            raise ValueError("Was not given an instance of single_lc_object")
         # Make sure the object's ID does not match any other object
         if object.ID in self.index_dict.keys():
-            raise RuntimeError("Not a unique ID, " + str(object.ID))
+            raise ValueError("Not a unique ID, " + str(object.ID))
         # Map the object's ID to its position in self.objects
         self.index_dict[object.ID] = len(self.objects)
 
