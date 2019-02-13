@@ -61,8 +61,10 @@ class test_light_curve_objects(unittest.TestCase):
         # Test that adding non-light_curve objects raise exception
         with self.assertRaises(ValueError):
             all_objects.add_object('foo')
-        #with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError):
+            all_objects.add_object([1.,27.,'bar',True])
 
+        # Add light curves to all_objects
         all_objects.add_object(lcclass.single_lc_object(self.t1,
                                                             self.mag1,
                                                             self.err1,
@@ -75,14 +77,18 @@ class test_light_curve_objects(unittest.TestCase):
                                                             4.,
                                                             8.999,
                                                             '2'))
+
+        # Make sure the neighbors are getting assessed and added correctly
         self.assertListEqual(all_objects.objects[all_objects.index_dict['1']].neighbors,
                              ['2'])
         self.assertListEqual(all_objects.objects[all_objects.index_dict['2']].neighbors,
                              ['1'])
 
+        # Add another object
         all_objects.add_object(lcclass.single_lc_object([1.],[1.],[1.],
                                                             4.,9.000001,
                                                             '3'))
+        # Make sure the neighbors are correct
         self.assertListEqual(all_objects.objects[all_objects.index_dict['1']].neighbors,
                              ['2'])
         self.assertListEqual(all_objects.objects[all_objects.index_dict['2']].neighbors,
@@ -90,6 +96,7 @@ class test_light_curve_objects(unittest.TestCase):
         self.assertListEqual(all_objects.objects[all_objects.index_dict['3']].neighbors,
                              ['2'])
 
+        # Make sure exception is raised when a duplicate ID is added
         with self.assertRaises(ValueError):
             all_objects.add_object(lcclass.single_lc_object([1.],[1.],[1.],1.,1.,'3'))
                                                             
