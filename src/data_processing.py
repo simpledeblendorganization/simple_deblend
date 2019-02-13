@@ -4,7 +4,7 @@ This code is where the rubber meets the road: where the light curve
 data actually gets fed in and results actually get calculated.
 '''
 
-import light_curve_class.lc_objects as lc_objects
+from light_curve_class import lc_objects
 import simple_deblend
 from multiprocessing import Pool, cpu_count
 from astrobase.periodbase.zgls import pgen_lsp
@@ -76,7 +76,7 @@ class periodsearch_results():
         # flux amplitudes
 
 
-2        # Compare flux amplitudes
+        # Compare flux amplitudes
 
 
         # If neighbor has larger flux amplitude,
@@ -115,11 +115,11 @@ class periodsearch_results():
 
     def lomb_scargle_run(self,startp=None,endp=None,autofreq=True,
                              nbestpeaks=3,periodepsilon=0.1,stepsize=1.0e-4,
-                             sigclip=float(inf),output_dir=".":
+                             sigclip=float('inf'),output_dir="."):
 
-        params = {startp=startp,endp=endp,autofreq=autofreq,
-                      nbestpeaks=nbestpeaks,periodepsilon=periodepsilon,
-                      stepsize=stepsize,sigclip=sigclip}
+        params = {startp:startp,endp:endp,autofreq:autofreq,
+                      nbestpeaks:nbestpeaks,periodepsilon:periodepsilon,
+                      stepsize:stepsize,sigclip:sigclip}
 
         
         mp_pool = Pool(self.nworkers)
