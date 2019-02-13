@@ -4,7 +4,8 @@ python:
 # command to install dependencies
 script:
   - cd test
-  - python test_class_initialization.py
+  - python test_lc_class_initialization.py
+  - python test_data_processing.py
 branches:
   only:
     - master
