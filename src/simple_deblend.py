@@ -321,15 +321,15 @@ if __name__ == '__main__':
     yfit = ff(phase, in_phase=True)
     ytrue = ff_true(phase, in_phase=True)
 
-    import matplotlib.pyplot as plt
-    f, ax = plt.subplots()
-    ax.plot(phase, yfit, label='Fit')
-    ax.plot(phase, ytrue, label='True')
-    ax.errorbar((t * freq) % 1.0, y,
-                yerr=dy, capsize=0, color='k', lw=2, fmt='o',
-                alpha=0.2)
-    ax.legend(loc='best')
-    plt.show()
+    #import matplotlib.pyplot as plt
+    #f, ax = plt.subplots()
+    #ax.plot(phase, yfit, label='Fit')
+    #ax.plot(phase, ytrue, label='True')
+    #ax.errorbar((t * freq) % 1.0, y,
+    #            yerr=dy, capsize=0, color='k', lw=2, fmt='o',
+    #            alpha=0.2)
+    #ax.legend(loc='best')
+    #plt.show()
 
     # Now test the deblending -- we'll feed in the
     # smaller-amplitude lightcurve with its neighboring

@@ -23,6 +23,6 @@ class test_data_processing(unittest.TestCase):
     def test_periodsearch_results_setup(self):
         #Test initialization of the periodsearch_results class
         self.assertIsInstance(dproc.periodsearch_results('1'),
-                                  dproc.periodsearch_results
+                                  dproc.periodsearch_results)
         
 
