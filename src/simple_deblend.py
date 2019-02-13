@@ -192,11 +192,12 @@ def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
 
 
 def iterative_deblend(t, y, dy, neighbors,
+                      period_finding_func,
+                      results_storage_container,
+                      function_parms=None,
                       nharmonics_fit=5,
                       nharmonics_resid=10,
-                      max_fap=1e-3,
-                      minimum_freq=1./100.,
-                      maximum_freq=1./0.1):
+                      max_fap=1e-3):
     """
     Iteratively deblend a lightcurve against neighbors
 
@@ -211,6 +212,12 @@ def iterative_deblend(t, y, dy, neighbors,
     neighbors: list
         List of (t, y, dy) lightcurves for each
         neighbor (NOT including the lightcurve we are deblending)
+    period_finding_func: function
+        Function used to find the period.  Output format assumed to
+        be the same as that used in astrobase.periodbase
+    function_parms: dictionary
+        A dictionary containing parameters for the function in
+        period_finding_func
     nharmonics_fit:
         Number of harmonics to use in the fit (used to estimate
         flux amplitude)
@@ -219,21 +226,21 @@ def iterative_deblend(t, y, dy, neighbors,
         find that the signal is a blend of a neighboring signal
     max_fap: float
         Maximum False Alarm Probability (Baluev 2008) to consider.
-    minimum_freq: float
-        Minimum frequency to search
-    maximum_freq: float
-        Maximum frequency to search
     """
 
-    # use Lomb-Scargle to get best frequency
-    freqs, ls = (LombScargle(t, y, dy)
-                 .autopower(minimum_frequency=minimum_freq,
-                            maximum_frequency=maximum_freq))
+    # use the function to find the best period
+    lsp_dict = period_finding_func(t,y,dy,startp=parms['startp'],
+                                       endp=parms['endp'],
+                                       autofreq=parms['autofreq'],
+                                       nbestpeaks=1,
+                                       periodepsilon=parms['periodepsilon'],
+                                       stepsize=parms['stepsize'],
+                                       sigclip=parms['sigclip'],
+                                       verbose=False)
 
-    best_freq = freqs[np.argmax(ls)]
 
     # compute false alarm probability
-    fap = fap_baluev(t, dy, max(ls), maximum_freq)
+    fap = fap_baluev(t, dy, lsp_dict['bestlspval'],1./lsp_dict['bestperiod'])
     print("PERIOD: %.5e days;  FAP: %.5e"%(1./best_freq, fap))
 
     if fap > max_fap:
@@ -259,16 +266,20 @@ def iterative_deblend(t, y, dy, neighbors,
         # then we consider this signal to be a blend.
         # subtract off model signal to get residual
         # lightcurve, and try again
-        if ffn.flux_amplitude > ff.flux_amplitude:
+        if ffn.flux_amplitude > ff.flux_amplitude: # Need to look at ambiguous cases, also need to find which one is likely blend source, not just first blend source
             print("  -> blended! Trying again.")
+            results_storage_container.add_blend(lsp_dict,ffn.ID,fap)
             return iterative_deblend(t, y - ffr(t), dy, neighbors,
+                                     period_finding_func,
+                                     results_storage_container,
                                      nharmonics_fit=nharmonics_fit,
                                      nharmonics_resid=nharmonics_resid,
-                                     max_fap=max_fap,
-                                     minimum_freq=minimum_freq,
-                                     maximum_freq=maximum_freq)
+                                     max_fap=max_fap)
 
-    return ff
+    #return ff
+    # Return the period and the pre-whitened light curve
+    results_storage_container.add_good_period(lsp_dict,t,y,dy,fap)
+    return lsp_dict['bestperiod']
 
 
 if __name__ == '__main__':
