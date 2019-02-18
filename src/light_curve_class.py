@@ -4,6 +4,8 @@ This contains a class useful for organizing an object's light curve and
 other useful data, just to keep things clean going forward.
 '''
 
+import numpy as np
+
 
 class light_curve():
     ''' A base class for storing the basic light curve data: times,
@@ -27,10 +29,21 @@ class light_curve():
             raise ValueError("The lengths of times and mags are not the same")
         if len(mags_) != len(errs_):
             raise ValueError("The lengths of mags and errs are not the same")
-        
-        self.times = times_
-        self.mags = mags_
-        self.errs = errs_
+
+        # Make sure these are numpy arrays, since that is what the astrobase
+        # period search functions will take
+        if isinstance(times_,np.array):
+            self.times = times_
+        else:
+            self.times = np.array(times_)
+        if isinstance(mags_,np.array):
+            self.mags = mags_
+        else:
+            self.mags = np.array(mags_)
+        if isinstance(errs_,np.array):
+            self.errs = errs_
+        else:
+            self.errs = np.array(errs_)
 
 
 class single_lc_object(light_curve):
