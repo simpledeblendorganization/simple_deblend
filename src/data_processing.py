@@ -31,7 +31,7 @@ class lc_collection_for_processing(lc_objects):
                multiprocessing.cpu_count
     '''
     def __init__(self,radius_,nworkers=None):
-        lc_objects.__init__(radius_)
+        lc_objects.__init__(self,radius_)
         if not nworkers:
             self.nworkers = cpu_count
         elif nworkers > cpu_count():

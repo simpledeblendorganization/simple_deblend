@@ -26,3 +26,8 @@ class test_data_processing(unittest.TestCase):
                                   dproc.periodsearch_results)
         
 
+
+
+
+if __name__ == '__main__':
+    unittest.main()
