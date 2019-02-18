@@ -229,14 +229,7 @@ def iterative_deblend(t, y, dy, neighbors,
     """
 
     # use the function to find the best period
-    lsp_dict = period_finding_func(t,y,dy,startp=parms['startp'],
-                                       endp=parms['endp'],
-                                       autofreq=parms['autofreq'],
-                                       nbestpeaks=1,
-                                       periodepsilon=parms['periodepsilon'],
-                                       stepsize=parms['stepsize'],
-                                       sigclip=parms['sigclip'],
-                                       verbose=False)
+    lsp_dict = period_finding_func(t,y,dy,**function_parms)
 
 
     # compute false alarm probability
