@@ -50,13 +50,13 @@ class single_lc_object(light_curve):
      extra_info - (optional) a dictionary containing extra information
                   for the object
     '''
-    def __init__(self,times_,mags_,errs_,x_,y_,ID_,extra_info_={}):
+    def __init__(self,times_,mags_,errs_,x_,y_,ID_,extra_info={}):
         light_curve.__init__(self,times_,mags_,errs_)
         self.x = x_
         self.y = y_
         self.ID = ID_
         self.neighbors = [] # Empty list of nearby stars
-        self.extra_info = extra_info_
+        self.extra_info = extra_info
 
 
 class lc_objects():
@@ -75,22 +75,23 @@ class lc_objects():
         self.index_dict = {} # Dictionary to map IDs to self.objects indices
 
     # Method to add a single_lc_object
-    def add_object(self,object):
-        # Make sure it is a single_lc_object
-        if not isinstance(object,single_lc_object):
-            raise ValueError("Was not given an instance of single_lc_object")
+    def add_object(self,times,mags,errs,x,y,ID,extra_info={}):#,object):
         # Make sure the object's ID does not match any other object
-        if object.ID in self.index_dict.keys():
-            raise ValueError("Not a unique ID, " + str(object.ID))
+        if ID in self.index_dict.keys():
+            raise ValueError("Not a unique ID, " + str(ID))
+
+        # Add the object to the list
+        self.objects.append(single_lc_object(times,mags,errs,x,y,ID,
+                                                 extra_info=extra_info))
         # Map the object's ID to its position in self.objects
-        self.index_dict[object.ID] = len(self.objects)
+        self.index_dict[ID] = len(self.objects)-1
 
         # Check if the new object is neighbor to any other objects
-        for o in self.objects:
-            if (object.x - o.x)**2 + (object.y - o.y)**2 < self.neighbor_radius_squared:
-                object.neighbors.append(o.ID)
-                o.neighbors.append(object.ID)
+        for o in self.objects[:-1]:
+            if (x - o.x)**2 + (y - o.y)**2 < self.neighbor_radius_squared:
+                self.objects[-1].neighbors.append(o.ID)
+                o.neighbors.append(ID)
 
-        self.objects.append(object)
+
 
         

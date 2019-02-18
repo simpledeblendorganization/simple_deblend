@@ -57,25 +57,22 @@ class test_light_curve_objects(unittest.TestCase):
     def test_lc_objects_setup(self):
         all_objects = lcclass.lc_objects(5.)
 
-        # Test that adding non-light_curve objects raise exception
-        with self.assertRaises(ValueError):
+        # Test that passing incorrect and wrong number of arguments
+        # Raises an error
+        with self.assertRaises(TypeError):
             all_objects.add_object('foo')
+        with self.assertRaises(TypeError):
+            all_objects.add_object(1.,27.,'bar',True)
         with self.assertRaises(ValueError):
-            all_objects.add_object([1.,27.,'bar',True])
+            all_objects.add_object([1.,2.],[3.],[4.,5.],0,0,'hi')
+        with self.assertRaises(AttributeError):
+            all_objects.add_object([1.,2.,3.],[1.,2.,3.],1.,0,0,'bye')
 
         # Add light curves to all_objects
-        all_objects.add_object(lcclass.single_lc_object(self.t1,
-                                                            self.mag1,
-                                                            self.err1,
-                                                            4.,
-                                                            4.,
-                                                            '1'))
-        all_objects.add_object(lcclass.single_lc_object(self.t2,
-                                                            self.mag2,
-                                                            self.err2,
-                                                            4.,
-                                                            8.999,
-                                                            '2'))
+        all_objects.add_object(self.t1,self.mag1,self.err1,
+                                   4.,4.,'1')
+        all_objects.add_object(self.t2,self.mag2,self.err2,
+                                   4.,8.999,'2')
 
         # Make sure the neighbors are getting assessed and added correctly
         self.assertListEqual(all_objects.objects[all_objects.index_dict['1']].neighbors,
@@ -84,9 +81,7 @@ class test_light_curve_objects(unittest.TestCase):
                              ['1'])
 
         # Add another object
-        all_objects.add_object(lcclass.single_lc_object([1.],[1.],[1.],
-                                                            4.,9.000001,
-                                                            '3'))
+        all_objects.add_object([1.],[1.],[1.], 4.,9.000001,'3')
         # Make sure the neighbors are correct
         self.assertListEqual(all_objects.objects[all_objects.index_dict['1']].neighbors,
                              ['2'])
@@ -97,7 +92,7 @@ class test_light_curve_objects(unittest.TestCase):
 
         # Make sure exception is raised when a duplicate ID is added
         with self.assertRaises(ValueError):
-            all_objects.add_object(lcclass.single_lc_object([1.],[1.],[1.],1.,1.,'3'))
+            all_objects.add_object([1.],[1.],[1.],1.,1.,'3')
                                                             
 
 
