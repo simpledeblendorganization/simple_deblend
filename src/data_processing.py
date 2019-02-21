@@ -5,7 +5,7 @@ data actually gets fed in and results actually get calculated.
 '''
 
 from light_curve_class import lc_objects
-import simple_deblend
+import simple_deblend as sdb
 from multiprocessing import Pool, cpu_count
 from astrobase.periodbase.zgls import pgen_lsp as ls_p
 from astrobase.periodbase.spdm import stellingwerf_pdm as pdm_p
@@ -43,74 +43,76 @@ class lc_collection_for_processing(lc_objects):
         self.results = {}
 
 
-    def run_ls(self,startp=None,endp=None,autofreq=True,
+    def run_ls(self,num_periods=3,
+                   startp=None,endp=None,autofreq=True,
                    nbestpeaks=3,periodepsilon=0.1,stepsize=1.0e-4,
                    sigclip=float('inf')):
 
-        params = {startp:startp,endp:endp,autofreq:autofreq,
-                      nbestpeaks:nbestpeaks,periodepsilon:periodepsilon,
-                      stepsize:stepsize,sigclip:sigclip}
+        params = {'startp':startp,'endp':endp,'autofreq':autofreq,
+                      'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
+                      'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
 
-        self.run('LS',ls_p,params)
+        self.run('LS',ls_p,params,num_periods)
 
         
-    def run_pdm(self,startp=None,endp=None,autofreq=True,
+    def run_pdm(self,num_periods=3,
+                    startp=None,endp=None,autofreq=True,
                      nbestpeaks=3,periodepsilon=0.1,stepsize=1.0e-4,
                      sigclip=float('inf')):
 
-        params = {startp:startp,endp:endp,autofreq:autofreq,
-                      nbestpeaks:nbestpeaks,periodepsilon:periodepsilon,
-                      stepsize:stepsize,sigclip:sigclip}
+        params = {'startp':startp,'endp':endp,'autofreq':autofreq,
+                      'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
+                      'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
 
-        self.run('PDM',pdm_p,params)
+        self.run('PDM',pdm_p,params,num_periods)
 
-    def run_bls(self,startp=None,endp=None,autofreq=True,
-                     nbestpeaks=3,periodepsilon=0.1,stepsize=1.0e-4,
-                     sigclip=float('inf')):
+    def run_bls(self,num_periods=3,
+                    startp=None,endp=None,autofreq=True,
+                    nbestpeaks=3,periodepsilon=0.1,stepsize=1.0e-4,
+                    sigclip=float('inf')):
 
-        params = {startp:startp,endp:endp,autofreq:autofreq,
-                      nbestpeaks:nbestpeaks,periodepsilon:periodepsilon,
-                      stepsize:stepsize,sigclip:sigclip}
+        params = {'startp':startp,'endp':endp,'autofreq':autofreq,
+                      'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
+                      'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
 
-        self.run('BLS',bls_p,params)
+        self.run('BLS',bls_p,params,num_periods)
         
 
-    def run(self,which_method,ps_func,params):
+    def run(self,which_method,ps_func,params,num_periods):
 
-        mp_pool = Pool(self.nworkers)
+        #mp_pool = Pool(self.nworkers)
 
-        _ = pool.starmap(self._run_single_object, [(o,which_method,ps_func,
-                                                        params)
-                                                       for o in self.objects])
+        #_ = mp_pool.starmap(self._run_single_object, [(o,which_method,ps_func,
+        #                                                params,num_periods)
+        #                                               for o in self.objects])
+        for o in self.objects:
+            self._run_single_object(o,which_method,ps_func,
+                                        params,num_periods)
 
-    def _run_single_object(self,object,which_method,ps_func):
+    def _run_single_object(self,object,which_method,ps_func,params,num_periods):
 
         # Actually, just try John's function
-        neighbor_lightcurves = [(self.lc_objects.objects[self.lc_objects.objects.index_dict[neighbor_ID]].times,
-                                     self.lc_objects.objects[self.lc_objects.objects.index_dict[neighbor_ID]].mags,
-                                     self.lc_objects.objects[self.lc_objects.objects.index_dict[neighbor_ID]].errs) for neighbor_ID in object.neighbors]
+        neighbor_lightcurves = [(self.objects[self.index_dict[neighbor_ID]].times,
+                                     self.objects[self.index_dict[neighbor_ID]].mags,
+                                     self.objects[self.index_dict[neighbor_ID]].errs) for neighbor_ID in object.neighbors]
 
 
         results_storage = periodsearch_results(object.ID)
 
-        for _ in range(parms['nbestpeaks']):
-            rv = iterative_deblend(object.times,object.mags,object.errs,
-                                    neighbor_lightcurves,pgen,
+        while len(results_storage.good_periods_info) < num_periods:
+            rv = sdb.iterative_deblend(object.times,object.mags,object.errs,
+                                    neighbor_lightcurves,ps_func,
                                     results_storage,
-                                    function_parms=parms,
+                                    function_params=params,
                                     nharmonics_fit=7,
                                     max_fap=.5)
             if rv is None:
                     break
 
         if len(results_storage.good_periods_info) > 0:
-            self.results[object.ID][method] = rv
-        #else:
-        #    all_results[method] = None
-
-        #if not all
-        #with open(output_dir + "periodsearch_" + object.ID + ".pkl") as f:
-        #    pickle.dump(results_storage,f)
+            if object.ID not in self.results.keys():
+                self.results[object.ID] = {}
+            self.results[object.ID][which_method] = results_storage
 
         ###### So what kind of information do I want returned?
           # LSP of any well-found peak

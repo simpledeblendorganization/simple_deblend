@@ -194,7 +194,7 @@ def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
 def iterative_deblend(t, y, dy, neighbors,
                       period_finding_func,
                       results_storage_container,
-                      function_parms=None,
+                      function_params=None,
                       nharmonics_fit=5,
                       nharmonics_resid=10,
                       max_fap=1e-3):
@@ -215,7 +215,7 @@ def iterative_deblend(t, y, dy, neighbors,
     period_finding_func: function
         Function used to find the period.  Output format assumed to
         be the same as that used in astrobase.periodbase
-    function_parms: dictionary
+    function_params: dictionary
         A dictionary containing parameters for the function in
         period_finding_func
     nharmonics_fit:
@@ -229,12 +229,13 @@ def iterative_deblend(t, y, dy, neighbors,
     """
 
     # use the function to find the best period
-    lsp_dict = period_finding_func(t,y,dy,**function_parms)
+    lsp_dict = period_finding_func(t,y,dy,**function_params)
 
 
     # compute false alarm probability
-    fap = fap_baluev(t, dy, lsp_dict['bestlspval'],1./lsp_dict['bestperiod'])
-    print("PERIOD: %.5e days;  FAP: %.5e"%(1./best_freq, fap))
+    best_freq = 1./lsp_dict['bestperiod']
+    fap = fap_baluev(t, dy, lsp_dict['bestlspval'],best_freq)
+    print("PERIOD: %.5e days;  FAP: %.5e"%(lsp_dict['bestperiod'], fap))
 
     if fap > max_fap:
         print("  -> not significant enough. No signal found.")
@@ -265,6 +266,7 @@ def iterative_deblend(t, y, dy, neighbors,
             return iterative_deblend(t, y - ffr(t), dy, neighbors,
                                      period_finding_func,
                                      results_storage_container,
+                                     function_params=function_params,
                                      nharmonics_fit=nharmonics_fit,
                                      nharmonics_resid=nharmonics_resid,
                                      max_fap=max_fap)
