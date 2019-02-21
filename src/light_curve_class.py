@@ -32,15 +32,15 @@ class light_curve():
 
         # Make sure these are numpy arrays, since that is what the astrobase
         # period search functions will take
-        if isinstance(times_,np.array):
+        if isinstance(times_,np.ndarray):
             self.times = times_
         else:
             self.times = np.array(times_)
-        if isinstance(mags_,np.array):
+        if isinstance(mags_,np.ndarray):
             self.mags = mags_
         else:
             self.mags = np.array(mags_)
-        if isinstance(errs_,np.array):
+        if isinstance(errs_,np.ndarray):
             self.errs = errs_
         else:
             self.errs = np.array(errs_)
