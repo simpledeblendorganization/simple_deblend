@@ -80,17 +80,25 @@ class lc_collection_for_processing(lc_objects):
 
     def run(self,which_method,ps_func,params,num_periods):
 
-        #mp_pool = Pool(self.nworkers)
+        mp_pool = Pool(self.nworkers)
 
-        #_ = mp_pool.starmap(self._run_single_object, [(o,which_method,ps_func,
-        #                                                params,num_periods)
+        #_ = mp_pool.map(self._run_single_object, [{'object':o,
+        #                                           'which_method':which_method,
+        #                                           'ps_func':ps_func,
+        #                                            'params':params,
+        #                                            'num_periods':num_periods}
         #                                               for o in self.objects])
         for o in self.objects:
+            print("******\n" + o.ID + "\n******\n")
             self._run_single_object(o,which_method,ps_func,
                                         params,num_periods)
 
     def _run_single_object(self,object,which_method,ps_func,params,num_periods):
-
+        #object = kwarg_dict['object']
+        #which_method = kwarg_dict['which_method']
+        #ps_func = kwarg_dict['ps_func']
+        #params = kwarg_dict['params']
+        #num_periods = kwarg_dict['num_periods']
         # Actually, just try John's function
         neighbor_lightcurves = [(self.objects[self.index_dict[neighbor_ID]].times,
                                      self.objects[self.index_dict[neighbor_ID]].mags,

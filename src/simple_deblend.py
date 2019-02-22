@@ -256,6 +256,8 @@ def iterative_deblend(t, y, dy, neighbors,
         ffn = (FourierFit(nharmonics=nharmonics_fit)
                .fit(tn, yn, dyn, best_freq))
 
+
+        
         # if neighbor has larger flux amplitude,
         # then we consider this signal to be a blend.
         # subtract off model signal to get residual
