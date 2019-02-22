@@ -6,7 +6,6 @@ This tests the class definitions in lightcurve_class.py.
 import unittest
 import sys, os
 sys.path.insert(1,os.path.abspath('../src'))
-print(os.path.abspath('../src'))
 import light_curve_class as lcclass
 
 class test_light_curve_objects(unittest.TestCase):
