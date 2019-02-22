@@ -29,7 +29,7 @@ class test_data_processing_init(unittest.TestCase):
 class test_data_processing_run(unittest.TestCase):
 
     def setUp(self):
-        self.col_a = dproc.lc_collection_for_processing(1.,nworkers=1)
+        self.col_a = dproc.lc_collection_for_processing(1.,nworkers=4)
         sample_len_1 = 1000
         t1 = np.linspace(0,42,sample_len_1)
         self.col_a.add_object(t1,10.+np.sin(t1),[.1]*sample_len_1,0.,0.,'object1')

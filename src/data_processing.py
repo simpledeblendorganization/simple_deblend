@@ -6,7 +6,8 @@ data actually gets fed in and results actually get calculated.
 
 from light_curve_class import lc_objects
 import simple_deblend as sdb
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count
+from concurrent.futures import ProcessPoolExecutor
 from astrobase.periodbase.zgls import pgen_lsp as ls_p
 from astrobase.periodbase.spdm import stellingwerf_pdm as pdm_p
 from astrobase.periodbase.kbls import bls_parallel_pfind as bls_p
@@ -33,10 +34,10 @@ class lc_collection_for_processing(lc_objects):
     def __init__(self,radius_,nworkers=None):
         lc_objects.__init__(self,radius_)
         if not nworkers:
-            self.nworkers = cpu_count
+            self.nworkers = cpu_count()/4 # Break down over 4 stars in parallel
         elif nworkers > cpu_count():
             print("nworkers was greater than number of CPUs, setting instead to " + str(cpu_count))
-            self.nworkers = cpu_count
+            self.nworkers = cpu_count()
         else:
             self.nworkers = nworkers
         #self._acceptable_methods = ['LS','BLS','PDM']
@@ -80,7 +81,10 @@ class lc_collection_for_processing(lc_objects):
 
     def run(self,which_method,ps_func,params,num_periods):
 
-        mp_pool = Pool(self.nworkers)
+        #ProcessPoolExecutor
+        #with ProcessPoolExecutor(max_workers=ncontrolworkers) as executor:
+        #    resultfutures = executor.map(runpf_worker, tasklist)
+        #mp_pool = Pool(self.nworkers)
 
         #_ = mp_pool.map(self._run_single_object, [{'object':o,
         #                                           'which_method':which_method,
@@ -88,18 +92,31 @@ class lc_collection_for_processing(lc_objects):
         #                                            'params':params,
         #                                            'num_periods':num_periods}
         #                                               for o in self.objects])
-        for o in self.objects:
-            print("******\n" + o.ID + "\n******\n")
-            self._run_single_object(o,which_method,ps_func,
-                                        params,num_periods)
+        with ProcessPoolExecutor(max_workers=self.nworkers) as executor:
+        #for o in self.objects:
+            #print("******\n" + o.ID + "\n******\n")
+            _ = executor.map(self._run_single_object,[(o,which_method,ps_func,
+                                                       params,num_periods,
+                                                       self.nworkers)
+                                                       for o in self.objects])
 
-    def _run_single_object(self,object,which_method,ps_func,params,num_periods):
+
+
+    def _run_single_object(self,object,which_method,ps_func,params,num_periods,
+                               n_control_workers):
         #object = kwarg_dict['object']
         #which_method = kwarg_dict['which_method']
         #ps_func = kwarg_dict['ps_func']
         #params = kwarg_dict['params']
         #num_periods = kwarg_dict['num_periods']
         # Actually, just try John's function
+        num_proc_per_run = max(1,cpu_count()/n_control_workers)
+        if 'nworkers' in params.keys():
+            print("\n***")
+            print("params dictionary had nworkers key")
+            print("This value is being changed to " + str(num_proc_per_run))
+            print("***\n")
+        params['nworkers'] = num_proc_per_run
         neighbor_lightcurves = [(self.objects[self.index_dict[neighbor_ID]].times,
                                      self.objects[self.index_dict[neighbor_ID]].mags,
                                      self.objects[self.index_dict[neighbor_ID]].errs) for neighbor_ID in object.neighbors]

@@ -265,13 +265,14 @@ def iterative_deblend(t, y, dy, neighbors,
         if ffn.flux_amplitude > ff.flux_amplitude: # Need to look at ambiguous cases, also need to find which one is likely blend source, not just first blend source
             print("  -> blended! Trying again.")
             results_storage_container.add_blend(lsp_dict,ffn.ID,fap)
-            return iterative_deblend(t, y - ffr(t), dy, neighbors,
-                                     period_finding_func,
-                                     results_storage_container,
-                                     function_params=function_params,
-                                     nharmonics_fit=nharmonics_fit,
-                                     nharmonics_resid=nharmonics_resid,
-                                     max_fap=max_fap)
+            #return iterative_deblend(t, y - ffr(t), dy, neighbors,
+            #                         period_finding_func,
+            #                         results_storage_container,
+            #                         function_params=function_params,
+            #                         nharmonics_fit=nharmonics_fit,
+            #                         nharmonics_resid=nharmonics_resid,
+            #                         max_fap=max_fap)
+            return 0
 
     #return ff
     # Return the period and the pre-whitened light curve
