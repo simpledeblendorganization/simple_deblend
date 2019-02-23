@@ -28,9 +28,9 @@ class test_data_processing_init(unittest.TestCase):
 class test_data_processing_run(unittest.TestCase):
 
     def setUp(self):
-        self.col_a = dproc.lc_collection_for_processing(1.,nworkers=4)
-        sample_len_1 = 1000
-        t1 = np.linspace(0,42,sample_len_1)
+        self.col_a = dproc.lc_collection_for_processing(1.,n_control_workers=4)
+        sample_len_1 = 3000
+        t1 = np.linspace(0,1200,sample_len_1)
         self.col_a.add_object(t1,10.+np.sin(t1),[.1]*sample_len_1,0.,0.,'object1')
         self.col_a.add_object(t1,[10.]*(sample_len_1-1) + [10.0001],[.1]*sample_len_1,0.5,0,'object2')
 
@@ -46,14 +46,12 @@ class test_data_processing_run(unittest.TestCase):
 
     def test_basic_run(self):
         # Test a basic run of the iterative deblending
-        self.col_a.run_ls(startp=0.5,endp=4.)
-        print("\n\n\n\n\n.....")
-        print(self.col_a.results.keys())
+        self.col_a.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False)
 
         with self.assertRaises(KeyError):
             self.col_a.results['object1']['BLS']
 
-        self.assertEqual(self.col_a.results['object1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi)
+        self.assertAlmostEqual(self.col_a.results['object1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi,places=6)
         self.assertEqual(len(self.col_a.results['object1']),1)
         for a in self.col_a.results['object1']['LS'].good_periods_info:
             print(a['lsp_dict']['bestperiod'])

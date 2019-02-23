@@ -14,8 +14,6 @@ from astrobase.periodbase.kbls import bls_parallel_pfind as bls_p
 
 
 
-
-
 class lc_collection_for_processing(lc_objects):
     '''This is the "master class", as it were, of this package.  The methods
     of this class are what actually lead to periods being found, checked,
@@ -27,19 +25,19 @@ class lc_collection_for_processing(lc_objects):
     The initialization takes one argument and one optional argument:
     radius   - the circular radius, in pixels, for objects to be in 
                sufficient proximity to be regarded as neighbors
-    nworkers - (optional; default None) the number of workers to use in the
+    n_control_workers - (optional; default None) the number of workers to use in the
                parallel calculation---value of None defaults to 
                multiprocessing.cpu_count
     '''
-    def __init__(self,radius_,nworkers=None):
+    def __init__(self,radius_,n_control_workers=None):
         lc_objects.__init__(self,radius_)
-        if not nworkers:
-            self.nworkers = cpu_count()/4 # Break down over 4 stars in parallel
-        elif nworkers > cpu_count():
-            print("nworkers was greater than number of CPUs, setting instead to " + str(cpu_count))
-            self.nworkers = cpu_count()
+        if not n_control_workers:
+            self.n_control_workers = cpu_count()/4 # Break down over 4 stars in parallel
+        elif n_control_workers > cpu_count():
+            print("n_control_workers was greater than number of CPUs, setting instead to " + str(cpu_count))
+            self.n_control_workers = cpu_count()
         else:
-            self.nworkers = nworkers
+            self.n_control_workers = n_control_workers
         #self._acceptable_methods = ['LS','BLS','PDM']
         self.results = {}
 
@@ -81,35 +79,19 @@ class lc_collection_for_processing(lc_objects):
 
     def run(self,which_method,ps_func,params,num_periods):
 
-        #ProcessPoolExecutor
-        #with ProcessPoolExecutor(max_workers=ncontrolworkers) as executor:
-        #    resultfutures = executor.map(runpf_worker, tasklist)
-        #mp_pool = Pool(self.nworkers)
-
-        #_ = mp_pool.map(self._run_single_object, [{'object':o,
-        #                                           'which_method':which_method,
-        #                                           'ps_func':ps_func,
-        #                                            'params':params,
-        #                                            'num_periods':num_periods}
-        #                                               for o in self.objects])
-        with ProcessPoolExecutor(max_workers=self.nworkers) as executor:
-        #for o in self.objects:
-            #print("******\n" + o.ID + "\n******\n")
+        with ProcessPoolExecutor(max_workers=self.n_control_workers) as executor:
             _ = executor.map(self._run_single_object,[(o,which_method,ps_func,
                                                        params,num_periods,
-                                                       self.nworkers)
+                                                       self.n_control_workers)
                                                        for o in self.objects])
 
 
 
-    def _run_single_object(self,object,which_method,ps_func,params,num_periods,
-                               n_control_workers):
-        #object = kwarg_dict['object']
-        #which_method = kwarg_dict['which_method']
-        #ps_func = kwarg_dict['ps_func']
-        #params = kwarg_dict['params']
-        #num_periods = kwarg_dict['num_periods']
-        # Actually, just try John's function
+    #def _run_single_object(self,object,which_method,ps_func,params,num_periods,
+    #                           n_control_workers):
+    def _run_single_object(self,task):
+        (object,which_method,ps_func,params,num_periods,n_control_workers) = task
+        print("Running " + object.ID + "...")
         num_proc_per_run = max(1,cpu_count()/n_control_workers)
         if 'nworkers' in params.keys():
             print("\n***")
@@ -174,3 +156,13 @@ class periodsearch_results():
         self.blend_info.append(dict_to_add)
 
 
+if __name__ == "__main__":
+
+    import numpy as np
+    
+    col_a = lc_collection_for_processing(1.,n_control_workers=4)
+    sample_len_1 = 3000
+    t1 = np.linspace(0,1200,sample_len_1)
+    col_a.add_object(t1,10.+np.sin(t1),[.1]*sample_len_1,0.,0.,'object1')
+    col_a.add_object(t1,[10.]*(sample_len_1-1) + [10.0001],[.1]*sample_len_1,0.5,0,'object2')
+    col_a.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False)
