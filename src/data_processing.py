@@ -159,10 +159,15 @@ class periodsearch_results():
 if __name__ == "__main__":
 
     import numpy as np
+    import matplotlib.pyplot as plt
     
     col_a = lc_collection_for_processing(1.,n_control_workers=4)
-    sample_len_1 = 3000
+    sample_len_1 = 6000
     t1 = np.linspace(0,1200,sample_len_1)
+    plt.scatter(t1,10.+np.sin(t1),s=2)
+    plt.xlim(0,50)
+    plt.savefig("temp.pdf")
+    plt.close()
     col_a.add_object(t1,10.+np.sin(t1),[.1]*sample_len_1,0.,0.,'object1')
     col_a.add_object(t1,[10.]*(sample_len_1-1) + [10.0001],[.1]*sample_len_1,0.5,0,'object2')
     col_a.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False)
