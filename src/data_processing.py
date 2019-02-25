@@ -13,7 +13,6 @@ from astrobase.periodbase.spdm import stellingwerf_pdm as pdm_p
 from astrobase.periodbase.kbls import bls_parallel_pfind as bls_p
 
 
-
 class lc_collection_for_processing(lc_objects):
     '''This is the "master class", as it were, of this package.  The methods
     of this class are what actually lead to periods being found, checked,
@@ -44,45 +43,60 @@ class lc_collection_for_processing(lc_objects):
 
     def run_ls(self,num_periods=3,
                    startp=None,endp=None,autofreq=True,
-                   nbestpeaks=3,periodepsilon=0.1,stepsize=1.0e-4,
-                   sigclip=float('inf')):
+                   nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
+                   sigclip=float('inf'),nworkers=None):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
-
-        self.run('LS',ls_p,params,num_periods)
+        self.run('LS',ls_p,params,num_periods,nworkers)
 
         
     def run_pdm(self,num_periods=3,
                     startp=None,endp=None,autofreq=True,
-                     nbestpeaks=3,periodepsilon=0.1,stepsize=1.0e-4,
-                     sigclip=float('inf')):
+                     nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
+                     sigclip=float('inf'),nworkers=None):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
 
-        self.run('PDM',pdm_p,params,num_periods)
+        self.run('PDM',pdm_p,params,num_periods,nworkers)
 
     def run_bls(self,num_periods=3,
                     startp=None,endp=None,autofreq=True,
-                    nbestpeaks=3,periodepsilon=0.1,stepsize=1.0e-4,
-                    sigclip=float('inf')):
+                    nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
+                    sigclip=float('inf'),nworkers=None):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
 
-        self.run('BLS',bls_p,params,num_periods)
+        self.run('BLS',bls_p,params,num_periods,nworkers)
         
 
-    def run(self,which_method,ps_func,params,num_periods):
+    def run(self,which_method,ps_func,params,num_periods,nworkers):
+        num_proc_per_run = max(1,cpu_count()//self.n_control_workers)
+        if nworkers is None:
+            print("\n***")
+            print("None value given to nworkers, auto-calculating a value")
+        else:
+            print("\n***")
+            print("nworkers value given")
+            if nworkers > num_proc_per_run:
+                print("Its value, " + str(nworkers) + " is too large given")
+                print(" the number of CPUs and number of control processes")
+                print("It is being changed to " + str(num_proc_per_run))
+
+            else:
+                num_proc_per_run = nworkers
+            print("***\n")
+        print("Number of worker processes per control process: " + str(num_proc_per_run) + "\n")
+
 
         with ProcessPoolExecutor(max_workers=self.n_control_workers) as executor:
             _ = executor.map(self._run_single_object,[(o,which_method,ps_func,
-                                                       params,num_periods,
-                                                       self.n_control_workers)
+                                                       params,num_periods)
                                                        for o in self.objects])
 
 
@@ -90,18 +104,8 @@ class lc_collection_for_processing(lc_objects):
     #def _run_single_object(self,object,which_method,ps_func,params,num_periods,
     #                           n_control_workers):
     def _run_single_object(self,task):
-        (object,which_method,ps_func,params,num_periods,n_control_workers) = task
-        print("Running " + object.ID + "...")
-        num_proc_per_run = max(1,cpu_count()//n_control_workers)
-        if 'nworkers' in params.keys():
-            print("\n***")
-            print("params dictionary had nworkers key")
-            if params['nworkers'] > num_proc_per_run:
-                print("Its value, " + str(params['nworkers']) + " is too large given")
-                print(" the number of CPUs and number of control processes")
-                print("It is being changed to " + str(num_proc_per_run))
-                params['nworkers'] = num_proc_per_run
-            print("***\n")
+        (object,which_method,ps_func,params,num_periods) = task
+
         neighbor_lightcurves = [(self.objects[self.index_dict[neighbor_ID]].times,
                                      self.objects[self.index_dict[neighbor_ID]].mags,
                                      self.objects[self.index_dict[neighbor_ID]].errs) for neighbor_ID in object.neighbors]
@@ -115,7 +119,7 @@ class lc_collection_for_processing(lc_objects):
                                     results_storage,
                                     function_params=params,
                                     nharmonics_fit=7,
-                                    max_fap=.5)
+                                       max_fap=.5,ID=str(object.ID))
             if rv is None:
                     break
 

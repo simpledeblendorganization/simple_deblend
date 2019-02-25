@@ -197,7 +197,7 @@ def iterative_deblend(t, y, dy, neighbors,
                       function_params=None,
                       nharmonics_fit=5,
                       nharmonics_resid=10,
-                      max_fap=1e-3):
+                      max_fap=1e-3,ID=None):
     """
     Iteratively deblend a lightcurve against neighbors
 
@@ -234,11 +234,18 @@ def iterative_deblend(t, y, dy, neighbors,
 
     # compute false alarm probability
     best_freq = 1./lsp_dict['bestperiod']
-    fap = fap_baluev(t, dy, lsp_dict['bestlspval'],best_freq)
-    print("PERIOD: %.5e days;  FAP: %.5e"%(lsp_dict['bestperiod'], fap))
+    #fap = fap_baluev(t, dy, lsp_dict['lspvals'], 1./min(lsp_dict['periods']))
+    fap = fap_baluev(t, dy, lsp_dict['bestlspval'], best_freq)#1./lsp_dict['bestperiod'])
+    if ID:
+        print("%s PERIOD: %.5e days;  FAP: %.5e"%(ID,lsp_dict['bestperiod'],fap))
+    else:
+        print("PERIOD: %.5e days;  FAP: %.5e"%(lsp_dict['bestperiod'],fap))
 
-    if fap > max_fap:
-        print("  -> not significant enough. No signal found.")
+    if fap > max_fap or np.isnan(lsp_dict['bestperiod']):
+        if ID:
+            print("  -> not significant enough. No signal found for " + ID)
+        else:
+            print("  -> not significant enough. No signal found.")
         return None
 
     # Fit truncated Fourier series at this frequency
@@ -265,14 +272,13 @@ def iterative_deblend(t, y, dy, neighbors,
         if ffn.flux_amplitude > ff.flux_amplitude: # Need to look at ambiguous cases, also need to find which one is likely blend source, not just first blend source
             print("  -> blended! Trying again.")
             results_storage_container.add_blend(lsp_dict,ffn.ID,fap)
-            #return iterative_deblend(t, y - ffr(t), dy, neighbors,
-            #                         period_finding_func,
-            #                         results_storage_container,
-            #                         function_params=function_params,
-            #                         nharmonics_fit=nharmonics_fit,
-            #                         nharmonics_resid=nharmonics_resid,
-            #                         max_fap=max_fap)
-            return 0
+            return iterative_deblend(t, y - ffr(t), dy, neighbors,
+                                     period_finding_func,
+                                     results_storage_container,
+                                     function_params=function_params,
+                                     nharmonics_fit=nharmonics_fit,
+                                     nharmonics_resid=nharmonics_resid,
+                                     max_fap=max_fap,ID=ID)
 
     #return ff
     # Return the period and the pre-whitened light curve

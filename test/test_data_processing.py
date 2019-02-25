@@ -28,10 +28,13 @@ class test_data_processing_init(unittest.TestCase):
 class test_data_processing_run(unittest.TestCase):
 
     def setUp(self):
-        self.col_a = dproc.lc_collection_for_processing(1.,n_control_workers=4)
+        self.col_a = dproc.lc_collection_for_processing(1.,n_control_workers=2)
         sample_len_1 = 3000
         t1 = np.linspace(0,1200,sample_len_1)
         self.col_a.add_object(t1,10.+np.sin(t1),[.1]*sample_len_1,0.,0.,'object1')
+        # Modify one value 
+        self.col_a.objects[0].mags[3] =\
+                        self.col_a.objects[0].mags[3] + .001
         self.col_a.add_object(t1,[10.]*(sample_len_1-1) + [10.0001],[.1]*sample_len_1,0.5,0,'object2')
 
     def test_lc_collection_setup(self):
