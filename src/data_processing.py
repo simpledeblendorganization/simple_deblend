@@ -92,13 +92,16 @@ class lc_collection_for_processing(lc_objects):
     def _run_single_object(self,task):
         (object,which_method,ps_func,params,num_periods,n_control_workers) = task
         print("Running " + object.ID + "...")
-        num_proc_per_run = max(1,cpu_count()/n_control_workers)
+        num_proc_per_run = max(1,cpu_count()//n_control_workers)
         if 'nworkers' in params.keys():
             print("\n***")
             print("params dictionary had nworkers key")
-            print("This value is being changed to " + str(num_proc_per_run))
+            if params['nworkers'] > num_proc_per_run:
+                print("Its value, " + str(params['nworkers']) + " is too large given")
+                print(" the number of CPUs and number of control processes")
+                print("It is being changed to " + str(num_proc_per_run))
+                params['nworkers'] = num_proc_per_run
             print("***\n")
-        params['nworkers'] = num_proc_per_run
         neighbor_lightcurves = [(self.objects[self.index_dict[neighbor_ID]].times,
                                      self.objects[self.index_dict[neighbor_ID]].mags,
                                      self.objects[self.index_dict[neighbor_ID]].errs) for neighbor_ID in object.neighbors]
