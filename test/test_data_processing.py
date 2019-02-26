@@ -51,6 +51,7 @@ class test_data_processing_run(unittest.TestCase):
         # Test a basic run of the iterative deblending
         self.col_a.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False)
 
+        self.col_a.objects
         with self.assertRaises(KeyError):
             self.col_a.results['object1']['BLS']
 

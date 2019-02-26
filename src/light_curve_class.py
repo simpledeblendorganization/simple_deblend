@@ -86,6 +86,7 @@ class lc_objects():
         self.neighbor_radius_squared = radius_**2 # Storing radius squared
         self.objects = [] # To store all the objects
         self.index_dict = {} # Dictionary to map IDs to self.objects indices
+        self.results = {} # Dictionary to save results
 
     # Method to add a single_lc_object
     def add_object(self,times,mags,errs,x,y,ID,extra_info={}):#,object):
@@ -98,6 +99,9 @@ class lc_objects():
                                                  extra_info=extra_info))
         # Map the object's ID to its position in self.objects
         self.index_dict[ID] = len(self.objects)-1
+
+        # Give it a place in self.results
+        self.results[ID] = {}
 
         # Check if the new object is neighbor to any other objects
         for o in self.objects[:-1]:

@@ -11,6 +11,8 @@ from concurrent.futures import ProcessPoolExecutor
 from astrobase.periodbase.zgls import pgen_lsp as ls_p
 from astrobase.periodbase.spdm import stellingwerf_pdm as pdm_p
 from astrobase.periodbase.kbls import bls_parallel_pfind as bls_p
+import copy
+import pickle
 
 
 class lc_collection_for_processing(lc_objects):
@@ -37,8 +39,6 @@ class lc_collection_for_processing(lc_objects):
             self.n_control_workers = cpu_count()
         else:
             self.n_control_workers = n_control_workers
-        #self._acceptable_methods = ['LS','BLS','PDM']
-        self.results = {}
 
 
     def run_ls(self,num_periods=3,
@@ -63,6 +63,7 @@ class lc_collection_for_processing(lc_objects):
 
         self.run('PDM',pdm_p,params,num_periods,nworkers)
 
+
     def run_bls(self,num_periods=3,
                     startp=None,endp=None,autofreq=True,
                     nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
@@ -80,6 +81,7 @@ class lc_collection_for_processing(lc_objects):
         if nworkers is None:
             print("\n***")
             print("None value given to nworkers, auto-calculating a value")
+            print("\n***")
         else:
             print("\n***")
             print("nworkers value given")
@@ -95,14 +97,20 @@ class lc_collection_for_processing(lc_objects):
 
 
         with ProcessPoolExecutor(max_workers=self.n_control_workers) as executor:
-            _ = executor.map(self._run_single_object,[(o,which_method,ps_func,
-                                                       params,num_periods)
-                                                       for o in self.objects])
+            er = executor.map(self._run_single_object,[(o,which_method,ps_func,
+                                                             params,num_periods)
+                                                            for o in self.objects])
+        
+        #for o in self.objects:
+        #    self._run_single_object((o,which_method,ps_func,
+        #                              params,num_periods))
+        pool_results = [x for x in er]
+
+        for result in pool_results:
+            if result:
+                self.results[result.ID][which_method] = result
 
 
-
-    #def _run_single_object(self,object,which_method,ps_func,params,num_periods,
-    #                           n_control_workers):
     def _run_single_object(self,task):
         (object,which_method,ps_func,params,num_periods) = task
 
@@ -121,12 +129,12 @@ class lc_collection_for_processing(lc_objects):
                                     nharmonics_fit=7,
                                        max_fap=.5,ID=str(object.ID))
             if rv is None:
-                    break
+                break
 
         if len(results_storage.good_periods_info) > 0:
-            if object.ID not in self.results.keys():
-                self.results[object.ID] = {}
-            self.results[object.ID][which_method] = results_storage
+            return results_storage
+        else:
+            return None
 
         ###### So what kind of information do I want returned?
           # LSP of any well-found peak
@@ -135,10 +143,9 @@ class lc_collection_for_processing(lc_objects):
 
 
     def save_periodsearch_results(self,outputdir):
-        for o in self.objects:
-            if o.ID in self.results.keys():
-                with open(outputdir + "ps_" + o.ID + ".pkl","wb") as f:
-                    pickle.dump(self.results[o.ID],f)
+        if len(results_storage.good_periods_info) > 0:
+            with open(self.outputdir + "ps_" + results_storage.ID + ".pkl","wb") as f:
+                pickle.dump(results_storage,f)
         
 
             
@@ -163,18 +170,4 @@ class periodsearch_results():
         self.blend_info.append(dict_to_add)
 
 
-if __name__ == "__main__":
-
-    import numpy as np
-    import matplotlib.pyplot as plt
-    
-    col_a = lc_collection_for_processing(1.,n_control_workers=4)
-    sample_len_1 = 6000
-    t1 = np.linspace(0,1200,sample_len_1)
-    plt.scatter(t1,10.+np.sin(t1),s=2)
-    plt.xlim(0,50)
-    plt.savefig("temp.pdf")
-    plt.close()
-    col_a.add_object(t1,10.+np.sin(t1),[.1]*sample_len_1,0.,0.,'object1')
-    col_a.add_object(t1,[10.]*(sample_len_1-1) + [10.0001],[.1]*sample_len_1,0.5,0,'object2')
-    col_a.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False)
+#if __name__ == "__main__":
