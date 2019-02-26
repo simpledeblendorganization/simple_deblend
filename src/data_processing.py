@@ -121,14 +121,17 @@ class lc_collection_for_processing(lc_objects):
 
         results_storage = periodsearch_results(object.ID)
 
+        yprime = object.mags
         while len(results_storage.good_periods_info) < num_periods:
-            rv = sdb.iterative_deblend(object.times,object.mags,object.errs,
+            yprime = sdb.iterative_deblend(object.times,yprime,object.errs,
                                     neighbor_lightcurves,ps_func,
                                     results_storage,
                                     function_params=params,
                                     nharmonics_fit=7,
                                        max_fap=.5,ID=str(object.ID))
-            if rv is None:
+            if yprime is None:
+                #print("yprime is None")
+                #print(len(results_storage.good_periods_info))
                 break
 
         if len(results_storage.good_periods_info) > 0:
@@ -162,11 +165,12 @@ class periodsearch_results():
                            'num_previous_blends':len(self.blends_info)}
         self.good_periods_info.append(dict_to_add)
 
-    def add_blend(self,lsp_dict,neighbor_ID,fap):
+    def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,fap):
         dict_to_add = {'lsp_dict':lsp_dict,
                            'ID_of_blend':neighbor_ID,
                            'fap':fap,
-                           'num_previous_signals':len(self.good_periods_info)}
+                           'num_previous_signals':len(self.good_periods_info),
+                           'times':times,'mags':mags,'errs':errs}
         self.blend_info.append(dict_to_add)
 
 
