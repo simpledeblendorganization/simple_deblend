@@ -100,10 +100,11 @@ class lc_collection_for_processing(lc_objects):
             er = executor.map(self._run_single_object,[(o,which_method,ps_func,
                                                              params,num_periods)
                                                             for o in self.objects])
-        
+
         #for o in self.objects:
         #    self._run_single_object((o,which_method,ps_func,
         #                              params,num_periods))
+
         pool_results = [x for x in er]
 
         for result in pool_results:
@@ -171,7 +172,7 @@ class periodsearch_results():
                            'fap':fap,
                            'num_previous_signals':len(self.good_periods_info),
                            'times':times,'mags':mags,'errs':errs}
-        self.blend_info.append(dict_to_add)
+        self.blends_info.append(dict_to_add)
 
 
 #if __name__ == "__main__":
