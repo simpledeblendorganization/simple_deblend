@@ -253,25 +253,39 @@ def iterative_deblend(t, y, dy, neighbors,
           .fit(t, y, dy, best_freq))
 
     # fit another truncated Fourier series with more harmonics
-    ffr = (FourierFit(nharmonics=nharmonics_resid)
+    ffr = (FourierFit(nharmonics=nharmonics_resid) #TODO fit at period of higher amplitude thing
            .fit(t, y, dy, best_freq))
 
-    for tn, yn, dyn in neighbors:
+    ffn_all = {}
+    for n_ID in neighbors.keys():
 
 
         # fit neighbor's lightcurve at this frequency
         ffn = (FourierFit(nharmonics=nharmonics_fit)
-               .fit(tn, yn, dyn, best_freq))
+               .fit(neighbors[n_ID][0], neighbors[n_ID][1], 
+                    neighbors[n_ID][2], best_freq))
+        ffn_all[n_ID] = ffn
 
+    # Figure out which has maximum amplitude
+    max_amp = 0.
+    max_ffn_ID = None
+    for n_ID in ffn_all.keys():
+        if ffn_all[n_ID].flux_amplitude > max_amp:
+            max_amp = ffn_all[n_ID].flux_amplitude
+            max_ffn_ID = n_ID
 
         
-        # if neighbor has larger flux amplitude,
-        # then we consider this signal to be a blend.
-        # subtract off model signal to get residual
-        # lightcurve, and try again
-        if ffn.flux_amplitude > ff.flux_amplitude: # Need to look at ambiguous cases, also need to find which one is likely blend source, not just first blend source
+    # if neighbor has larger flux amplitude,
+    # then we consider this signal to be a blend.
+    # subtract off model signal to get residual
+    # lightcurve, and try again
+    if max_ffn_ID:
+        print("   checking blends")
+        print("   " + max_ffn_ID)
+        print("   " + str(ffn_all[max_ffn_ID].flux_amplitude) + "   " + str(ff.flux_amplitude))
+        if ffn_all[max_ffn_ID].flux_amplitude > ff.flux_amplitude: # TODO Need to look at ambiguous cases
             print("  -> blended! Trying again.")
-            results_storage_container.add_blend(lsp_dict,t,y,dy,ID,fap)
+            results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,fap)
             return iterative_deblend(t, y - ffr(t), dy, neighbors,
                                      period_finding_func,
                                      results_storage_container,
@@ -280,7 +294,6 @@ def iterative_deblend(t, y, dy, neighbors,
                                      nharmonics_resid=nharmonics_resid,
                                      max_fap=max_fap,ID=ID)
 
-    #return ff
     # Return the period and the pre-whitened light curve
     results_storage_container.add_good_period(lsp_dict,t,y,dy,fap)
     return y-ffr(t)

@@ -115,9 +115,9 @@ class lc_collection_for_processing(lc_objects):
     def _run_single_object(self,task):
         (object,which_method,ps_func,params,num_periods) = task
 
-        neighbor_lightcurves = [(self.objects[self.index_dict[neighbor_ID]].times,
+        neighbor_lightcurves = {neighbor_ID:(self.objects[self.index_dict[neighbor_ID]].times,
                                      self.objects[self.index_dict[neighbor_ID]].mags,
-                                     self.objects[self.index_dict[neighbor_ID]].errs) for neighbor_ID in object.neighbors]
+                                     self.objects[self.index_dict[neighbor_ID]].errs) for neighbor_ID in object.neighbors}
 
 
         results_storage = periodsearch_results(object.ID)
