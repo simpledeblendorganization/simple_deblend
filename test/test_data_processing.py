@@ -44,6 +44,7 @@ class test_data_processing_run(unittest.TestCase):
         self.col_a.add_object(t1,np.array([10.]*sample_len_1)+sigma1*rand1.randn(sample_len_1),
                                   [sigma1]*sample_len_1,0.5,0,'object2')
 
+
         # another random number
         rand2 = np.random.RandomState(seed=1847)
         
@@ -83,7 +84,7 @@ class test_data_processing_run(unittest.TestCase):
 
         ### col_c, test with some blending
         rand3 = np.random.RandomState(seed=1847)
-        self.col_c = dproc.lc_collection_for_processing(5,n_control_workers=1)
+        self.col_c = dproc.lc_collection_for_processing(5,n_control_workers=2)
         sample_len_3=3500
         t3 = np.linspace(0,80,sample_len_3)
         self.omegac = 8.319
@@ -93,15 +94,8 @@ class test_data_processing_run(unittest.TestCase):
         sigmac3 = .2
         temp1 = rand3.randn(sample_len_3)
         temp2 = rand3.randn(sample_len_3)
+        _ = rand3.randn(sample_len_3)
         temp3 = rand3.randn(sample_len_3)
-        temp3 = rand3.randn(sample_len_3)
-        import matplotlib.pyplot as plt
-        plt.scatter(t3,10. + 0.5*np.sin(self.omegac*t3 + phi_c) +
-                                  sigmac2*temp2,s=2)
-        #plt.plot(t3,np.sin(2*np.pi/1.20265*t3+phi_c),lw=.7)
-        plt.xlim(0,9)
-        plt.savefig("t.pdf")
-        plt.close()
         self.col_c.add_object(t3,8. + np.sin(self.omegac*t3 + phi_c) +
                                   sigmac1*temp1,
                                   [sigmac1]*sample_len_3,0.,1.,'c1')
@@ -111,6 +105,36 @@ class test_data_processing_run(unittest.TestCase):
         self.col_c.add_object(t3,4. + 0.1*np.sin(self.omegac*t3 + phi_c) +
                                   sigmac3*temp3,
                                   [sigmac3]*sample_len_3,10234.,-2327912.7,'c3')
+
+
+        ### col_d, long-period test 
+        rand4 = np.random.RandomState(seed=1853)
+        self.col_d = dproc.lc_collection_for_processing(10,n_control_workers=1)
+        
+        sample_len_4 = 5002
+        t4 = np.linspace(0,102,sample_len_4)
+        self.omegad = 2.*np.pi/30.1107
+        sigma4 = .2
+        self.col_d.add_object(t4, 5.+.75*sigma4*np.sin(self.omegad*t4)+sigma4*rand4.randn(sample_len_4),
+                                  [sigma4]*sample_len_4,0.,1.0,'d1')
+
+        ### col_e, multiple blended objects
+        rand5 = np.random.RandomState(seed=1893)
+        self.col_e = dproc.lc_collection_for_processing(10.,n_control_workers=1)
+
+        sample_len_5 = 2855
+        t5 = np.linspace(0,21.5,sample_len_5)
+        self.omegae = 2.*np.pi/3.48208#3.47464
+        phi_e = .3
+        sigma5 = .1
+        self.col_e.add_object(t5, 4.+np.sin(self.omegae*t5+phi_e)+sigma5*rand4.randn(sample_len_5),
+                                  [sigma5]*sample_len_5,0.,0.5,'e1')
+        self.col_e.add_object(t5, 4.+.4*np.sin(self.omegae*t5+phi_e)+sigma5*rand4.randn(sample_len_5),
+                                  [sigma5]*sample_len_5,0.5,0.,'e2')
+        self.col_e.add_object(t5, 4.+.3*np.sin(self.omegae*t5+phi_e)+sigma5*rand4.randn(sample_len_5),
+                                  [sigma5]*sample_len_5,0.7,0.1,'e3')
+        self.col_e.add_object(t5, 4.+.2*np.sin(self.omegae*t5+phi_e)+sigma5*rand4.randn(sample_len_5),
+                                  [sigma5]*sample_len_5,3.0,0.9,'e4')
 
     def test_lc_collection_setup(self):
         # Test initialization of the lc_collection_for_processing class
@@ -122,6 +146,8 @@ class test_data_processing_run(unittest.TestCase):
         self.assertIsInstance(dproc.periodsearch_results('1'),
                                   dproc.periodsearch_results)
 
+                             
+        
     def test_basic_ls_run(self):
         # Test a basic run of the iterative deblending
         self.col_a.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False,max_fap=.4)
@@ -135,6 +161,7 @@ class test_data_processing_run(unittest.TestCase):
         self.assertAlmostEqual(self.col_a.results['object1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi,places=6)
         self.assertEqual(len(self.col_a.results['object1']),1)
         self.assertEqual(len(self.col_a.results['object1']['LS'].good_periods_info),1)
+        self.assertEqual(len(self.col_a.results['object1']['LS'].blends_info),0)
         self.assertEqual(len(self.col_a.results['object2']),0)
 
         
@@ -158,6 +185,34 @@ class test_data_processing_run(unittest.TestCase):
         self.assertEqual(len(self.col_c.results['c3']['LS'].blends_info),0)
         self.assertAlmostEqual(self.col_c.results['c3']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
         self.assertEqual(self.col_c.results['c3']['LS'].good_periods_info[0]['num_previous_blends'],0)
+
+
+    def test_longperiod(self):
+        # Test a long period object
+        self.col_d.run_ls(startp=28.,endp=32.,autofreq=True)
+
+        self.assertEqual(len(self.col_d.results['d1']['LS'].good_periods_info),1)
+        self.assertEqual(len(self.col_d.results['d1']['LS'].blends_info),0)
+        self.assertAlmostEqual(self.col_d.results['d1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegad,places=5)
+
+    def test_multipleblend(self):
+        # Test a long period object and also objects with multiple blends
+        self.col_e.run_ls(startp=2.5,endp=4.7,max_fap=.23,autofreq=True)#,stepsize=1e-7)
+
+        self.assertEqual(len(self.col_e.results['e1']['LS'].good_periods_info),1)
+        self.assertAlmostEqual(self.col_e.results['e1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegae,places=3)
+        self.assertEqual(len(self.col_e.results['e2']['LS'].good_periods_info),0)
+        self.assertEqual(len(self.col_e.results['e3']['LS'].good_periods_info),0)
+        self.assertEqual(len(self.col_e.results['e4']['LS'].good_periods_info),0)
+        self.assertEqual(len(self.col_e.results['e2']['LS'].blends_info),1)
+        self.assertEqual(len(self.col_e.results['e3']['LS'].blends_info),1)
+        self.assertEqual(len(self.col_e.results['e4']['LS'].blends_info),1)
+        self.assertEqual(self.col_e.results['e2']['LS'].blends_info[0]['ID_of_blend'],'e1')
+        self.assertEqual(self.col_e.results['e3']['LS'].blends_info[0]['ID_of_blend'],'e1')
+        self.assertEqual(self.col_e.results['e4']['LS'].blends_info[0]['ID_of_blend'],'e1')
+
+
+
 
         
     def _test_blended_ls_run(self):

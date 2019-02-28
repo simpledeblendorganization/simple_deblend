@@ -44,22 +44,24 @@ class lc_collection_for_processing(lc_objects):
     def run_ls(self,num_periods=3,
                    startp=None,endp=None,autofreq=True,
                    nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-                   sigclip=float('inf'),nworkers=None,max_fap=.5):
+                   sigclip=float('inf'),nworkers=None,max_fap=.5,
+                   verbose=False):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
-                      'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
+                      'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
         self.run('LS',ls_p,params,num_periods,nworkers,max_fap=max_fap)
 
         
     def run_pdm(self,num_periods=3,
                     startp=None,endp=None,autofreq=True,
                      nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-                     sigclip=float('inf'),nworkers=None,max_fap=.5):
+                     sigclip=float('inf'),nworkers=None,max_fap=.5,
+                     verbose=False):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
-                      'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
+                      'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
 
         self.run('PDM',pdm_p,params,num_periods,nworkers,max_fap=max_fap)
 
@@ -67,11 +69,12 @@ class lc_collection_for_processing(lc_objects):
     def run_bls(self,num_periods=3,
                     startp=None,endp=None,autofreq=True,
                     nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-                    sigclip=float('inf'),nworkers=None,max_fap=.5):
+                    sigclip=float('inf'),nworkers=None,max_fap=.5,
+                    verbose=False):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
-                      'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
+                      'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
 
         self.run('BLS',bls_p,params,num_periods,nworkers,max_fap=max_fap)
         
