@@ -44,39 +44,39 @@ class lc_collection_for_processing(lc_objects):
     def run_ls(self,num_periods=3,
                    startp=None,endp=None,autofreq=True,
                    nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-                   sigclip=float('inf'),nworkers=None):
+                   sigclip=float('inf'),nworkers=None,max_fap=.5):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
-        self.run('LS',ls_p,params,num_periods,nworkers)
+        self.run('LS',ls_p,params,num_periods,nworkers,max_fap=max_fap)
 
         
     def run_pdm(self,num_periods=3,
                     startp=None,endp=None,autofreq=True,
                      nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-                     sigclip=float('inf'),nworkers=None):
+                     sigclip=float('inf'),nworkers=None,max_fap=.5):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
 
-        self.run('PDM',pdm_p,params,num_periods,nworkers)
+        self.run('PDM',pdm_p,params,num_periods,nworkers,max_fap=max_fap)
 
 
     def run_bls(self,num_periods=3,
                     startp=None,endp=None,autofreq=True,
                     nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-                    sigclip=float('inf'),nworkers=None):
+                    sigclip=float('inf'),nworkers=None,max_fap=.5):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'stepsize':stepsize,'sigclip':sigclip,'verbose':False}
 
-        self.run('BLS',bls_p,params,num_periods,nworkers)
+        self.run('BLS',bls_p,params,num_periods,nworkers,max_fap=max_fap)
         
 
-    def run(self,which_method,ps_func,params,num_periods,nworkers):
+    def run(self,which_method,ps_func,params,num_periods,nworkers,max_fap):
         num_proc_per_run = max(1,cpu_count()//self.n_control_workers)
         if nworkers is None:
             print("\n***")
@@ -98,7 +98,7 @@ class lc_collection_for_processing(lc_objects):
 
         with ProcessPoolExecutor(max_workers=self.n_control_workers) as executor:
             er = executor.map(self._run_single_object,[(o,which_method,ps_func,
-                                                             params,num_periods)
+                                                             params,num_periods,max_fap)
                                                             for o in self.objects])
 
         #for o in self.objects:
@@ -113,7 +113,7 @@ class lc_collection_for_processing(lc_objects):
 
 
     def _run_single_object(self,task):
-        (object,which_method,ps_func,params,num_periods) = task
+        (object,which_method,ps_func,params,num_periods,max_fap) = task
 
         neighbor_lightcurves = {neighbor_ID:(self.objects[self.index_dict[neighbor_ID]].times,
                                      self.objects[self.index_dict[neighbor_ID]].mags,
@@ -123,19 +123,21 @@ class lc_collection_for_processing(lc_objects):
         results_storage = periodsearch_results(object.ID)
 
         yprime = object.mags
+        temp_num = -1
         while len(results_storage.good_periods_info) < num_periods:
+            temp_num += 1
             yprime = sdb.iterative_deblend(object.times,yprime,object.errs,
                                     neighbor_lightcurves,ps_func,
                                     results_storage,
                                     function_params=params,
                                     nharmonics_fit=7,
-                                       max_fap=.5,ID=str(object.ID))
+                                       max_fap=max_fap,ID=str(object.ID),num_plots0=temp_num)
             if yprime is None:
                 #print("yprime is None")
                 #print(len(results_storage.good_periods_info))
                 break
 
-        if len(results_storage.good_periods_info) > 0:
+        if len(results_storage.good_periods_info) > 0 or len(results_storage.blends_info) > 0:
             return results_storage
         else:
             return None

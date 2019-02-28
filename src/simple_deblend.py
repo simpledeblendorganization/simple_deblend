@@ -1,6 +1,7 @@
 from scipy.special import gammaln
 import numpy as np
 #from astropy.stats import LombScargle
+#import matplotlib.pyplot as plt
 
 
 
@@ -197,7 +198,8 @@ def iterative_deblend(t, y, dy, neighbors,
                       function_params=None,
                       nharmonics_fit=5,
                       nharmonics_resid=10,
-                      max_fap=1e-3,ID=None):
+                      max_fap=1e-3,ID=None,num_plots0=0,
+                      num_plots1=0):
     """
     Iteratively deblend a lightcurve against neighbors
 
@@ -234,6 +236,8 @@ def iterative_deblend(t, y, dy, neighbors,
 
     # compute false alarm probability
     best_freq = 1./lsp_dict['bestperiod']
+    #if num_plots0 == 0 and num_plots1 == 1 and ID=='o3':
+    #    best_freq = .782927/(2.*np.pi)
     #fap = fap_baluev(t, dy, lsp_dict['lspvals'], 1./min(lsp_dict['periods']))
     fap = fap_baluev(t, dy, lsp_dict['bestlspval'], best_freq)#1./lsp_dict['bestperiod'])
     if ID:
@@ -253,8 +257,10 @@ def iterative_deblend(t, y, dy, neighbors,
           .fit(t, y, dy, best_freq))
 
     # fit another truncated Fourier series with more harmonics
-    ffr = (FourierFit(nharmonics=nharmonics_resid) #TODO fit at period of higher amplitude thing
-           .fit(t, y, dy, best_freq))
+    ffr = (FourierFit(nharmonics=nharmonics_resid)
+           .fit(t, y, dy, best_freq)) #TODO fit at period of higher amplitude thing
+
+
 
     ffn_all = {}
     for n_ID in neighbors.keys():
@@ -292,7 +298,7 @@ def iterative_deblend(t, y, dy, neighbors,
                                      function_params=function_params,
                                      nharmonics_fit=nharmonics_fit,
                                      nharmonics_resid=nharmonics_resid,
-                                     max_fap=max_fap,ID=ID)
+                                     max_fap=max_fap,ID=ID,num_plots1=num_plots1+1)
 
     # Return the period and the pre-whitened light curve
     results_storage_container.add_good_period(lsp_dict,t,y,dy,fap)
