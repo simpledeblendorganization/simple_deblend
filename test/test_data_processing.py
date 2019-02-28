@@ -122,7 +122,7 @@ class test_data_processing_run(unittest.TestCase):
         self.assertIsInstance(dproc.periodsearch_results('1'),
                                   dproc.periodsearch_results)
 
-    def _test_basic_ls_run(self):
+    def test_basic_ls_run(self):
         # Test a basic run of the iterative deblending
         self.col_a.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False,max_fap=.4)
 
@@ -136,6 +136,28 @@ class test_data_processing_run(unittest.TestCase):
         self.assertEqual(len(self.col_a.results['object1']),1)
         self.assertEqual(len(self.col_a.results['object1']['LS'].good_periods_info),1)
         self.assertEqual(len(self.col_a.results['object2']),0)
+
+        
+    def test_simple_blended_ls_run(self):
+        self.col_c.run_ls(startp=0.5,endp=2.,stepsize=5e-5,autofreq=False,max_fap=.1)
+
+        # Check c1
+        self.assertEqual(len(self.col_c.results['c1']['LS'].good_periods_info),1)
+        self.assertEqual(len(self.col_c.results['c1']['LS'].blends_info),0)
+        self.assertAlmostEqual(self.col_c.results['c1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
+        self.assertEqual(self.col_c.results['c1']['LS'].good_periods_info[0]['num_previous_blends'],0)
+
+        # Check c2
+        self.assertEqual(len(self.col_c.results['c2']['LS'].good_periods_info),0)
+        self.assertEqual(len(self.col_c.results['c2']['LS'].blends_info),1)
+        self.assertEqual(self.col_c.results['c2']['LS'].blends_info[0]['ID_of_blend'],'c1')
+        self.assertAlmostEqual(self.col_c.results['c2']['LS'].blends_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
+
+        #Check c3
+        self.assertEqual(len(self.col_c.results['c3']['LS'].good_periods_info),1)
+        self.assertEqual(len(self.col_c.results['c3']['LS'].blends_info),0)
+        self.assertAlmostEqual(self.col_c.results['c3']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
+        self.assertEqual(self.col_c.results['c3']['LS'].good_periods_info[0]['num_previous_blends'],0)
 
         
     def _test_blended_ls_run(self):
@@ -165,27 +187,6 @@ class test_data_processing_run(unittest.TestCase):
             self.col_b.results['o4']['LS']
         self.assertEqual(len(self.col_b.results['o4'].keys()),0)
 
-
-    def test_simple_blended_ls_run(self):
-        self.col_c.run_ls(startp=0.5,endp=2.,stepsize=5e-5,autofreq=False,max_fap=.1)
-
-        # Check c1
-        self.assertEqual(len(self.col_c.results['c1']['LS'].good_periods_info),1)
-        self.assertEqual(len(self.col_c.results['c1']['LS'].blends_info),0)
-        self.assertAlmostEqual(self.col_c.results['c1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
-        self.assertEqual(self.col_c.results['c1']['LS'].good_periods_info[0]['num_previous_blends'],0)
-
-        # Check c2
-        self.assertEqual(len(self.col_c.results['c2']['LS'].good_periods_info),0)
-        self.assertEqual(len(self.col_c.results['c2']['LS'].blends_info),1)
-        self.assertEqual(self.col_c.results['c2']['LS'].blends_info[0]['ID_of_blend'],'c1')
-        self.assertAlmostEqual(self.col_c.results['c2']['LS'].blends_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
-
-        #Check c3
-        self.assertEqual(len(self.col_c.results['c3']['LS'].good_periods_info),1)
-        self.assertEqual(len(self.col_c.results['c3']['LS'].blends_info),0)
-        self.assertAlmostEqual(self.col_c.results['c3']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
-        self.assertEqual(self.col_c.results['c3']['LS'].good_periods_info[0]['num_previous_blends'],0)
 
 if __name__ == '__main__':
     unittest.main()
