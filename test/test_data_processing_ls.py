@@ -1,6 +1,7 @@
 '''test_data_processing.py - Joshua Wallace - Feb 2019
 
-This tests classes and methods in the data_processing.py file.
+This tests classes and methods in the data_processing.py file,
+using the Lomb-Scargle method.
 '''
 
 import unittest
