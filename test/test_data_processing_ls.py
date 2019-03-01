@@ -26,7 +26,7 @@ class test_data_processing_init(unittest.TestCase):
         self.assertIsInstance(dproc.periodsearch_results('1'),
                                   dproc.periodsearch_results)
 
-class test_data_processing_run_sinusoidal_single_signal(unittest.TestCase):
+class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
 
     def setUp(self):
         # random number
@@ -251,7 +251,7 @@ class test_data_processing_run_sinusoidal_multiple_signals(unittest.TestCase):
 """
 
 
-class test_data_processing_run_rrlyrae_signal(unittest.TestCase):
+class test_data_processing_ls_rrlyrae_signal(unittest.TestCase):
 
     def setUp(self):
 

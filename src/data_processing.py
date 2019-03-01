@@ -57,11 +57,12 @@ class lc_collection_for_processing(lc_objects):
                     startp=None,endp=None,autofreq=True,
                      nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
                      sigclip=float('inf'),nworkers=None,max_fap=.5,
-                     verbose=False):
+                     verbose=False,phasebinsize=0.05):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
-                      'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
+                      'stepsize':stepsize,'sigclip':sigclip,
+                      'verbose':verbose,'phasebinsize':phasebinsize}
 
         self.run('PDM',pdm_p,params,num_periods,nworkers,max_fap=max_fap)
 
