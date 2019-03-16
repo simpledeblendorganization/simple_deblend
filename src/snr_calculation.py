@@ -20,6 +20,7 @@ freq_window_epsilon = 3.
 
 def periodogram_snr(periodogram,periods,index_to_evaluate,duration,per_type):
     """
+    Assumes fixed frequency spacing for periods
     """
     # Some checking
     if len(periodogram) != len(periods):
@@ -30,17 +31,15 @@ def periodogram_snr(periodogram,periods,index_to_evaluate,duration,per_type):
         raise ValueError("Selected periodogram value is nan")
     if np.isinf(periodogram[index_to_evaluate]):
         raise ValueError("Selected periodogram value is not finite")
-    if pertype.upper() not in ['LS','PDM','BLS']:
-        raise ValueError("Periodogram type " + pertype + " not recognized")
+    if per_type.upper() not in ['LS','PDM','BLS']:
+        raise ValueError("Periodogram type " + per_type + " not recognized")
 
     # First, median-filter the periodogram
     corrected_perdgm = periodogram
 
     # Now, calculate the SNR
     freq_window_size = freq_window_epsilon/duration
-    delta_frequency = 1./periods[0] - 1./periods[1]
-    if delta_frequency < 0.:
-        raise ValueError("The delta_frequency value is negative")
+    delta_frequency = abs(1./periods[1] - 1./periods[0])
     freq_window_index_size = int(round(freq_window_size/delta_frequency))
 
     perdgm_window = []
