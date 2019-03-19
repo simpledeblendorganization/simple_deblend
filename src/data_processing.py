@@ -127,15 +127,13 @@ class lc_collection_for_processing(lc_objects):
         results_storage = periodsearch_results(object.ID)
 
         yprime = object.mags
-        temp_num = -1
         while len(results_storage.good_periods_info) < num_periods:
-            temp_num += 1
             yprime = sdb.iterative_deblend(object.times,yprime,object.errs,
                                     neighbor_lightcurves,ps_func,
                                     results_storage,
                                     function_params=params,
                                     nharmonics_fit=7,
-                                       max_fap=max_fap,ID=str(object.ID),num_plots0=temp_num)
+                                       max_fap=max_fap,ID=str(object.ID))
             if yprime is None:
                 #print("yprime is None")
                 #print(len(results_storage.good_periods_info))

@@ -234,11 +234,30 @@ def iterative_deblend(t, y, dy, neighbors,
     lsp_dict = period_finding_func(t,y,dy,**function_params)
 
     # Now median filter the periodogram if selected
-    if median_filter:
-        pass
+    if medianfilter:
+        freq_window_epsilon = 1.
+        median_filter_half_bin_size = 40
+        duration = t[-1] - t[0]
+        freq_window_size = freq_window_epsilon/duration
+        freq_window_index_size = int(round(freq_window_size/(1./lsp_dict['periods'][0] - 1./lsp_dict['periods'][1])))
+
+        median_filter_values = []
+        for i in range(len(lsp_dict['lspvals'])):
+            window_vals = []
+            if i > freq_window_index_size:
+                if i - freq_window_index_size <=0:
+                    raise RuntimeError("Too small, " + str(i-freq_window_index_size))
+                window_vals.extend(lsp_dict['lspvals'][max(0,i-freq_window_index_size-median_filter_half_bin_size):i-freq_window_index_size].tolist())
+            if i + freq_window_index_size < len(lsp_dict['lspvals']):
+                window_vals.extend(lsp_dict['lspvals'][i+freq_window_index_size:i+freq_window_index_size+median_filter_half_bin_size].tolist())
+                
+          
+
+
         lsp_dict['medianfilter'] = True
     else:
         pdgm_values = lsp_dict['lspvals']
+
         lsp_dict['medianfilter'] = False
         if lsp_dict['periods'][np.argmax(pdgm_values)] != lsp_dict['bestperiod']:
             raise ValueError("For some reason, the bestperiod does not match the actual best period w/o median filtering")
