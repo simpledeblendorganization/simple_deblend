@@ -198,8 +198,8 @@ def iterative_deblend(t, y, dy, neighbors,
                       function_params=None,
                       nharmonics_fit=5,
                       nharmonics_resid=10,
-                      max_fap=1e-3,ID=None,num_plots0=0,
-                      num_plots1=0):
+                      max_fap=1e-3,ID=None,
+                      medianfilter=False):
     """
     Iteratively deblend a lightcurve against neighbors
 
@@ -233,19 +233,29 @@ def iterative_deblend(t, y, dy, neighbors,
     # use the function to find the best period
     lsp_dict = period_finding_func(t,y,dy,**function_params)
 
+    # Now median filter the periodogram if selected
+    if median_filter:
+        pass
+        lsp_dict['medianfilter'] = True
+    else:
+        pdgm_values = lsp_dict['lspvals']
+        lsp_dict['medianfilter'] = False
+        if lsp_dict['periods'][np.argmax(pdgm_values)] != lsp_dict['bestperiod']:
+            raise ValueError("For some reason, the bestperiod does not match the actual best period w/o median filtering")
+
+    best_pdgm_index = np.argmax(pdgm_values)
+
+    
 
     # compute false alarm probability
-    best_freq = 1./lsp_dict['bestperiod']
-    #if num_plots0 == 0 and num_plots1 == 1 and ID=='o3':
-    #    best_freq = .782927/(2.*np.pi)
-    #fap = fap_baluev(t, dy, lsp_dict['lspvals'], 1./min(lsp_dict['periods']))
-    fap = fap_baluev(t, dy, lsp_dict['bestlspval'], best_freq)#1./lsp_dict['bestperiod'])
+    best_freq = 1./lsp_dict['periods'][best_pdgm_index]
+    fap = fap_baluev(t, dy, pdgm_values[best_pdgm_index], best_freq)
     if ID:
-        print("%s PERIOD: %.5e days;  FAP: %.5e"%(ID,lsp_dict['bestperiod'],fap))
+        print("%s PERIOD: %.5e days;  FAP: %.5e"%(ID,lsp_dict['periods'][best_pdgm_index],fap))
     else:
-        print("PERIOD: %.5e days;  FAP: %.5e"%(lsp_dict['bestperiod'],fap))
+        print("PERIOD: %.5e days;  FAP: %.5e"%(lsp_dict['periods'][best_pdgm_index],fap))
 
-    if fap > max_fap or np.isnan(lsp_dict['bestperiod']):
+    if fap > max_fap or np.isnan(lsp_dict['periods'][best_pdgm_index]):
         if ID:
             print("  -> not significant enough. No signal found for " + ID)
         else:
@@ -298,7 +308,7 @@ def iterative_deblend(t, y, dy, neighbors,
                                      function_params=function_params,
                                      nharmonics_fit=nharmonics_fit,
                                      nharmonics_resid=nharmonics_resid,
-                                     max_fap=max_fap,ID=ID,num_plots1=num_plots1+1)
+                                     max_fap=max_fap,ID=ID)
 
     # Return the period and the pre-whitened light curve
     results_storage_container.add_good_period(lsp_dict,t,y,dy,fap)
