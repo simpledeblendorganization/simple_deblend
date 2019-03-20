@@ -1,4 +1,4 @@
-'''test_data_processing.py - Joshua Wallace - Feb 2019
+'''test_data_processing_ls.py - Joshua Wallace - Feb 2019
 
 This tests classes and methods in the data_processing.py file,
 using the Lomb-Scargle method.
