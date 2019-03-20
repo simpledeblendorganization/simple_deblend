@@ -151,7 +151,7 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
     def _test_multipleblend(self):
         # Test a long period object and also objects with multiple blends
         self.col_e.run_pdm(startp=2.5,endp=4.7,max_fap=.23,autofreq=True,
-                           medianfilter=False
+                           medianfilter=False)
 
         self.assertEqual(len(self.col_e.results['e1']['PDM'].good_periods_info),1)
         self.assertAlmostEqual(self.col_e.results['e1']['PDM'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegae,places=3)
@@ -208,7 +208,7 @@ class test_data_processing_pdm_rrlyrae_signal(unittest.TestCase):
     def _test_rrblend(self):
         # Test an RRab and a blend
         self.col.run_pdm(startp=.2,endp=1.,stepsize=1e-4,autofreq=False,
-                         medianfilter=False
+                         medianfilter=False)
 
         self.assertEqual(len(self.col.results['rr1']['PDM'].good_periods_info),1)
         self.assertEqual(len(self.col.results['rr1']['PDM'].blends_info),0)

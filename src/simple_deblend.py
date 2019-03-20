@@ -1,5 +1,6 @@
 from scipy.special import gammaln
 import numpy as np
+import math
 #from astropy.stats import LombScargle
 #import matplotlib.pyplot as plt
 
@@ -193,6 +194,13 @@ def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
 
 
 def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,duration):
+    # First, make sure all the frequency values are equally spaced
+    diff = np.diff(1./periods)
+    for val in diff:
+        if not math.isclose(val,diff[0],rel_tol=1e-5,abs_tol=1e-5):
+            raise ValueError("The frequency differences are not equal spacing, which this function assumes")
+
+
     freq_window_size = freq_window_epsilon/duration
     freq_window_index_size = int(round(freq_window_size/(1./periods[0] - 1./periods[1])))
 
