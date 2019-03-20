@@ -1,4 +1,5 @@
 from scipy.special import gammaln
+from scipy.stats import sigmaclip
 import numpy as np
 import math
 #from astropy.stats import LombScargle

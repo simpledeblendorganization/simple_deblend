@@ -23,3 +23,7 @@ class test_median_filter(unittest.TestCase):
         output = sdb.median_filtering(self.lspvals,self.periods,
                                       2.,30,60.)
         self.assertAlmostEqual(output,self.lspvals-self.val)
+
+
+if __name__ == '__main__':
+    unittest.main()
