@@ -192,6 +192,29 @@ def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
     return 1 - Psing * np.exp(-tau)
 
 
+def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_half_bin_size,duration)
+        freq_window_size = freq_window_epsilon/duration
+        freq_window_index_size = int(round(freq_window_size/(1./periods[0] - 1./periods[1])))
+
+        median_filter_values = []
+        for i in range(len(lspvals)):
+            window_vals = []
+            if i > freq_window_index_size:
+                if i - freq_window_index_size <=0:
+                    raise RuntimeError("Too small, " + str(i-freq_window_index_size))
+                window_vals.extend(lspvals[max(0,i-freq_window_index_size-median_filter_half_bin_size):i-freq_window_index_size].tolist())
+            if i + freq_window_index_size < len(lspvals):
+                window_vals.extend(lspvals[i+freq_window_index_size:i+freq_window_index_size+median_filter_half_bin_size].tolist())
+                
+            window_vals = np.array(window_vals)
+            wherefinite = np.isfinite(window_vals)
+            vals, low, upp = sigmaclip(window_vals[wherefinite],low=3,high=3)
+
+            median_filter_values.append(np.median(vals))
+
+        return lspvals - median_filter_values
+
+
 def iterative_deblend(t, y, dy, neighbors,
                       period_finding_func,
                       results_storage_container,
@@ -199,7 +222,9 @@ def iterative_deblend(t, y, dy, neighbors,
                       nharmonics_fit=5,
                       nharmonics_resid=10,
                       max_fap=1e-3,ID=None,
-                      medianfilter=False):
+                      medianfilter=False,
+                      freq_window_epsilon=1.,
+                      median_filter_half_bin_size=40):
     """
     Iteratively deblend a lightcurve against neighbors
 
@@ -235,26 +260,15 @@ def iterative_deblend(t, y, dy, neighbors,
 
     # Now median filter the periodogram if selected
     if medianfilter:
-        freq_window_epsilon = 1.
-        median_filter_half_bin_size = 40
-        duration = t[-1] - t[0]
-        freq_window_size = freq_window_epsilon/duration
-        freq_window_index_size = int(round(freq_window_size/(1./lsp_dict['periods'][0] - 1./lsp_dict['periods'][1])))
-
-        median_filter_values = []
-        for i in range(len(lsp_dict['lspvals'])):
-            window_vals = []
-            if i > freq_window_index_size:
-                if i - freq_window_index_size <=0:
-                    raise RuntimeError("Too small, " + str(i-freq_window_index_size))
-                window_vals.extend(lsp_dict['lspvals'][max(0,i-freq_window_index_size-median_filter_half_bin_size):i-freq_window_index_size].tolist())
-            if i + freq_window_index_size < len(lsp_dict['lspvals']):
-                window_vals.extend(lsp_dict['lspvals'][i+freq_window_index_size:i+freq_window_index_size+median_filter_half_bin_size].tolist())
-                
-          
-
+              
+        pdgm_values = median_filtering(lsp_dict['lspvals'],lsp_dict['periods'],
+                                       freq_window_epsilon,
+                                       median_filter_half_bin_size,
+                                       t[-1]-t[0])
 
         lsp_dict['medianfilter'] = True
+        lsp_dict['lspvalsmf'] = pdgm_values
+
     else:
         pdgm_values = lsp_dict['lspvals']
 
