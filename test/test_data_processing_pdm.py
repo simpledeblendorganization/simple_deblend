@@ -100,7 +100,8 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
     ### To be added back in when signal vetting is good
     def _________test_basic_pdm_run(self):
         # Test a basic run of the iterative deblending
-        self.col_a.run_pdm(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False,max_fap=.4)
+        self.col_a.run_pdm(startp=6.,endp=7.,stepsize=0.0000001,
+                           autofreq=False,max_fap=.4,medianfilter=False)
 
         with self.assertRaises(KeyError):
             self.col_a.results['object1']['BLS']
@@ -116,7 +117,8 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
 
     #### To be added back in when signal vetting is good
     def _________test_simple_blended_pdm_run(self):
-        self.col_c.run_pdm(startp=0.5,endp=2.,stepsize=5e-5,autofreq=False,max_fap=.1)
+        self.col_c.run_pdm(startp=0.5,endp=2.,stepsize=5e-5,
+                           autofreq=False,max_fap=.1,medianfilter=False)
 
         # Check c1
         self.assertEqual(len(self.col_c.results['c1']['PDM'].good_periods_info),1)
@@ -139,7 +141,8 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
 
     def _test_longperiod(self):
         # Test a long period object
-        self.col_d.run_pdm(startp=28.,endp=32.,autofreq=True)
+        self.col_d.run_pdm(startp=28.,endp=32.,autofreq=True,
+                           medianfilter=False)
 
         self.assertEqual(len(self.col_d.results['d1']['PDM'].good_periods_info),1)
         self.assertEqual(len(self.col_d.results['d1']['PDM'].blends_info),0)
@@ -147,7 +150,8 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
 
     def _test_multipleblend(self):
         # Test a long period object and also objects with multiple blends
-        self.col_e.run_pdm(startp=2.5,endp=4.7,max_fap=.23,autofreq=True)#,stepsize=1e-7)
+        self.col_e.run_pdm(startp=2.5,endp=4.7,max_fap=.23,autofreq=True,
+                           medianfilter=False
 
         self.assertEqual(len(self.col_e.results['e1']['PDM'].good_periods_info),1)
         self.assertAlmostEqual(self.col_e.results['e1']['PDM'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegae,places=3)
@@ -203,7 +207,8 @@ class test_data_processing_pdm_rrlyrae_signal(unittest.TestCase):
 
     def _test_rrblend(self):
         # Test an RRab and a blend
-        self.col.run_pdm(startp=.2,endp=1.,stepsize=1e-4,autofreq=False)#True)
+        self.col.run_pdm(startp=.2,endp=1.,stepsize=1e-4,autofreq=False,
+                         medianfilter=False
 
         self.assertEqual(len(self.col.results['rr1']['PDM'].good_periods_info),1)
         self.assertEqual(len(self.col.results['rr1']['PDM'].blends_info),0)

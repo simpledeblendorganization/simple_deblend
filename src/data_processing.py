@@ -13,6 +13,8 @@ from astrobase.periodbase.spdm import stellingwerf_pdm as pdm_p
 from astrobase.periodbase.kbls import bls_parallel_pfind as bls_p
 import copy
 import pickle
+import warnings
+
 
 
 class lc_collection_for_processing(lc_objects):
@@ -42,10 +44,11 @@ class lc_collection_for_processing(lc_objects):
 
 
     def run_ls(self,num_periods=3,
-                   startp=None,endp=None,autofreq=True,
-                   nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-                   sigclip=float('inf'),nworkers=None,max_fap=.5,
-                   verbose=False):
+               startp=None,endp=None,autofreq=True,
+               nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
+               sigclip=float('inf'),nworkers=None,max_fap=.5,
+               verbose=False,medianfilter=False,
+               freq_window_epsilon=None,median_filter_size=None):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
@@ -54,10 +57,11 @@ class lc_collection_for_processing(lc_objects):
 
         
     def run_pdm(self,num_periods=3,
-                    startp=None,endp=None,autofreq=True,
-                     nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-                     sigclip=float('inf'),nworkers=None,max_fap=.5,
-                     verbose=False,phasebinsize=0.05):
+                startp=None,endp=None,autofreq=True,
+                nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
+                sigclip=float('inf'),nworkers=None,max_fap=.5,
+                verbose=False,phasebinsize=0.05,medianfilter=False,
+                freq_window_epsilon=None,median_filter_size=None):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
@@ -68,10 +72,11 @@ class lc_collection_for_processing(lc_objects):
 
 
     def run_bls(self,num_periods=3,
-                    startp=None,endp=None,autofreq=True,
-                    nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-                    sigclip=float('inf'),nworkers=None,max_fap=.5,
-                    verbose=False):
+                startp=None,endp=None,autofreq=True,
+                nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
+                sigclip=float('inf'),nworkers=None,max_fap=.5,
+                verbose=False,medianfilter=False,freq_window_epsilon=None,
+                median_filter_size=None):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
@@ -80,7 +85,8 @@ class lc_collection_for_processing(lc_objects):
         self.run('BLS',bls_p,params,num_periods,nworkers,max_fap=max_fap)
         
 
-    def run(self,which_method,ps_func,params,num_periods,nworkers,max_fap):
+    def run(self,which_method,ps_func,params,num_periods,nworkers,max_fap,
+            medianfilter=False,freq_window_epsilon=None,median_filter_size=None):
         num_proc_per_run = max(1,cpu_count()//self.n_control_workers)
         if nworkers is None:
             print("\n***")
@@ -102,8 +108,10 @@ class lc_collection_for_processing(lc_objects):
 
         with ProcessPoolExecutor(max_workers=self.n_control_workers) as executor:
             er = executor.map(self._run_single_object,[(o,which_method,ps_func,
-                                                             params,num_periods,max_fap)
-                                                            for o in self.objects])
+                                                        params,num_periods,max_fap,
+                                                        medianfilter,freq_window_epsilon,
+                                                        median_filter_size)
+                                                       for o in self.objects])
 
         #for o in self.objects:
         #    self._run_single_object((o,which_method,ps_func,
@@ -117,7 +125,14 @@ class lc_collection_for_processing(lc_objects):
 
 
     def _run_single_object(self,task):
-        (object,which_method,ps_func,params,num_periods,max_fap) = task
+        (object,which_method,ps_func,params,num_periods,max_fap,
+         medianfilter,freq_window_epsilon,median_filter_size) = task
+
+        if not medianfilter:
+            if freq_window_epsilon is not None:
+                warnings.warn("medianfilter is False, but freq_window_epsilon is not None")
+            if median_filter_size is not None:
+                warnings.warn("medianfilter is False, but median_filter_size is not None")
 
         neighbor_lightcurves = {neighbor_ID:(self.objects[self.index_dict[neighbor_ID]].times,
                                      self.objects[self.index_dict[neighbor_ID]].mags,
@@ -129,11 +144,14 @@ class lc_collection_for_processing(lc_objects):
         yprime = object.mags
         while len(results_storage.good_periods_info) < num_periods:
             yprime = sdb.iterative_deblend(object.times,yprime,object.errs,
-                                    neighbor_lightcurves,ps_func,
-                                    results_storage,
-                                    function_params=params,
-                                    nharmonics_fit=7,
-                                       max_fap=max_fap,ID=str(object.ID))
+                                           neighbor_lightcurves,ps_func,
+                                           results_storage,
+                                           function_params=params,
+                                           nharmonics_fit=7,
+                                           max_fap=max_fap,ID=str(object.ID),
+                                           medianfilter=medianfilter,
+                                           freq_window_epsilon=freq_window_epsilon,
+                                           median_filter_size=median_filter_size)
             if yprime is None:
                 #print("yprime is None")
                 #print(len(results_storage.good_periods_info))
