@@ -22,7 +22,15 @@ class test_median_filter(unittest.TestCase):
     def test_filter_doesnt_mess_up_flat(self):
         output = sdb.median_filtering(self.lspvals,self.periods,
                                       2.,30,60.)
-        self.assertAlmostEqual(output,self.lspvals-self.val)
+        for val1, val2 in zip(output,self.lspvals-self.val):
+            self.assertAlmostEqual(val1,val2,places=10)
+
+        mod_lspvals = self.lspvals[:]
+        high_val = 20.
+        mod_lspvals[len(mod_lspvals)//2] = high_val
+        output2 = sdb.median_filtering(mod_lspvals,self.periods,2.,30,60.)
+        for val1, val2 in zip(output2,mod_lspvals-self.val):
+            self.assertAlmostEqual(val1,val2,places=11)
 
 
 if __name__ == '__main__':
