@@ -38,7 +38,6 @@ class test_warning_median_filter(unittest.TestCase):
             col.run_pdm(startp=10.,endp=11.,stepsize=0.1,autofreq=False,
                           max_fap=.4,medianfilter=False,median_filter_size=1)
 
-
         # BLS run
         with self.assertWarns(UserWarning):
             col.run_bls(startp=10.,endp=11.,stepsize=0.1,autofreq=False,

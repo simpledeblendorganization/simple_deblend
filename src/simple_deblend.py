@@ -201,20 +201,18 @@ def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,dura
         if not math.isclose(val,diff[0],rel_tol=1e-5,abs_tol=1e-5):
             raise ValueError("The frequency differences are not equal spacing, which this function assumes")
 
-
     freq_window_size = freq_window_epsilon/duration
-    freq_window_index_size = int(round(freq_window_size/(1./periods[0] - 1./periods[1])))
+    freq_window_index_size = int(round(freq_window_size/abs(1./periods[0] - 1./periods[1])))
 
     median_filter_values = []
     for i in range(len(lspvals)):
         window_vals = []
-        if i > freq_window_index_size:
-            if i - freq_window_index_size <=0:
+        if i >= freq_window_index_size:
+            if i - freq_window_index_size < 0:
                 raise RuntimeError("Too small, " + str(i-freq_window_index_size))
-            window_vals.extend(lspvals[max(0,i-freq_window_index_size-median_filter_size):i-freq_window_index_size].tolist())
+            window_vals.extend(lspvals[max(0,i-freq_window_index_size-median_filter_size+1):i-freq_window_index_size+1].tolist())
         if i + freq_window_index_size < len(lspvals):
             window_vals.extend(lspvals[i+freq_window_index_size:i+freq_window_index_size+median_filter_size].tolist())
-
         window_vals = np.array(window_vals)
         wherefinite = np.isfinite(window_vals)
         vals, low, upp = sigmaclip(window_vals[wherefinite],low=3,high=3)
