@@ -1,7 +1,8 @@
-from scipy.special import gammaln
+#from scipy.special import gammaln
 from scipy.stats import sigmaclip
 import numpy as np
 import math
+import snr_calculation as snr
 #from astropy.stats import LombScargle
 #import matplotlib.pyplot as plt
 
@@ -230,8 +231,10 @@ def iterative_deblend(t, y, dy, neighbors,
                       nharmonics_resid=10,
                       max_fap=1e-3,ID=None,
                       medianfilter=False,
-                      freq_window_epsilon=1.,
-                      median_filter_size=40):
+                      freq_window_epsilon_mf=1.,
+                      freq_window_epsilon_snr=1.,
+                      window_size_mf=40,
+                      window_size_snr=40):
     """
     Iteratively deblend a lightcurve against neighbors
 
@@ -269,8 +272,8 @@ def iterative_deblend(t, y, dy, neighbors,
     if medianfilter:
               
         pdgm_values = median_filtering(lsp_dict['lspvals'],lsp_dict['periods'],
-                                       freq_window_epsilon,
-                                       median_filter_size,
+                                       freq_window_epsilon_mf,
+                                       window_size_mf,
                                        t[-1]-t[0])
 
         lsp_dict['medianfilter'] = True
@@ -286,7 +289,7 @@ def iterative_deblend(t, y, dy, neighbors,
     best_pdgm_index = np.argmax(pdgm_values)
 
     
-
+    """
     # compute false alarm probability
     best_freq = 1./lsp_dict['periods'][best_pdgm_index]
     fap = fap_baluev(t, dy, pdgm_values[best_pdgm_index], best_freq)
@@ -296,6 +299,22 @@ def iterative_deblend(t, y, dy, neighbors,
         print("PERIOD: %.5e days;  FAP: %.5e"%(lsp_dict['periods'][best_pdgm_index],fap))
 
     if fap > max_fap or np.isnan(lsp_dict['periods'][best_pdgm_index]):
+        if ID:
+            print("  -> not significant enough. No signal found for " + ID)
+        else:
+            print("  -> not significant enough. No signal found.")
+        return None
+    """
+    
+    # Compute periodogram SNR, compare to threshold
+    per_snr = snr.periodogram_snr(pdgm_values,lsp_dict['periods'],
+                                  best_pdgm_index,
+                                  max(t)-min(t),lsp_dict['method'],
+                                  freq_window_epsilon=freq_window_epsilon_snr,
+                                  rms_window_bin_size=window_size_snr)
+    snr_to_compare = 0.
+
+    if per_snr > snr_to_compare or np.isnan(lsp_dict['periods'][best_pdgm_index]):
         if ID:
             print("  -> not significant enough. No signal found for " + ID)
         else:
