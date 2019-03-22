@@ -8,17 +8,9 @@ robustness of the periodogram peak.
 from scipy.stats import sigmaclip
 import numpy as np
 
-#num_periodogram_values_to_check_each_side = 15
-median_filter_half_bin_size = 80
-rms_window_half_bin_size = median_filter_half_bin_size
-median_filter_half_bin_size_bls = 400
-rms_window_half_bin_size_bls = median_filter_half_bin_size_bls
-nbestpeaks = 12
-periodepsilon = .05
-freq_window_epsilon = 3.
 
-
-def periodogram_snr(periodogram,periods,index_to_evaluate,duration,per_type):
+def periodogram_snr(periodogram,periods,index_to_evaluate,duration,per_type,freq_window_epsilon=3.,
+                    rms_window_bin_size=100):
     """
     Assumes fixed frequency spacing for periods
     """
@@ -34,31 +26,23 @@ def periodogram_snr(periodogram,periods,index_to_evaluate,duration,per_type):
     if per_type.upper() not in ['LS','PDM','BLS']:
         raise ValueError("Periodogram type " + per_type + " not recognized")
 
-    # First, median-filter the periodogram
-    corrected_perdgm = periodogram
-
     # Now, calculate the SNR
     freq_window_size = freq_window_epsilon/duration
     delta_frequency = abs(1./periods[1] - 1./periods[0])
     freq_window_index_size = int(round(freq_window_size/delta_frequency))
 
     perdgm_window = []
-    if per_type.upper() == 'BLS':
-        h = rms_window_half_bin_size_bls
-    else:
-        h = rms_window_half_bin_size
     if index_to_evaluate > freq_window_index_size:
-        perdgm_window.extend(corrected_perdgm[max(0,index_to_evaluate-freq_window_index_size-h):index_to_evaluate-freq_window_index_size].tolist())
-    if index_to_evaluate + freq_window_index_size < len(corrected_perdgm):
-        perdgm_window.extend(corrected_perdgm[index_to_evaluate+freq_window_index_size:index_to_evaluate+freq_window_index_size+h].tolist())
+        perdgm_window.extend(periodogram[max(0,index_to_evaluate-freq_window_index_size-rms_window_bin_size):index_to_evaluate-freq_window_index_size].tolist())
+    if index_to_evaluate + freq_window_index_size < len(periodogram):
+        perdgm_window.extend(periodogram[index_to_evaluate+freq_window_index_size:index_to_evaluate+freq_window_index_size+rms_window_bin_size].tolist())
     perdgm_window = np.array(perdgm_window)
     wherefinite = np.isfinite(perdgm_window)
     vals, low, upp = sigmaclip(perdgm_window[wherefinite],low=3,high=3)
     stddev = np.std(vals)
 
-
     # Return
     if per_type.upper() == 'PDM': # If PDM, use correct amplitude
-        return (1.-corrected_perdgm[index_to_evaluate])/stddev
+        return (1.-periodogram[index_to_evaluate])/stddev
     else:
-        return corrected_perdgm[index_to_evaluate]/stddev
+        return periodogram[index_to_evaluate]/stddev
