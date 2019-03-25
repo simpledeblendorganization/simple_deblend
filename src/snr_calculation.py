@@ -9,8 +9,8 @@ from scipy.stats import sigmaclip
 import numpy as np
 
 
-def periodogram_snr(periodogram,periods,index_to_evaluate,duration,per_type,freq_window_epsilon=3.,
-                    rms_window_bin_size=100):
+def periodogram_snr(periodogram,periods,index_to_evaluate,duration,per_type,
+                    freq_window_epsilon=3.,rms_window_bin_size=100):
     """
     Assumes fixed frequency spacing for periods
     """

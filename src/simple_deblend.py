@@ -226,6 +226,7 @@ def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,dura
 def iterative_deblend(t, y, dy, neighbors,
                       period_finding_func,
                       results_storage_container,
+                      which_method,
                       function_params=None,
                       nharmonics_fit=5,
                       nharmonics_resid=10,
@@ -234,7 +235,8 @@ def iterative_deblend(t, y, dy, neighbors,
                       freq_window_epsilon_mf=1.,
                       freq_window_epsilon_snr=1.,
                       window_size_mf=40,
-                      window_size_snr=40):
+                      window_size_snr=40,
+                      snr_threshold=0.):
     """
     Iteratively deblend a lightcurve against neighbors
 
@@ -289,14 +291,12 @@ def iterative_deblend(t, y, dy, neighbors,
     best_pdgm_index = np.argmax(pdgm_values)
 
     
+    best_freq = 1./lsp_dict['periods'][best_pdgm_index]
     """
     # compute false alarm probability
     best_freq = 1./lsp_dict['periods'][best_pdgm_index]
     fap = fap_baluev(t, dy, pdgm_values[best_pdgm_index], best_freq)
-    if ID:
-        print("%s PERIOD: %.5e days;  FAP: %.5e"%(ID,lsp_dict['periods'][best_pdgm_index],fap))
-    else:
-        print("PERIOD: %.5e days;  FAP: %.5e"%(lsp_dict['periods'][best_pdgm_index],fap))
+
 
     if fap > max_fap or np.isnan(lsp_dict['periods'][best_pdgm_index]):
         if ID:
@@ -309,12 +309,15 @@ def iterative_deblend(t, y, dy, neighbors,
     # Compute periodogram SNR, compare to threshold
     per_snr = snr.periodogram_snr(pdgm_values,lsp_dict['periods'],
                                   best_pdgm_index,
-                                  max(t)-min(t),lsp_dict['method'],
+                                  max(t)-min(t),which_method,
                                   freq_window_epsilon=freq_window_epsilon_snr,
                                   rms_window_bin_size=window_size_snr)
-    snr_to_compare = 0.
+    if ID:
+        print("%s PERIOD: %.5e days;  pSNR: %.5e"%(ID,lsp_dict['periods'][best_pdgm_index],per_snr))
+    else:
+        print("PERIOD: %.5e days;  pSNR: %.5e"%(lsp_dict['periods'][best_pdgm_index],per_snr))
 
-    if per_snr > snr_to_compare or np.isnan(lsp_dict['periods'][best_pdgm_index]):
+    if per_snr < snr_threshold or np.isnan(lsp_dict['periods'][best_pdgm_index]):
         if ID:
             print("  -> not significant enough. No signal found for " + ID)
         else:
@@ -360,17 +363,24 @@ def iterative_deblend(t, y, dy, neighbors,
         print("   " + str(ffn_all[max_ffn_ID].flux_amplitude) + "   " + str(ff.flux_amplitude))
         if ffn_all[max_ffn_ID].flux_amplitude > ff.flux_amplitude: # TODO Need to look at ambiguous cases
             print("  -> blended! Trying again.")
-            results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,fap)
+            results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold)#,fap)
             return iterative_deblend(t, y - ffr(t), dy, neighbors,
                                      period_finding_func,
                                      results_storage_container,
+                                     which_method,
                                      function_params=function_params,
                                      nharmonics_fit=nharmonics_fit,
                                      nharmonics_resid=nharmonics_resid,
-                                     max_fap=max_fap,ID=ID)
+                                     max_fap=max_fap,ID=ID,
+                                     medianfilter=medianfilter,
+                                     freq_window_epsilon_mf=freq_window_epsilon_mf,
+                                     freq_window_epsilon_snr=freq_window_epsilon_snr,
+                                     window_size_mf=window_size_mf,
+                                     window_size_snr=window_size_snr)
+
 
     # Return the period and the pre-whitened light curve
-    results_storage_container.add_good_period(lsp_dict,t,y,dy,fap)
+    results_storage_container.add_good_period(lsp_dict,t,y,dy,snr_threshold)#,fap)
     return y-ffr(t)
 
 
