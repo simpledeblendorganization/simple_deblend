@@ -35,12 +35,14 @@ class lc_collection_for_processing(lc_objects):
     def __init__(self,radius_,n_control_workers=None):
         lc_objects.__init__(self,radius_)
         if not n_control_workers:
-            self.n_control_workers = cpu_count()/4 # Break down over 4 stars in parallel
+            self.n_control_workers = cpu_count()//4 # Break down over 4 stars in parallel
         elif n_control_workers > cpu_count():
             print("n_control_workers was greater than number of CPUs, setting instead to " + str(cpu_count))
             self.n_control_workers = cpu_count()
         else:
             self.n_control_workers = n_control_workers
+
+        print("n_control_workers is: " + str(self.n_control_workers))
 
 
     def run_ls(self,num_periods=3,
@@ -116,6 +118,7 @@ class lc_collection_for_processing(lc_objects):
             medianfilter=False,freq_window_epsilon_mf=None,
             freq_window_epsilon_snr=None,median_filter_size=None,
             snr_filter_size=None,snr_threshold=0.):
+
         num_proc_per_run = max(1,cpu_count()//self.n_control_workers)
         if nworkers is None:
             print("\n***")
@@ -151,11 +154,20 @@ class lc_collection_for_processing(lc_objects):
         with ProcessPoolExecutor(max_workers=self.n_control_workers) as executor:
             er = executor.map(self._run_single_object,running_tasks)
 
-        #for o in self.objects:
-        #    self._run_single_object((o,which_method,ps_func,
-        #                              params,num_periods))
-
         pool_results = [x for x in er]
+
+
+        #pool_results = []
+        #for o in self.objects:
+        #    er = self._run_single_object((o,which_method,ps_func,params,
+        #                                  num_periods,max_fap,
+        #                                  medianfilter,freq_window_epsilon_mf,
+        #                                  freq_window_epsilon_snr,
+        #                                  median_filter_size,
+        #                                  snr_filter_size,snr_threshold))
+        #    pool_results.append(er)
+
+
 
         for result in pool_results:
             if result:

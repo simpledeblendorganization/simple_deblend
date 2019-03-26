@@ -124,9 +124,9 @@ class FourierFit(object):
 
 
 
-
+"""
 def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
-    """
+    ""
     False alarm probability for periodogram peak
     based on Baluev (2008) [2008MNRAS.385.1279B]
     Parameters
@@ -163,7 +163,7 @@ def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
     >>> results = proc.run([(t, y, dy)])
     >>> freqs, powers = results[0]
     >>> fap_baluev(t, dy, powers, max(freqs))
-    """
+    ""
 
     N = len(t)
     d = d_K - d_H
@@ -193,7 +193,7 @@ def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
     Psing = 1 - (1 - z) ** (0.5 * N_K)
 
     return 1 - Psing * np.exp(-tau)
-
+"""
 
 def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,duration):
     # First, make sure all the frequency values are equally spaced
@@ -204,6 +204,7 @@ def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,dura
 
     freq_window_size = freq_window_epsilon/duration
     freq_window_index_size = int(round(freq_window_size/abs(1./periods[0] - 1./periods[1])))
+
 
     median_filter_values = []
     for i in range(len(lspvals)):
@@ -223,6 +224,7 @@ def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,dura
     return lspvals - median_filter_values
 
 
+import matplotlib.pyplot as plt
 def iterative_deblend(t, y, dy, neighbors,
                       period_finding_func,
                       results_storage_container,
@@ -270,6 +272,7 @@ def iterative_deblend(t, y, dy, neighbors,
     # use the function to find the best period
     lsp_dict = period_finding_func(t,y,dy,**function_params)
 
+
     # Now median filter the periodogram if selected
     if medianfilter:
               
@@ -285,11 +288,15 @@ def iterative_deblend(t, y, dy, neighbors,
         pdgm_values = lsp_dict['lspvals']
 
         lsp_dict['medianfilter'] = False
-        if lsp_dict['periods'][np.argmax(pdgm_values)] != lsp_dict['bestperiod']:
+        if abs(lsp_dict['periods'][np.argmax(pdgm_values)] - lsp_dict['bestperiod'])/lsp_dict['bestperiod'] > 1e-7:
             raise ValueError("For some reason, the bestperiod does not match the actual best period w/o median filtering")
 
     best_pdgm_index = np.argmax(pdgm_values)
 
+    plt.plot(lsp_dict['periods'],lsp_dict['lspvals'])
+    plt.xscale('log')
+    plt.savefig("temp.png",dpi=400)
+    #quit()
     
     best_freq = 1./lsp_dict['periods'][best_pdgm_index]
     """
@@ -313,15 +320,15 @@ def iterative_deblend(t, y, dy, neighbors,
                                   freq_window_epsilon=freq_window_epsilon_snr,
                                   rms_window_bin_size=window_size_snr)
     if ID:
-        print("%s PERIOD: %.5e days;  pSNR: %.5e"%(ID,lsp_dict['periods'][best_pdgm_index],per_snr))
+        print("%s\n PERIOD: %.5e days;  pSNR: %.5e"%(ID,lsp_dict['periods'][best_pdgm_index],per_snr))
     else:
         print("PERIOD: %.5e days;  pSNR: %.5e"%(lsp_dict['periods'][best_pdgm_index],per_snr))
 
     if per_snr < snr_threshold or np.isnan(lsp_dict['periods'][best_pdgm_index]):
         if ID:
-            print("  -> not significant enough. No signal found for " + ID)
+            print("   -> not significant enough, for " + ID)
         else:
-            print("  -> not significant enough. No signal found.")
+            print("   -> not significant enough.")
         return None
 
     # Fit truncated Fourier series at this frequency
@@ -358,11 +365,11 @@ def iterative_deblend(t, y, dy, neighbors,
     # subtract off model signal to get residual
     # lightcurve, and try again
     if max_ffn_ID:
-        print("   checking blends")
-        print("   " + max_ffn_ID)
-        print("   " + str(ffn_all[max_ffn_ID].flux_amplitude) + "   " + str(ff.flux_amplitude))
+        print("    checking blends")
+        print("    " + max_ffn_ID)
+        print("    " + str(ffn_all[max_ffn_ID].flux_amplitude) + "   " + str(ff.flux_amplitude))
         if ffn_all[max_ffn_ID].flux_amplitude > ff.flux_amplitude: # TODO Need to look at ambiguous cases
-            print("  -> blended! Trying again.")
+            print("   -> blended! Trying again.")
             results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold)#,fap)
             return iterative_deblend(t, y - ffr(t), dy, neighbors,
                                      period_finding_func,
@@ -376,7 +383,8 @@ def iterative_deblend(t, y, dy, neighbors,
                                      freq_window_epsilon_mf=freq_window_epsilon_mf,
                                      freq_window_epsilon_snr=freq_window_epsilon_snr,
                                      window_size_mf=window_size_mf,
-                                     window_size_snr=window_size_snr)
+                                     window_size_snr=window_size_snr,
+                                     snr_threshold=snr_threshold)
 
 
     # Return the period and the pre-whitened light curve

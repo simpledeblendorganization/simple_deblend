@@ -9,6 +9,7 @@ import sys, os
 sys.path.insert(1,os.path.abspath('../src'))
 import data_processing as dproc
 import numpy as np
+import copy
 
 
 class test_data_processing_init(unittest.TestCase):
@@ -26,6 +27,35 @@ class test_data_processing_init(unittest.TestCase):
         self.assertIsInstance(dproc.periodsearch_results('1'),
                                   dproc.periodsearch_results)
 
+
+class test_data_processing_error_filterwindows(unittest.TestCase):
+
+    def setUp(self):
+        self.col1 = dproc.lc_collection_for_processing(1.,n_control_workers=1)
+        length = 1500
+        t1 = np.linspace(0,100,length)
+        self.col1.add_object(t1,[10.]*length+.3*np.sin(t1),[.5]*length,0.,0.,'1')
+        self.col2 = copy.deepcopy(self.col1)
+        self.col3 = copy.deepcopy(self.col1)
+
+
+    def test_window_toolarge(self):
+        # Test that snr freq window index size is too large raises error
+        with self.assertRaises(ValueError):
+            self.col1.run_ls(startp=20.,endp=25.,stepsize=5e-5,autofreq=False,
+                             max_fap=.1,medianfilter=False,
+                             freq_window_epsilon_snr=5.,
+                             snr_filter_size=1500,snr_threshold=1.)
+
+    def test_window_yyy90percent(self):
+        # Test that snr freq window index size is large raises error
+        with self.assertRaises(ValueError):
+            self.col2.run_ls(startp=20.,endp=25.,stepsize=5e-5,autofreq=False,
+                             max_fap=.1,medianfilter=False,
+                             freq_window_epsilon_snr=0.95,
+                             snr_filter_size=1500,snr_threshold=1.)
+
+
 class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
 
     def setUp(self):
@@ -33,9 +63,9 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
         rand1 = np.random.RandomState(seed=1844)
         
         ### col_a, very basic, two-object test
-        self.col_a = dproc.lc_collection_for_processing(1.,n_control_workers=1)#2)
+        self.col_a = dproc.lc_collection_for_processing(1.,n_control_workers=2)
         sample_len_1 = 3000
-        sigma1 = .01
+        sigma1 = .08#.01
         t1 = np.linspace(0,1200,sample_len_1)
         self.col_a.add_object(t1,10.+np.sin(t1)+sigma1*rand1.randn(sample_len_1),
                                   [sigma1]*sample_len_1,0.,0.,'object1')
@@ -49,7 +79,8 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
 
         ### col_c, test with some blending
         rand3 = np.random.RandomState(seed=1847)
-        self.col_c = dproc.lc_collection_for_processing(5,n_control_workers=1)#2)
+        self.col_c = dproc.lc_collection_for_processing(5,n_control_workers=2)
+
         sample_len_3=3500
         t3 = np.linspace(0,80,sample_len_3)
         self.omegac = 8.319
@@ -77,7 +108,7 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
         self.col_d = dproc.lc_collection_for_processing(10,n_control_workers=1)
         
         sample_len_4 = 5002
-        t4 = np.linspace(0,102,sample_len_4)
+        t4 = np.linspace(0,121.2,sample_len_4)
         self.omegad = 2.*np.pi/30.1107
         sigma4 = .2
         self.col_d.add_object(t4, 5.+.75*sigma4*np.sin(self.omegad*t4)+sigma4*rand4.randn(sample_len_4),
@@ -85,10 +116,10 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
 
         ### col_e, multiple blended objects
         rand5 = np.random.RandomState(seed=1893)
-        self.col_e = dproc.lc_collection_for_processing(10.,n_control_workers=1)
+        self.col_e = dproc.lc_collection_for_processing(10.,n_control_workers=2)
 
         sample_len_5 = 2855
-        t5 = np.linspace(0,21.5,sample_len_5)
+        t5 = np.linspace(0,100.5,sample_len_5)
         self.omegae = 2.*np.pi/3.48208#3.47464
         phi_e = .3
         sigma5 = .1
@@ -117,28 +148,25 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
         # Test a basic run of the iterative deblending
         self.col_a.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False,
                           max_fap=.4,medianfilter=False,
-                          freq_window_epsilon_snr=3.,
-                          snr_filter_size=40,snr_threshold=5.,nworkers=1)
+                          freq_window_epsilon_snr=10.,
+                          snr_filter_size=50000,snr_threshold=[12.,5.])
 
         with self.assertRaises(KeyError):
             self.col_a.results['object1']['BLS']
-        with self.assertRaises(KeyError):
-            self.col_a.results['object2']['LS']
-        self.assertEqual(len(self.col_a.results['object2'].keys()),0)
+        self.assertEqual(len(self.col_a.results['object1'].keys()),1)
+        self.assertEqual(len(self.col_a.results['object2'].keys()),1)
 
         self.assertAlmostEqual(self.col_a.results['object1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi,places=6)
         self.assertEqual(len(self.col_a.results['object1']),1)
         self.assertEqual(len(self.col_a.results['object1']['LS'].good_periods_info),1)
         self.assertEqual(len(self.col_a.results['object1']['LS'].blends_info),0)
-        self.assertEqual(len(self.col_a.results['object2']),0)
 
         
-    def __test_simple_blended_ls_run(self):
+    def test_simple_blended_ls_run(self):
         self.col_c.run_ls(startp=0.5,endp=2.,stepsize=5e-5,autofreq=False,
                           max_fap=.1,medianfilter=False,
-                          freq_window_epsilon_snr=3.,
-                          snr_filter_size=40,snr_threshold=.1,
-                          nworkers=1)
+                          freq_window_epsilon_snr=5.,
+                          snr_filter_size=1500,snr_threshold=12.)
 
         # Check c1
         self.assertEqual(len(self.col_c.results['c1']['LS'].good_periods_info),1)
@@ -159,23 +187,25 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
         self.assertEqual(self.col_c.results['c3']['LS'].good_periods_info[0]['num_previous_blends'],0)
 
 
-    def __test_longperiod(self):
+    def test_longperiod(self):
         # Test a long period object
-        self.col_d.run_ls(startp=28.,endp=32.,autofreq=True,medianfilter=False,
-                          freq_window_epsilon_snr=3.,snr_filter_size=40)
+        self.col_d.run_ls(startp=20.,endp=50.,autofreq=False,
+                          stepsize=1e-5,medianfilter=False,
+                          freq_window_epsilon_snr=2.0,snr_filter_size=200,snr_threshold=100.)
 
         self.assertEqual(len(self.col_d.results['d1']['LS'].good_periods_info),1)
         self.assertEqual(len(self.col_d.results['d1']['LS'].blends_info),0)
-        self.assertAlmostEqual(self.col_d.results['d1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegad,places=5)
+        self.assertAlmostEqual(self.col_d.results['d1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegad,places=1)
 
-    def __test_multipleblend(self):
+    def test_multipleblend(self):
         # Test a long period object and also objects with multiple blends
-        self.col_e.run_ls(startp=2.5,endp=4.7,max_fap=.23,autofreq=True,
-                          medianfilter=False,freq_window_epsilon_snr=3.,
-                          snr_filter_size=40)
+        self.col_e.run_ls(startp=2.5,endp=4.7,max_fap=.23,autofreq=False,
+                          stepsize=1e-5,
+                          medianfilter=False,freq_window_epsilon_snr=3.5,
+                          snr_filter_size=1000,snr_threshold=12.)
 
         self.assertEqual(len(self.col_e.results['e1']['LS'].good_periods_info),1)
-        self.assertAlmostEqual(self.col_e.results['e1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegae,places=3)
+        self.assertAlmostEqual(self.col_e.results['e1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegae,places=2)
         self.assertEqual(len(self.col_e.results['e2']['LS'].good_periods_info),0)
         self.assertEqual(len(self.col_e.results['e3']['LS'].good_periods_info),0)
         self.assertEqual(len(self.col_e.results['e4']['LS'].good_periods_info),0)
