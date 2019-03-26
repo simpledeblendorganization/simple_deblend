@@ -47,7 +47,7 @@ class test_data_processing_error_filterwindows(unittest.TestCase):
                              freq_window_epsilon_snr=5.,
                              snr_filter_size=1500,snr_threshold=1.)
 
-    def test_window_yyy90percent(self):
+    def test_window_90percent(self):
         # Test that snr freq window index size is large raises error
         with self.assertRaises(ValueError):
             self.col2.run_ls(startp=20.,endp=25.,stepsize=5e-5,autofreq=False,
@@ -331,11 +331,11 @@ class test_data_processing_ls_rrlyrae_signal(unittest.TestCase):
         self.col.add_object(t,mags_2,[sigma2]*time_length,1.,1.6,'rr2')
 
 
-    def __test_rrblend(self):
+    def test_rrblend(self):
         # Test an RRab and a blend
         self.col.run_ls(startp=.2,endp=1.,stepsize=1e-4,autofreq=False,
-                        medianfilter=False,freq_window_epsilon_snr=3.,
-                        snr_filter_size=40)
+                        medianfilter=False,freq_window_epsilon_snr=4.,
+                        snr_filter_size=400,snr_threshold=15.)
 
         self.assertEqual(len(self.col.results['rr1']['LS'].good_periods_info),1)
         self.assertEqual(len(self.col.results['rr1']['LS'].blends_info),0)
