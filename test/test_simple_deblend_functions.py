@@ -16,20 +16,36 @@ class test_median_filter(unittest.TestCase):
         n = 5000
         self.val = 2.
         self.lspvals = self.val + np.zeros(n)
+        self.val_pdm = .9
+        self.lspvals_pdm = self.val_pdm + np.zeros(n)
         frequencies = np.linspace(.05,10,n)
         self.periods = 1./frequencies
 
     def test_filter_doesnt_mess_up_flat(self):
         output = sdb.median_filtering(self.lspvals,self.periods,
-                                      2.,30,60.)
+                                      2.,30,60.,'LS')
         for val1, val2 in zip(output,self.lspvals-self.val):
             self.assertAlmostEqual(val1,val2,places=10)
 
         mod_lspvals = self.lspvals[:]
         high_val = 20.
         mod_lspvals[len(mod_lspvals)//2] = high_val
-        output2 = sdb.median_filtering(mod_lspvals,self.periods,2.,30,60.)
+        output2 = sdb.median_filtering(mod_lspvals,self.periods,2.,30,60.,'LS')
         for val1, val2 in zip(output2,mod_lspvals-self.val):
+            self.assertAlmostEqual(val1,val2,places=11)
+
+    def test_filter_doesnt_mess_up_flat_pdm(self):
+        output = sdb.median_filtering(self.lspvals_pdm,self.periods,
+                                      2.,30,60.,'PDM')
+        for val1, val2 in zip(output,self.lspvals_pdm - self.val_pdm + 1.):
+            self.assertAlmostEqual(val1,val2,places=11)
+
+        mod_lspvals_pdm = self.lspvals_pdm[:]
+        high_val = .1
+        mod_lspvals_pdm[len(mod_lspvals_pdm)//2] = high_val
+        output2 = sdb.median_filtering(mod_lspvals_pdm,self.periods,
+                                       2.,30,60.,'PDM')
+        for val1, val2 in zip(output2,mod_lspvals_pdm - self.val_pdm + 1.):
             self.assertAlmostEqual(val1,val2,places=11)
 
     def test_filter_cleans_up_slope(self):
@@ -40,7 +56,7 @@ class test_median_filter(unittest.TestCase):
                   np.linspace(addon_min,addon_max,len(self.lspvals))
         median_filter_size = 4
         output_slope = sdb.median_filtering(lspvals,self.periods,1.,
-                                            median_filter_size,502.)
+                                            median_filter_size,502.,'LS')
         for i in range(len(output_slope)):
             if i < median_filter_size:
                 self.assertLess(output_slope[i],0.)

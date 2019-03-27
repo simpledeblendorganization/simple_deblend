@@ -151,9 +151,9 @@ def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,dura
     #quit()
 
     if which_method == 'PDM':
-        return lspvals - median_filter_values + 1.
+        return lspvals + (1. - np.array(median_filter_values))
     else:
-        return lspvals - median_filter_values
+        return lspvals - np.array(median_filter_values)
 
 
 def iterative_deblend(t, y, dy, neighbors,
@@ -265,6 +265,7 @@ def iterative_deblend(t, y, dy, neighbors,
     # Fit truncated Fourier series at this frequency
     ff = (FourierFit(nharmonics=nharmonics_fit)
           .fit(t, y, dy, best_freq))
+    this_flux_amplitude = ff.flux_amplitude
 
     # fit another truncated Fourier series with more harmonics
     ffr = (FourierFit(nharmonics=nharmonics_resid)
@@ -285,7 +286,11 @@ def iterative_deblend(t, y, dy, neighbors,
     # Figure out which has maximum amplitude
     max_amp = 0.
     max_ffn_ID = None
+    significant_neighbor_blends = []
     for n_ID in ffn_all.keys():
+        if ffn_all[n_ID].flux_amplitude >\
+         results_storage_container.count_neighbor_threshold*this_flux_amplitude:
+            significant_neighbor_blends.append(n_ID)
         if ffn_all[n_ID].flux_amplitude > max_amp:
             max_amp = ffn_all[n_ID].flux_amplitude
             max_ffn_ID = n_ID
@@ -300,8 +305,8 @@ def iterative_deblend(t, y, dy, neighbors,
     if max_ffn_ID:
         print("    checking blends")
         print("    " + max_ffn_ID)
-        print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(ff.flux_amplitude))
-        if ffn_all[max_ffn_ID].flux_amplitude > ff.flux_amplitude: # TODO Need to look at ambiguous cases
+        print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(this_flux_amplitude))
+        if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude: # TODO Need to look at ambiguous cases
             print("   -> blended! Trying again.")
             results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold)
             return iterative_deblend(t, y - ffr(t) + average_add_back,
@@ -322,7 +327,8 @@ def iterative_deblend(t, y, dy, neighbors,
 
 
     # Return the period and the pre-whitened light curve
-    results_storage_container.add_good_period(lsp_dict,t,y,dy,snr_threshold)
+    
+    results_storage_container.add_good_period(lsp_dict,t,y,dy,snr_threshold,significant_neighbor_blends)
     return y - ffr(t) + average_add_back
 
 
