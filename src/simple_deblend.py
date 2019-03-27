@@ -194,8 +194,8 @@ def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
 
     return 1 - Psing * np.exp(-tau)
 """
-
-def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,duration):
+import matplotlib.pyplot as plt
+def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,duration,which_method):
     # First, make sure all the frequency values are equally spaced
     diff = np.diff(1./periods)
     for val in diff:
@@ -221,10 +221,17 @@ def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,dura
 
         median_filter_values.append(np.median(vals))
 
-    return lspvals - median_filter_values
+    #plt.plot(periods,lspvals,color='red',lw=.9)
+    #plt.plot(periods,lspvals - median_filter_values+1.,color='blue',lw=.5)
+    #plt.savefig("temp.pdf")
+    #quit()
+
+    if which_method == 'PDM':
+        return lspvals - median_filter_values + 1.
+    else:
+        return lspvals - median_filter_values
 
 
-import matplotlib.pyplot as plt
 def iterative_deblend(t, y, dy, neighbors,
                       period_finding_func,
                       results_storage_container,
@@ -285,7 +292,7 @@ def iterative_deblend(t, y, dy, neighbors,
         pdgm_values = median_filtering(lsp_dict['lspvals'],lsp_dict['periods'],
                                        freq_window_epsilon_mf,
                                        window_size_mf,
-                                       t[-1]-t[0])
+                                       t[-1]-t[0],which_method)
 
         lsp_dict['medianfilter'] = True
         lsp_dict['lspvalsmf'] = pdgm_values
@@ -308,19 +315,9 @@ def iterative_deblend(t, y, dy, neighbors,
     else:
         best_pdgm_index = np.argmax(pdgm_values)
 
-    plt.plot(lsp_dict['periods'],lsp_dict['lspvals'])
-    plt.scatter(lsp_dict['periods'][best_pdgm_index],
-                0.,s=10,color='black')
     freq_window_size = freq_window_epsilon_snr/(max(t)-min(t))
     delta_frequency = abs(1./lsp_dict['periods'][1] - 1./lsp_dict['periods'][0])
     freq_window_index_size = int(round(freq_window_size/delta_frequency))
-    plt.scatter(lsp_dict['periods'][max(0,best_pdgm_index-freq_window_index_size)],
-                0.,s=6,color='red')
-    plt.scatter(lsp_dict['periods'][min(best_pdgm_index+freq_window_index_size,len(lsp_dict['periods'])-1)],
-                0.,s=6,color='red')
-    plt.xscale('log')
-    plt.savefig("temp_" + which_method + ".png",dpi=400)
-    #quit()
     
     best_freq = 1./lsp_dict['periods'][best_pdgm_index]
     """
@@ -384,6 +381,8 @@ def iterative_deblend(t, y, dy, neighbors,
             max_ffn_ID = n_ID
 
         
+    average_add_back = np.average(y,weights=1./np.power(dy,2))
+
     # if neighbor has larger flux amplitude,
     # then we consider this signal to be a blend.
     # subtract off model signal to get residual
@@ -391,11 +390,12 @@ def iterative_deblend(t, y, dy, neighbors,
     if max_ffn_ID:
         print("    checking blends")
         print("    " + max_ffn_ID)
-        print("    " + str(ffn_all[max_ffn_ID].flux_amplitude) + "   " + str(ff.flux_amplitude))
+        print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(ff.flux_amplitude))
         if ffn_all[max_ffn_ID].flux_amplitude > ff.flux_amplitude: # TODO Need to look at ambiguous cases
             print("   -> blended! Trying again.")
             results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold)#,fap)
-            return iterative_deblend(t, y - ffr(t), dy, neighbors,
+            return iterative_deblend(t, y - ffr(t) + average_add_back,
+                                     dy, neighbors,
                                      period_finding_func,
                                      results_storage_container,
                                      which_method,
@@ -413,7 +413,7 @@ def iterative_deblend(t, y, dy, neighbors,
 
     # Return the period and the pre-whitened light curve
     results_storage_container.add_good_period(lsp_dict,t,y,dy,snr_threshold)#,fap)
-    return y-ffr(t)
+    return y - ffr(t) + average_add_back
 
 
 if __name__ == '__main__':
