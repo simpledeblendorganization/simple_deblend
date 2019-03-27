@@ -272,6 +272,12 @@ def iterative_deblend(t, y, dy, neighbors,
     # use the function to find the best period
     lsp_dict = period_finding_func(t,y,dy,**function_params)
 
+    if np.isnan(lsp_dict['bestperiod']):
+        if ID:
+            print(ID + "\n   -> period finding function found no period, for " + ID)
+        else:
+            print("   -> period finding function found no period.")
+        return None
 
     # Now median filter the periodogram if selected
     if medianfilter:
@@ -288,14 +294,32 @@ def iterative_deblend(t, y, dy, neighbors,
         pdgm_values = lsp_dict['lspvals']
 
         lsp_dict['medianfilter'] = False
-        if abs(lsp_dict['periods'][np.argmax(pdgm_values)] - lsp_dict['bestperiod'])/lsp_dict['bestperiod'] > 1e-7:
-            raise ValueError("For some reason, the bestperiod does not match the actual best period w/o median filtering")
+        if which_method == 'PDM':
+            per_to_comp = lsp_dict['periods'][np.argmin(pdgm_values)]
+        else:
+            per_to_comp = lsp_dict['periods'][np.argmax(pdgm_values)]
+        if abs(per_to_comp - lsp_dict['bestperiod'])/lsp_dict['bestperiod'] > 1e-7:
+            print(" Periods: " + str(per_to_comp) + "   " +\
+                  str(lsp_dict['bestperiod']))
+            raise ValueError("The bestperiod does not match the actual best period w/o median filtering")
 
-    best_pdgm_index = np.argmax(pdgm_values)
+    if which_method == 'PDM':
+        best_pdgm_index = np.argmin(pdgm_values)
+    else:
+        best_pdgm_index = np.argmax(pdgm_values)
 
     plt.plot(lsp_dict['periods'],lsp_dict['lspvals'])
+    plt.scatter(lsp_dict['periods'][best_pdgm_index],
+                0.,s=10,color='black')
+    freq_window_size = freq_window_epsilon_snr/(max(t)-min(t))
+    delta_frequency = abs(1./lsp_dict['periods'][1] - 1./lsp_dict['periods'][0])
+    freq_window_index_size = int(round(freq_window_size/delta_frequency))
+    plt.scatter(lsp_dict['periods'][max(0,best_pdgm_index-freq_window_index_size)],
+                0.,s=6,color='red')
+    plt.scatter(lsp_dict['periods'][min(best_pdgm_index+freq_window_index_size,len(lsp_dict['periods'])-1)],
+                0.,s=6,color='red')
     plt.xscale('log')
-    plt.savefig("temp.png",dpi=400)
+    plt.savefig("temp_" + which_method + ".png",dpi=400)
     #quit()
     
     best_freq = 1./lsp_dict['periods'][best_pdgm_index]
