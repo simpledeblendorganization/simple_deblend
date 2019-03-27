@@ -1,10 +1,7 @@
-#from scipy.special import gammaln
 from scipy.stats import sigmaclip
 import numpy as np
 import math
 import snr_calculation as snr
-#from astropy.stats import LombScargle
-#import matplotlib.pyplot as plt
 
 
 
