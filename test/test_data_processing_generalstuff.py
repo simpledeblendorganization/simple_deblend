@@ -39,32 +39,32 @@ class test_warning_median_filter(unittest.TestCase):
         ## LS run
         with self.assertWarns(UserWarning):
             col.run_ls(startp=10.,endp=11.,stepsize=0.1,autofreq=False,
-                       max_fap=.4,medianfilter=False,
+                       medianfilter=False,
                        freq_window_epsilon_mf=1)
 
         with self.assertWarns(UserWarning):
             col.run_ls(startp=10.,endp=11.,stepsize=0.1,autofreq=False,
-                       max_fap=.4,medianfilter=False,median_filter_size=1)
+                       medianfilter=False,median_filter_size=1)
 
         # PDM run
         with self.assertWarns(UserWarning):
             col.run_pdm(startp=10.,endp=11.,stepsize=0.1,autofreq=False,
-                        max_fap=.4,medianfilter=False,
+                        medianfilter=False,
                         freq_window_epsilon_mf=1)
 
         with self.assertWarns(UserWarning):
             col.run_pdm(startp=10.,endp=11.,stepsize=0.1,autofreq=False,
-                        max_fap=.4,medianfilter=False,median_filter_size=1)
+                        medianfilter=False,median_filter_size=1)
 
         # BLS run
         with self.assertWarns(UserWarning):
             col.run_bls(startp=10.,endp=11.,stepsize=0.1,autofreq=False,
-                        max_fap=.4,medianfilter=False,
+                        medianfilter=False,
                         freq_window_epsilon_mf=1)
 
         with self.assertWarns(UserWarning):
             col.run_bls(startp=10.,endp=11.,stepsize=0.1,autofreq=False,
-                        max_fap=.4,medianfilter=False,median_filter_size=1)
+                        medianfilter=False,median_filter_size=1)
 
 
 

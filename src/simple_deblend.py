@@ -122,79 +122,6 @@ class FourierFit(object):
 
 
 
-
-
-"""
-def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
-    ""
-    False alarm probability for periodogram peak
-    based on Baluev (2008) [2008MNRAS.385.1279B]
-    Parameters
-    ----------
-    t: array_like
-        Observation times.
-    dy: array_like
-        Observation uncertainties.
-    z: array_like or float
-        Periodogram value(s)
-    fmax: float
-        Maximum frequency searched
-    d_K: int, optional (default: 3)
-        Number of degrees of fredom for periodgram model.
-        2H - 1 where H is the number of harmonics
-    d_H: int, optional (default: 1)
-        Number of degrees of freedom for default model.
-    use_gamma: bool, optional (default: True)
-        Use gamma function for computation of numerical
-        coefficient; replaced with scipy.special.gammaln
-        and should be stable now
-    Returns
-    -------
-    fap: float
-        False alarm probability
-    Example
-    -------
-    >>> rand = np.random.RandomState(100)
-    >>> t = np.sort(rand.rand(100))
-    >>> y = 12 + 0.01 * np.cos(2 * np.pi * 10. * t)
-    >>> dy = 0.01 * np.ones_like(y)
-    >>> y += dy * rand.rand(len(t))
-    >>> proc = LombScargleAsyncProcess()
-    >>> results = proc.run([(t, y, dy)])
-    >>> freqs, powers = results[0]
-    >>> fap_baluev(t, dy, powers, max(freqs))
-    ""
-
-    N = len(t)
-    d = d_K - d_H
-
-    N_K = N - d_K
-    N_H = N - d_H
-    g = (0.5 * N_H) ** (0.5 * (d - 1))
-
-    if use_gamma:
-        g = np.exp(gammaln(0.5 * N_H) - gammaln(0.5 * (N_K + 1)))
-
-    w = np.power(dy, -2)
-
-    tbar = np.dot(w, t) / sum(w)
-    Dt = np.dot(w, np.power(t - tbar, 2)) / sum(w)
-
-    Teff = np.sqrt(4 * np.pi * Dt)
-
-    W = fmax * Teff
-    A = (2 * np.pi ** 1.5) * W
-
-    eZ1 = (z / np.pi) ** 0.5 * (d - 1)
-    eZ2 = (1 - z) ** (0.5 * (N_K - 1))
-
-    tau = (g * A / (2 * np.pi)) * eZ1 * eZ2
-
-    Psing = 1 - (1 - z) ** (0.5 * N_K)
-
-    return 1 - Psing * np.exp(-tau)
-"""
-import matplotlib.pyplot as plt
 def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,duration,which_method):
     # First, make sure all the frequency values are equally spaced
     diff = np.diff(1./periods)
@@ -239,7 +166,7 @@ def iterative_deblend(t, y, dy, neighbors,
                       function_params=None,
                       nharmonics_fit=5,
                       nharmonics_resid=10,
-                      max_fap=1e-3,ID=None,
+                      ID=None,
                       medianfilter=False,
                       freq_window_epsilon_mf=1.,
                       freq_window_epsilon_snr=1.,
@@ -272,8 +199,6 @@ def iterative_deblend(t, y, dy, neighbors,
     nharmonics_resid:
         Number of harmonics to use to obtain the residual if we
         find that the signal is a blend of a neighboring signal
-    max_fap: float
-        Maximum False Alarm Probability (Baluev 2008) to consider.
     """
 
     # use the function to find the best period
@@ -320,19 +245,7 @@ def iterative_deblend(t, y, dy, neighbors,
     freq_window_index_size = int(round(freq_window_size/delta_frequency))
     
     best_freq = 1./lsp_dict['periods'][best_pdgm_index]
-    """
-    # compute false alarm probability
-    best_freq = 1./lsp_dict['periods'][best_pdgm_index]
-    fap = fap_baluev(t, dy, pdgm_values[best_pdgm_index], best_freq)
 
-
-    if fap > max_fap or np.isnan(lsp_dict['periods'][best_pdgm_index]):
-        if ID:
-            print("  -> not significant enough. No signal found for " + ID)
-        else:
-            print("  -> not significant enough. No signal found.")
-        return None
-    """
     
     # Compute periodogram SNR, compare to threshold
     per_snr = snr.periodogram_snr(pdgm_values,lsp_dict['periods'],
@@ -358,7 +271,7 @@ def iterative_deblend(t, y, dy, neighbors,
 
     # fit another truncated Fourier series with more harmonics
     ffr = (FourierFit(nharmonics=nharmonics_resid)
-           .fit(t, y, dy, best_freq)) #TODO fit at period of higher amplitude thing
+           .fit(t, y, dy, best_freq)) 
 
 
 
@@ -393,7 +306,7 @@ def iterative_deblend(t, y, dy, neighbors,
         print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(ff.flux_amplitude))
         if ffn_all[max_ffn_ID].flux_amplitude > ff.flux_amplitude: # TODO Need to look at ambiguous cases
             print("   -> blended! Trying again.")
-            results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold)#,fap)
+            results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold)
             return iterative_deblend(t, y - ffr(t) + average_add_back,
                                      dy, neighbors,
                                      period_finding_func,
@@ -402,7 +315,7 @@ def iterative_deblend(t, y, dy, neighbors,
                                      function_params=function_params,
                                      nharmonics_fit=nharmonics_fit,
                                      nharmonics_resid=nharmonics_resid,
-                                     max_fap=max_fap,ID=ID,
+                                     ID=ID,
                                      medianfilter=medianfilter,
                                      freq_window_epsilon_mf=freq_window_epsilon_mf,
                                      freq_window_epsilon_snr=freq_window_epsilon_snr,
@@ -412,7 +325,7 @@ def iterative_deblend(t, y, dy, neighbors,
 
 
     # Return the period and the pre-whitened light curve
-    results_storage_container.add_good_period(lsp_dict,t,y,dy,snr_threshold)#,fap)
+    results_storage_container.add_good_period(lsp_dict,t,y,dy,snr_threshold)
     return y - ffr(t) + average_add_back
 
 

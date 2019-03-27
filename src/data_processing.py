@@ -48,7 +48,7 @@ class lc_collection_for_processing(lc_objects):
     def run_ls(self,num_periods=3,
                startp=None,endp=None,autofreq=True,
                nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-               sigclip=float('inf'),nworkers=None,max_fap=.5,
+               sigclip=float('inf'),nworkers=None,
                verbose=False,medianfilter=False,
                freq_window_epsilon_mf=None,
                freq_window_epsilon_snr=None,
@@ -59,7 +59,7 @@ class lc_collection_for_processing(lc_objects):
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
-        self.run('LS',ls_p,params,num_periods,nworkers,max_fap=max_fap,
+        self.run('LS',ls_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
                  freq_window_epsilon_mf=freq_window_epsilon_mf,
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
@@ -70,7 +70,7 @@ class lc_collection_for_processing(lc_objects):
     def run_pdm(self,num_periods=3,
                 startp=None,endp=None,autofreq=True,
                 nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-                sigclip=float('inf'),nworkers=None,max_fap=.5,
+                sigclip=float('inf'),nworkers=None,
                 verbose=False,phasebinsize=0.05,medianfilter=False,
                 freq_window_epsilon_mf=None,
                 freq_window_epsilon_snr=None,
@@ -83,7 +83,7 @@ class lc_collection_for_processing(lc_objects):
                       'stepsize':stepsize,'sigclip':sigclip,
                       'verbose':verbose,'phasebinsize':phasebinsize}
 
-        self.run('PDM',pdm_p,params,num_periods,nworkers,max_fap=max_fap,
+        self.run('PDM',pdm_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
                  freq_window_epsilon_mf=freq_window_epsilon_mf,
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
@@ -94,7 +94,7 @@ class lc_collection_for_processing(lc_objects):
     def run_bls(self,num_periods=3,
                 startp=None,endp=None,autofreq=True,
                 nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
-                sigclip=float('inf'),nworkers=None,max_fap=.5,
+                sigclip=float('inf'),nworkers=None,
                 verbose=False,medianfilter=False,
                 freq_window_epsilon_mf=None,
                 freq_window_epislon_snr=None,
@@ -106,7 +106,7 @@ class lc_collection_for_processing(lc_objects):
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
 
-        self.run('BLS',bls_p,params,num_periods,nworkers,max_fap=max_fap,
+        self.run('BLS',bls_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
                  freq_window_epsilon_mf=freq_window_epsilon_mf,
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
@@ -114,7 +114,7 @@ class lc_collection_for_processing(lc_objects):
                  snr_filter_size=snr_filter_size,snr_threshold=snr_threshold)
         
 
-    def run(self,which_method,ps_func,params,num_periods,nworkers,max_fap,
+    def run(self,which_method,ps_func,params,num_periods,nworkers,
             medianfilter=False,freq_window_epsilon_mf=None,
             freq_window_epsilon_snr=None,median_filter_size=None,
             snr_filter_size=None,snr_threshold=0.):
@@ -139,13 +139,13 @@ class lc_collection_for_processing(lc_objects):
         if hasattr(snr_threshold,'__len__'):
             if len(snr_threshold) != len(self.objects):
                 raise ValueError("The length of snr_threshold is not the same as the length of objects")
-            running_tasks = [(o,which_method,ps_func,params,num_periods,max_fap,
+            running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
                               snr_filter_size,snr_val)
                              for o, snr_val in zip(self.objects,snr_threshold)]
         else:
-            running_tasks = [(o,which_method,ps_func,params,num_periods,max_fap,
+            running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
                               snr_filter_size,snr_threshold)
@@ -160,7 +160,7 @@ class lc_collection_for_processing(lc_objects):
         #pool_results = []
         #for o in self.objects:
         #    er = self._run_single_object((o,which_method,ps_func,params,
-        #                                  num_periods,max_fap,
+        #                                  num_periods,
         #                                  medianfilter,freq_window_epsilon_mf,
         #                                  freq_window_epsilon_snr,
         #                                  median_filter_size,
@@ -175,7 +175,7 @@ class lc_collection_for_processing(lc_objects):
 
 
     def _run_single_object(self,task):
-        (object,which_method,ps_func,params,num_periods,max_fap,
+        (object,which_method,ps_func,params,num_periods,
          medianfilter,freq_window_epsilon_mf,freq_window_epsilon_snr,
          median_filter_size,snr_filter_size,snr_threshold) = task
 
@@ -200,7 +200,7 @@ class lc_collection_for_processing(lc_objects):
                                            which_method,
                                            function_params=params,
                                            nharmonics_fit=7,
-                                           max_fap=max_fap,ID=str(object.ID),
+                                           ID=str(object.ID),
                                            medianfilter=medianfilter,
                                            freq_window_epsilon_mf=freq_window_epsilon_mf,
                                            freq_window_epsilon_snr=freq_window_epsilon_snr,
@@ -237,18 +237,17 @@ class periodsearch_results():
         self.good_periods_info = []
         self.blends_info = []
 
-    def add_good_period(self,lsp_dict,times,mags,errs,snr_value):#,fap):
+    def add_good_period(self,lsp_dict,times,mags,errs,snr_value):
         dict_to_add = {'lsp_dict':lsp_dict,'times':times,
-                       'mags':mags,'errs':errs,#'fap':fap,
+                       'mags':mags,'errs':errs,
                        'snr_value':snr_value,
                        'num_previous_blends':len(self.blends_info)}
         self.good_periods_info.append(dict_to_add)
 
-    def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,snr_value):#,fap):
+    def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,snr_value):
         dict_to_add = {'lsp_dict':lsp_dict,
                        'ID_of_blend':neighbor_ID,
                        'snr_value':snr_value,
-                       #'fap':fap,
                        'num_previous_signals':len(self.good_periods_info),
                        'times':times,'mags':mags,'errs':errs}
         self.blends_info.append(dict_to_add)

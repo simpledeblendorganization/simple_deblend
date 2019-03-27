@@ -28,7 +28,7 @@ class test_data_processing_error_filterwindows(unittest.TestCase):
         # Test that snr freq window index size is too large raises error
         with self.assertRaises(ValueError):
             self.col1.run_ls(startp=20.,endp=25.,stepsize=5e-5,autofreq=False,
-                             max_fap=.1,medianfilter=False,
+                             medianfilter=False,
                              freq_window_epsilon_snr=5.,
                              snr_filter_size=1500,snr_threshold=1.)
 
@@ -36,7 +36,7 @@ class test_data_processing_error_filterwindows(unittest.TestCase):
         # Test that snr freq window index size is large raises error
         with self.assertRaises(ValueError):
             self.col2.run_ls(startp=20.,endp=25.,stepsize=5e-5,autofreq=False,
-                             max_fap=.1,medianfilter=False,
+                             medianfilter=False,
                              freq_window_epsilon_snr=0.95,
                              snr_filter_size=1500,snr_threshold=1.)
 
@@ -133,7 +133,7 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
     def test_basic_ls_run(self):
         # Test a basic run of the iterative deblending
         self.col_a.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False,
-                          max_fap=.4,medianfilter=False,
+                          medianfilter=False,
                           freq_window_epsilon_snr=10.,
                           snr_filter_size=50000,snr_threshold=[12.,8.])
 
@@ -151,7 +151,7 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
     def test_basic_ls_run_medianfilter(self):
         # Test a basic run of the iterative deblending
         self.col_a2.run_ls(startp=6.,endp=7.,stepsize=0.00001,autofreq=False,
-                          max_fap=.4,medianfilter=True,
+                          medianfilter=True,
                           freq_window_epsilon_mf=10.,
                           median_filter_size=500,
                           freq_window_epsilon_snr=10.,
@@ -170,7 +170,7 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
       
     def test_simple_blended_ls_run(self):
         self.col_c.run_ls(startp=0.5,endp=2.,stepsize=5e-5,autofreq=False,
-                          max_fap=.1,medianfilter=False,
+                          medianfilter=False,
                           freq_window_epsilon_snr=5.,
                           snr_filter_size=1500,snr_threshold=12.)
 
@@ -205,7 +205,7 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
 
     def test_multipleblend(self):
         # Test a long period object and also objects with multiple blends
-        self.col_e.run_ls(startp=2.5,endp=4.7,max_fap=.23,autofreq=False,
+        self.col_e.run_ls(startp=2.5,endp=4.7,autofreq=False,
                           stepsize=1e-5,
                           medianfilter=False,freq_window_epsilon_snr=3.5,
                           snr_filter_size=1000,snr_threshold=12.)

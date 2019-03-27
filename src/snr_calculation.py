@@ -27,13 +27,11 @@ def periodogram_snr(periodogram,periods,index_to_evaluate,duration,per_type,
     if per_type.upper() not in ['LS','PDM','BLS']:
         raise ValueError("Periodogram type " + per_type + " not recognized")
 
-    #print(len(periodogram))
     # Now, calculate the SNR
     freq_window_size = freq_window_epsilon/duration
     delta_frequency = abs(1./periods[1] - 1./periods[0])
     freq_window_index_size = int(round(freq_window_size/delta_frequency))
 
-    print(len(periodogram), freq_window_size, freq_window_index_size)
 
     if freq_window_index_size > len(periodogram):
         raise ValueError("freq_window_index_size is greater than total periodogram length")
