@@ -19,7 +19,7 @@ class test_median_filter(unittest.TestCase):
         frequencies = np.linspace(.05,10,n)
         self.periods = 1./frequencies
 
-    def __test_filter_doesnt_mess_up_flat(self):
+    def test_filter_doesnt_mess_up_flat(self):
         output = sdb.median_filtering(self.lspvals,self.periods,
                                       2.,30,60.)
         for val1, val2 in zip(output,self.lspvals-self.val):
@@ -41,8 +41,6 @@ class test_median_filter(unittest.TestCase):
         median_filter_size = 4
         output_slope = sdb.median_filtering(lspvals,self.periods,1.,
                                             median_filter_size,502.)
-        print(output_slope[:15])
-        print(output_slope[-15:])
         for i in range(len(output_slope)):
             if i < median_filter_size:
                 self.assertLess(output_slope[i],0.)
