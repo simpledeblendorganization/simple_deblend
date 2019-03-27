@@ -169,7 +169,9 @@ def iterative_deblend(t, y, dy, neighbors,
                       freq_window_epsilon_snr=1.,
                       window_size_mf=40,
                       window_size_snr=40,
-                      snr_threshold=0.):
+                      snr_threshold=0.,
+                      max_blend_recursion=8,
+                      recursion_level=0):
     """
     Iteratively deblend a lightcurve against neighbors
 
@@ -309,6 +311,9 @@ def iterative_deblend(t, y, dy, neighbors,
         if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude: # TODO Need to look at ambiguous cases
             print("   -> blended! Trying again.")
             results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold)
+            if recursion_level >= max_blend_recursion:
+                print("   Reached the blend recursion level, no longer checking")
+                return None
             return iterative_deblend(t, y - ffr(t) + average_add_back,
                                      dy, neighbors,
                                      period_finding_func,
@@ -323,7 +328,9 @@ def iterative_deblend(t, y, dy, neighbors,
                                      freq_window_epsilon_snr=freq_window_epsilon_snr,
                                      window_size_mf=window_size_mf,
                                      window_size_snr=window_size_snr,
-                                     snr_threshold=snr_threshold)
+                                     snr_threshold=snr_threshold,
+                                     max_blend_recursion=max_blend_recursion,
+                                     recursion_level=recursion_level+1)
 
 
     # Return the period and the pre-whitened light curve

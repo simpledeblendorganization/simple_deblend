@@ -54,7 +54,8 @@ class lc_collection_for_processing(lc_objects):
                freq_window_epsilon_snr=None,
                median_filter_size=None,
                snr_filter_size=None,
-               snr_threshold=0.):
+               snr_threshold=0.,
+               max_blend_recursion=8):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
@@ -64,7 +65,8 @@ class lc_collection_for_processing(lc_objects):
                  freq_window_epsilon_mf=freq_window_epsilon_mf,
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
                  median_filter_size=median_filter_size,
-                 snr_filter_size=snr_filter_size,snr_threshold=snr_threshold)
+                 snr_filter_size=snr_filter_size,snr_threshold=snr_threshold,
+                 max_blend_recursion=max_blend_recursion)
 
         
     def run_pdm(self,num_periods=3,
@@ -76,7 +78,8 @@ class lc_collection_for_processing(lc_objects):
                 freq_window_epsilon_snr=None,
                 median_filter_size=None,
                 snr_filter_size=None,
-                snr_threshold=0.):
+                snr_threshold=0.,
+                max_blend_recursion=8):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
@@ -88,7 +91,8 @@ class lc_collection_for_processing(lc_objects):
                  freq_window_epsilon_mf=freq_window_epsilon_mf,
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
                  median_filter_size=median_filter_size,
-                 snr_filter_size=snr_filter_size,snr_threshold=snr_threshold)
+                 snr_filter_size=snr_filter_size,snr_threshold=snr_threshold,
+                 max_blend_recursion=max_blend_recursion)
 
 
     def run_bls(self,num_periods=3,
@@ -100,7 +104,8 @@ class lc_collection_for_processing(lc_objects):
                 freq_window_epislon_snr=None,
                 median_filter_size=None,
                 snr_filter_size=None,
-                snr_threshold=0.):
+                snr_threshold=0.,
+                max_blend_recursion=8):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
@@ -111,13 +116,14 @@ class lc_collection_for_processing(lc_objects):
                  freq_window_epsilon_mf=freq_window_epsilon_mf,
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
                  median_filter_size=median_filter_size,
-                 snr_filter_size=snr_filter_size,snr_threshold=snr_threshold)
+                 snr_filter_size=snr_filter_size,snr_threshold=snr_threshold,
+                 max_blend_recursion=max_blend_recursion)
         
 
     def run(self,which_method,ps_func,params,num_periods,nworkers,
             medianfilter=False,freq_window_epsilon_mf=None,
             freq_window_epsilon_snr=None,median_filter_size=None,
-            snr_filter_size=None,snr_threshold=0.):
+            snr_filter_size=None,snr_threshold=0.,max_blend_recursion=8):
 
         num_proc_per_run = max(1,cpu_count()//self.n_control_workers)
         if nworkers is None:
@@ -142,13 +148,13 @@ class lc_collection_for_processing(lc_objects):
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
-                              snr_filter_size,snr_val)
+                              snr_filter_size,snr_val,max_blend_recursion)
                              for o, snr_val in zip(self.objects,snr_threshold)]
         else:
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
-                              snr_filter_size,snr_threshold)
+                              snr_filter_size,snr_threshold,max_blend_recursion)
                              for o in self.objects]
 
         with ProcessPoolExecutor(max_workers=self.n_control_workers) as executor:
@@ -177,7 +183,8 @@ class lc_collection_for_processing(lc_objects):
     def _run_single_object(self,task):
         (object,which_method,ps_func,params,num_periods,
          medianfilter,freq_window_epsilon_mf,freq_window_epsilon_snr,
-         median_filter_size,snr_filter_size,snr_threshold) = task
+         median_filter_size,snr_filter_size,snr_threshold,
+         max_blend_recursion) = task
 
         if not medianfilter:
             if freq_window_epsilon_mf is not None:
@@ -206,7 +213,8 @@ class lc_collection_for_processing(lc_objects):
                                            freq_window_epsilon_snr=freq_window_epsilon_snr,
                                            window_size_mf=median_filter_size,
                                            window_size_snr=snr_filter_size,
-                                           snr_threshold=snr_threshold)
+                                           snr_threshold=snr_threshold,
+                                           max_blend_recursion=max_blend_recursion)
             if yprime is None:
                 #print("yprime is None")
                 #print(len(results_storage.good_periods_info))
@@ -238,7 +246,7 @@ class periodsearch_results():
         self.blends_info = []
         self.count_neighbor_threshold=count_neighbor_threshold
 
-    def add_good_period(self,lsp_dict,times,mags,errs,snr_value,signficiant_blends):
+    def add_good_period(self,lsp_dict,times,mags,errs,snr_value,significant_blends):
         dict_to_add = {'lsp_dict':lsp_dict,'times':times,
                        'mags':mags,'errs':errs,
                        'snr_value':snr_value,
