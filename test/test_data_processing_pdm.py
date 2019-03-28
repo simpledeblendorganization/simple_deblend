@@ -79,13 +79,13 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
         self.omegae = 2.*np.pi/3.48208#3.47464
         phi_e = .3
         sigma5 = .1
-        self.col_e.add_object(t5, 4.+np.sin(self.omegae*t5+phi_e)+sigma5*rand4.randn(sample_len_5),
+        self.col_e.add_object(t5, 4.+np.sin(self.omegae*t5+phi_e)+sigma5*rand5.randn(sample_len_5),
                                   [sigma5]*sample_len_5,0.,0.5,'e1')
-        self.col_e.add_object(t5, 4.+.4*np.sin(self.omegae*t5+phi_e)+sigma5*rand4.randn(sample_len_5),
+        self.col_e.add_object(t5, 4.+.4*np.sin(self.omegae*t5+phi_e)+sigma5*rand5.randn(sample_len_5),
                                   [sigma5]*sample_len_5,0.5,0.,'e2')
-        self.col_e.add_object(t5, 4.+.3*np.sin(self.omegae*t5+phi_e)+sigma5*rand4.randn(sample_len_5),
+        self.col_e.add_object(t5, 4.+.3*np.sin(self.omegae*t5+phi_e)+sigma5*rand5.randn(sample_len_5),
                                   [sigma5]*sample_len_5,0.7,0.1,'e3')
-        self.col_e.add_object(t5, 4.+.2*np.sin(self.omegae*t5+phi_e)+sigma5*rand4.randn(sample_len_5),
+        self.col_e.add_object(t5, 4.+.2*np.sin(self.omegae*t5+phi_e)+sigma5*rand5.randn(sample_len_5),
                                   [sigma5]*sample_len_5,3.0,0.9,'e4')
 
     def test_lc_collection_setup(self):
