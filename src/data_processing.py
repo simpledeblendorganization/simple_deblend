@@ -246,18 +246,22 @@ class periodsearch_results():
         self.blends_info = []
         self.count_neighbor_threshold=count_neighbor_threshold
 
-    def add_good_period(self,lsp_dict,times,mags,errs,snr_value,significant_blends):
+    def add_good_period(self,lsp_dict,times,mags,errs,snr_value,
+                        flux_amplitude,significant_blends):
         dict_to_add = {'lsp_dict':lsp_dict,'times':times,
                        'mags':mags,'errs':errs,
                        'snr_value':snr_value,
+                       'flux_amplitude':flux_amplitude,
                        'num_previous_blends':len(self.blends_info),
                        'significant_blends':significant_blends}
         self.good_periods_info.append(dict_to_add)
 
-    def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,snr_value):
+    def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,snr_value,
+                  flux_amplitude):
         dict_to_add = {'lsp_dict':lsp_dict,
                        'ID_of_blend':neighbor_ID,
                        'snr_value':snr_value,
+                       'flux_amplitude':flux_amplitude,
                        'num_previous_signals':len(self.good_periods_info),
                        'times':times,'mags':mags,'errs':errs}
         self.blends_info.append(dict_to_add)

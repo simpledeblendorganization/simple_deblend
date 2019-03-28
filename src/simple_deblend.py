@@ -307,9 +307,10 @@ def iterative_deblend(t, y, dy, neighbors,
         print("    checking blends")
         print("    " + max_ffn_ID)
         print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(this_flux_amplitude))
-        if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude: # TODO Need to look at ambiguous cases
+        if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude: 
             print("   -> blended! Trying again.")
-            results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold)
+            results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold,
+                                                this_flux_amplitude)
             if recursion_level >= max_blend_recursion:
                 print("   Reached the blend recursion level, no longer checking")
                 return None
@@ -334,7 +335,9 @@ def iterative_deblend(t, y, dy, neighbors,
 
     # Return the period and the pre-whitened light curve
     
-    results_storage_container.add_good_period(lsp_dict,t,y,dy,snr_threshold,significant_neighbor_blends)
+    results_storage_container.add_good_period(lsp_dict,t,y,dy,
+                                              snr_threshold,this_flux_amplitude,
+                                              significant_neighbor_blends)
     return y - ffr(t)
 
 
