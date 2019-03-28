@@ -115,7 +115,7 @@ class FourierFit(object):
     def __call__(self, t, in_phase=False):
         freq = 1 if in_phase else self.freq
         X = design_matrix(t, freq, self.nharmonics)
-        return X @ self.params + self.params[0]
+        return X @ self.params - self.params[0]
 
 
 
