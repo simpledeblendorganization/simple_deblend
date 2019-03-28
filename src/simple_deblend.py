@@ -88,7 +88,7 @@ class FourierFit(object):
 
         phase = np.linspace(0, 1, 200)
 
-        yfit = self(phase, in_phase=True)
+        yfit = self(phase, in_phase=True) + self.params[0]
 
         if self.y_as_flux:
             return 0.5 * (max(yfit) - min(yfit))

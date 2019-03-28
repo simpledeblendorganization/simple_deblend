@@ -101,11 +101,11 @@ class lc_collection_for_processing(lc_objects):
                 sigclip=float('inf'),nworkers=None,
                 verbose=False,medianfilter=False,
                 freq_window_epsilon_mf=None,
-                freq_window_epislon_snr=None,
+                freq_window_epsilon_snr=None,
                 median_filter_size=None,
                 snr_filter_size=None,
                 snr_threshold=0.,
-                max_blend_recursion=8):
+                max_blend_recursion=3):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
@@ -268,3 +268,17 @@ class periodsearch_results():
 
 
 #if __name__ == "__main__":
+
+
+"""
+def transit_insert(lc,t,depth,epoch,q,period):
+    lc_return = []
+    for point, tp in zip(lc,t):
+        t_mod = ((tp - epoch) % period)/period
+        if t_mod < q/2. or t_mod > (1.-q/2.):
+            lc_return.append(point + depth)
+        else:
+            lc_return.append(point)
+
+    return np.array(lc_return)
+"""
