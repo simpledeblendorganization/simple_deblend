@@ -11,7 +11,7 @@ import data_processing as dproc
 import numpy as np
 import copy
 
-"""
+
 class test_data_processing_initialization(unittest.TestCase):
 
     def test_lc_collection_setup(self):
@@ -51,12 +51,12 @@ class test_data_processing_error_filterwindows(unittest.TestCase):
                              medianfilter=False,
                              freq_window_epsilon_snr=0.95,
                              snr_filter_size=1500,snr_threshold=1.)
-"""
+
 
 class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
 
     def setUp(self):
-        """
+        
         # random number
         rand1 = np.random.RandomState(seed=1844)
         
@@ -412,7 +412,7 @@ class test_data_processing_run_sinusoidal_multiple_signals(unittest.TestCase):
         self.assertAlmostEqual(self.col_b.results['o5']['LS'].good_periods_info[1]['flux_amplitude'],self.fluxamp51,places=2)
 
 
-"""
+
 class test_data_processing_ls_rrlyrae_signal(unittest.TestCase):
 
     def setUp(self):
