@@ -115,7 +115,7 @@ class FourierFit(object):
     def __call__(self, t, in_phase=False):
         freq = 1 if in_phase else self.freq
         X = design_matrix(t, freq, self.nharmonics)
-        return X @ self.params
+        return X @ self.params + self.params[0]
 
 
 
@@ -298,7 +298,6 @@ def iterative_deblend(t, y, dy, neighbors,
             max_ffn_ID = n_ID
 
         
-    average_add_back = np.average(y,weights=1./np.power(dy,2))
 
     # if neighbor has larger flux amplitude,
     # then we consider this signal to be a blend.
@@ -314,7 +313,7 @@ def iterative_deblend(t, y, dy, neighbors,
             if recursion_level >= max_blend_recursion:
                 print("   Reached the blend recursion level, no longer checking")
                 return None
-            return iterative_deblend(t, y - ffr(t) + average_add_back,
+            return iterative_deblend(t, y - ffr(t),
                                      dy, neighbors,
                                      period_finding_func,
                                      results_storage_container,
@@ -336,7 +335,7 @@ def iterative_deblend(t, y, dy, neighbors,
     # Return the period and the pre-whitened light curve
     
     results_storage_container.add_good_period(lsp_dict,t,y,dy,snr_threshold,significant_neighbor_blends)
-    return y - ffr(t) + average_add_back
+    return y - ffr(t)
 
 
 if __name__ == '__main__':
