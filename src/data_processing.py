@@ -270,15 +270,3 @@ class periodsearch_results():
 #if __name__ == "__main__":
 
 
-"""
-def transit_insert(lc,t,depth,epoch,q,period):
-    lc_return = []
-    for point, tp in zip(lc,t):
-        t_mod = ((tp - epoch) % period)/period
-        if t_mod < q/2. or t_mod > (1.-q/2.):
-            lc_return.append(point + depth)
-        else:
-            lc_return.append(point)
-
-    return np.array(lc_return)
-"""
