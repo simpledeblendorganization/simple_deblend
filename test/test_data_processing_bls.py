@@ -43,9 +43,6 @@ class test_data_processing_basic_bls_run(unittest.TestCase):
         self.depth = .6
         self.fluxamp = 10**(-0.4*self.mag) - 10**(-0.4*(self.mag+self.depth))
         lc_start = [self.mag]*sample_len_1
-        import matplotlib.pyplot as plt
-        plt.scatter(t1%self.period,transit_insert(lc_start,t1,self.depth,1.5,.05,self.period)+sigma1*rand1.randn(sample_len_1),s=2)
-        plt.savefig("temp.pdf")
         self.col_a.add_object(t1,
                               transit_insert(lc_start,t1,self.depth,1.5,.05,self.period)+\
                                 sigma1*rand1.randn(sample_len_1),
