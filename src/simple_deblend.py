@@ -145,10 +145,6 @@ def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,dura
 
         median_filter_values.append(np.median(vals))
 
-    #plt.plot(periods,lspvals,color='red',lw=.9)
-    #plt.plot(periods,lspvals - median_filter_values+1.,color='blue',lw=.5)
-    #plt.savefig("temp.pdf")
-    #quit()
 
     if which_method == 'PDM':
         return lspvals + (1. - np.array(median_filter_values))
