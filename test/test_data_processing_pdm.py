@@ -179,7 +179,7 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
                            snr_filter_size=1000,snr_threshold=12.)
 
         self.assertEqual(len(self.col_e.results['e1']['PDM'].good_periods_info),1)
-        self.assertAlmostEqual(self.col_e.results['e1']['PDM'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegae,places=3)
+        self.assertAlmostEqual(self.col_e.results['e1']['PDM'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegae,places=2)
         self.assertEqual(len(self.col_e.results['e2']['PDM'].good_periods_info),0)
         self.assertEqual(len(self.col_e.results['e3']['PDM'].good_periods_info),0)
         self.assertEqual(len(self.col_e.results['e4']['PDM'].good_periods_info),0)
