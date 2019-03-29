@@ -26,7 +26,7 @@ def transit_insert(lc,t,depth,epoch,q,period):
 
 
 
-"""
+
 class test_data_processing_basic_bls_run(unittest.TestCase):
 
     def setUp(self):
@@ -216,7 +216,7 @@ class test_long_period_bls(unittest.TestCase):
         self.assertEqual(len(self.col_d.results['d1']['BLS'].blends_info),0)
         self.assertAlmostEqual(self.col_d.results['d1']['BLS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegad,places=1)
         self.assertAlmostEqual(self.col_d.results['d1']['BLS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_d,places=2)
-"""
+
 
 
 class test_multiple_blends_bls(unittest.TestCase):
@@ -294,6 +294,52 @@ class test_multiple_blends_bls(unittest.TestCase):
         self.assertEqual(self.col_e.results['e3']['BLS'].blends_info[0]['ID_of_blend'],'e1')
         self.assertEqual(self.col_e.results['e4']['BLS'].blends_info[0]['ID_of_blend'],'e1')
 
+
+
+
+class test_sinusoid_with_transit_bls(unittest.TestCase):
+
+    def setUp(self):
+
+        ### col_d, long-period test 
+        rand = np.random.RandomState(seed=1853)
+        self.col = dproc.lc_collection_for_processing(10,n_control_workers=1)
+        
+        sample_len = 8002
+        t = np.linspace(0,121.2,sample_len)
+        self.transit_period = 7.6712343532
+        self.omega = 2.*np.pi/3.1107
+        sigma = .15
+        self.mag = 5.
+        self.sin_amp = 1.7
+        self.depth = 0.19
+        self.depth_fluxamp = 10**(-0.4*self.mag) -\
+                          10**(-0.4*(self.mag+self.depth))
+        self.sin_fluxamp = 10**(-0.4*(self.mag-self.sin_amp)) -\
+                          10**(-0.4*(self.mag+self.sin_amp))
+        sin = self.mag + self.sin_amp*np.sin(self.omega*t) +\
+               sigma*rand.randn(sample_len)
+        self.col.add_object(t, transit_insert(sin,t,
+                                              self.depth,5.6,.02,
+                                              self.transit_period)+
+                              sigma*rand.randn(sample_len),
+                              [sigma]*sample_len,0.,1.0,'s')
+
+
+    def test_sinusoid_with_transit(self):
+        # Test a long period object
+        self.col.run_bls(startp=1.5,endp=15.,autofreq=False,
+                         stepsize=1e-5,medianfilter=False,
+                         maxtransitduration=0.5,
+                         freq_window_epsilon_snr=2.0,snr_filter_size=200,
+                         snr_threshold=25.)
+
+        self.assertEqual(len(self.col.results['s']['BLS'].good_periods_info),2)
+        self.assertEqual(len(self.col.results['s']['BLS'].blends_info),0)
+        self.assertAlmostEqual(self.col.results['s']['BLS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omega,places=3)
+        self.assertAlmostEqual(self.col.results['s']['BLS'].good_periods_info[0]['flux_amplitude'],self.sin_fluxamp,places=2)
+        self.assertAlmostEqual(self.col.results['s']['BLS'].good_periods_info[1]['lsp_dict']['bestperiod'],self.transit_period,places=4)
+        #self.assertAlmostEqual(self.col.results['s']['BLS'].good_periods_info[1]['flux_amplitude'],self.depth_fluxamp,places=4)
 
 
 

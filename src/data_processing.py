@@ -98,6 +98,7 @@ class lc_collection_for_processing(lc_objects):
     def run_bls(self,num_periods=3,
                 startp=None,endp=None,autofreq=True,
                 nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
+                mintransitduration=0.01,maxtransitduration=0.4,
                 sigclip=float('inf'),nworkers=None,
                 verbose=False,medianfilter=False,
                 freq_window_epsilon_mf=None,
@@ -108,8 +109,10 @@ class lc_collection_for_processing(lc_objects):
                 max_blend_recursion=3):
 
         params = {'startp':startp,'endp':endp,'autofreq':autofreq,
-                      'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
-                      'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
+                  'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
+                  'mintransitduration':mintransitduration,
+                  'maxtransitduration':maxtransitduration,
+                  'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
 
         self.run('BLS',bls_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
