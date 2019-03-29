@@ -471,7 +471,63 @@ class test_data_processing_ls_rrlyrae_signal(unittest.TestCase):
         self.assertEqual(len(self.col.results['rr2']['LS'].blends_info),1)
         self.assertEqual(self.col.results['rr2']['LS'].blends_info[0]['ID_of_blend'],'rr1')
         self.assertAlmostEqual(self.col.results['rr2']['LS'].blends_info[0]['flux_amplitude'],3.3142017e-6,places=4)
+
+
+class test_close_amplitudes_signal(unittest.TestCase):
   
+    def setUp(self):
+        
+        # random number
+        rand = np.random.RandomState(seed=1844)
+        
+        ### col_a, very basic, two-object test
+        self.col = dproc.lc_collection_for_processing(1.,n_control_workers=1)
+        sample_len = 3000
+        sigma = .08
+        t = np.linspace(0,1200,sample_len)
+        self.mag = 10.
+        self.sinamp_1 = 1.
+        self.sinamp_2 = 0.92
+        self.fluxamp_1 = 10**(-0.4*(self.mag-self.sinamp_1)) -\
+                       10**(-0.4*(self.mag+self.sinamp_1))
+        self.fluxamp_2 = 10**(-0.4*(self.mag-self.sinamp_2)) -\
+                       10**(-0.4*(self.mag+self.sinamp_2))
+        self.col.add_object(t,self.mag+self.sinamp_1*np.sin(t)+\
+                            sigma*rand.randn(sample_len),
+                            [sigma]*sample_len,0.,0.,'object1')
+        self.col.add_object(t,self.mag+self.sinamp_2*np.sin(t)+\
+                            sigma*rand.randn(sample_len),
+                            [sigma]*sample_len,0.,0.,'object2')
+
+    def test_close_amplitudes_signal(self):
+        self.col.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False,
+                        medianfilter=False,
+                        freq_window_epsilon_snr=10.,
+                        snr_filter_size=50000,snr_threshold=12.)
+
+        with self.assertRaises(KeyError):
+            self.col.results['object1']['BLS']
+        self.assertEqual(len(self.col.results['object1'].keys()),1)
+        self.assertEqual(len(self.col.results['object2'].keys()),1)
+
+        self.assertAlmostEqual(self.col.results['object1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi,places=6)
+        self.assertEqual(len(self.col.results['object1']),1)
+        self.assertEqual(len(self.col.results['object1']['LS'].good_periods_info),1)
+        self.assertAlmostEqual(self.col.results['object1']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_1,places=5)
+        self.assertEqual(len(self.col.results['object1']['LS'].blends_info),0)
+        self.assertEqual(self.col.results['object1']['LS'].good_periods_info[0]['not_max'],False)
+        self.assertEqual(self.col.results['object1']['LS'].good_periods_info[0]['significant_blends'],['object2'])
+
+        self.assertAlmostEqual(self.col.results['object2']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi,places=3)
+        self.assertEqual(len(self.col.results['object2']),1)
+        self.assertEqual(len(self.col.results['object2']['LS'].good_periods_info),1)
+        self.assertAlmostEqual(self.col.results['object2']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_2,places=3)
+        self.assertEqual(len(self.col.results['object2']['LS'].blends_info),0)
+        self.assertEqual(self.col.results['object2']['LS'].good_periods_info[0]['not_max'],True)
+        self.assertEqual(self.col.results['object2']['LS'].good_periods_info[0]['significant_blends'],['object1'])
+        
+
+
 
 if __name__ == '__main__':
     unittest.main()

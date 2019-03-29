@@ -299,41 +299,46 @@ def iterative_deblend(t, y, dy, neighbors,
     # then we consider this signal to be a blend.
     # subtract off model signal to get residual
     # lightcurve, and try again
+    notmax = False
     if max_ffn_ID:
         print("    checking blends")
         print("    " + max_ffn_ID)
         print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(this_flux_amplitude))
-        if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude: 
-            print("   -> blended! Trying again.")
-            results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold,
-                                                this_flux_amplitude)
-            if recursion_level >= max_blend_recursion:
-                print("   Reached the blend recursion level, no longer checking")
-                return None
-            return iterative_deblend(t, y - ffr(t),
-                                     dy, neighbors,
-                                     period_finding_func,
-                                     results_storage_container,
-                                     which_method,
-                                     function_params=function_params,
-                                     nharmonics_fit=nharmonics_fit,
-                                     nharmonics_resid=nharmonics_resid,
-                                     ID=ID,
-                                     medianfilter=medianfilter,
-                                     freq_window_epsilon_mf=freq_window_epsilon_mf,
-                                     freq_window_epsilon_snr=freq_window_epsilon_snr,
-                                     window_size_mf=window_size_mf,
-                                     window_size_snr=window_size_snr,
-                                     snr_threshold=snr_threshold,
-                                     max_blend_recursion=max_blend_recursion,
-                                     recursion_level=recursion_level+1)
+        if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude:
+            if this_flux_amplitude < results_storage_container.stillcount_blend_factor * ffn_all[max_ffn_ID].flux_amplitude:
+                print("   -> blended! Trying again.")
+                results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold,
+                                                    this_flux_amplitude)
+                if recursion_level >= max_blend_recursion:
+                    print("   Reached the blend recursion level, no longer checking")
+                    return None
+                return iterative_deblend(t, y - ffr(t),
+                                         dy, neighbors,
+                                         period_finding_func,
+                                         results_storage_container,
+                                         which_method,
+                                         function_params=function_params,
+                                         nharmonics_fit=nharmonics_fit,
+                                         nharmonics_resid=nharmonics_resid,
+                                         ID=ID,
+                                         medianfilter=medianfilter,
+                                         freq_window_epsilon_mf=freq_window_epsilon_mf,
+                                         freq_window_epsilon_snr=freq_window_epsilon_snr,
+                                         window_size_mf=window_size_mf,
+                                         window_size_snr=window_size_snr,
+                                         snr_threshold=snr_threshold,
+                                         max_blend_recursion=max_blend_recursion,
+                                         recursion_level=recursion_level+1)
+            else:
+                notmax = True
 
 
     # Return the period and the pre-whitened light curve
     
     results_storage_container.add_good_period(lsp_dict,t,y,dy,
                                               snr_threshold,this_flux_amplitude,
-                                              significant_neighbor_blends)
+                                              significant_neighbor_blends,
+                                              notmax=notmax)
     return y - ffr(t)
 
 

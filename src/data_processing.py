@@ -243,20 +243,23 @@ class lc_collection_for_processing(lc_objects):
             
 
 class periodsearch_results():
-    def __init__(self,ID,count_neighbor_threshold=.25):
+    def __init__(self,ID,count_neighbor_threshold=0.25,
+                 stillcount_blend_factor=0.9):
         self.ID = ID
         self.good_periods_info = []
         self.blends_info = []
         self.count_neighbor_threshold=count_neighbor_threshold
+        self.stillcount_blend_factor=stillcount_blend_factor
 
     def add_good_period(self,lsp_dict,times,mags,errs,snr_value,
-                        flux_amplitude,significant_blends):
+                        flux_amplitude,significant_blends,notmax=False):
         dict_to_add = {'lsp_dict':lsp_dict,'times':times,
                        'mags':mags,'errs':errs,
                        'snr_value':snr_value,
                        'flux_amplitude':flux_amplitude,
                        'num_previous_blends':len(self.blends_info),
-                       'significant_blends':significant_blends}
+                       'significant_blends':significant_blends,
+                       'not_max':notmax}
         self.good_periods_info.append(dict_to_add)
 
     def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,snr_value,
