@@ -9,11 +9,11 @@ M4 work.
 # Remember to make it return single-valued value
 
 
-ls_cutoff(p):
+def ls_cutoff(p):
     return 1.
 
-pdm_cutoff(p):
+def pdm_cutoff(p):
     return 1.
 
-bls_cutoff(p):
+def bls_cutoff(p):
     return 1.

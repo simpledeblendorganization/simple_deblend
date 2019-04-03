@@ -13,11 +13,14 @@ import data_processing as dproc
 import glob
 import pickle
 from astrobase.lcmath import sigclip_magseries
+import numpy as np
 import personal_thresholds as thresh
 
 
-if len(sys.argv) != 5:
-    print("Expecting 4 arguments:")
+
+
+if len(sys.argv) != 15:
+    print("Expecting 14 arguments:")
     print(" - path to input light curve files")
     print(" - neighbor inclusion radius")
     print(" - number of control workers")
@@ -117,7 +120,7 @@ def main():
     for ID in lcs.keys():
         lc = lcs[ID]
         this_xy = xy[ID]
-        col.add_object(lc_s[0],lc_s[1],lc_s[2],this_xy[0],this_xy[1],ID)
+        col.add_object(lc[0],lc[1],lc[2],this_xy[0],this_xy[1],ID)
 
     
     # Run Lomb-Scargle
