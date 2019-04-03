@@ -34,7 +34,7 @@ class test_data_processing_basic_bls_run(unittest.TestCase):
         rand1 = np.random.RandomState(seed=1844)
         
         ### col_a, very basic, two-object test
-        self.col_a = dproc.lc_collection_for_processing(1.,n_control_workers=2)
+        self.col_a = dproc.lc_collection_for_processing(1.,n_control_workers=1)
         sample_len_1 = 3000
         sigma1 = .08
         t1 = np.linspace(0,1200,sample_len_1)
@@ -59,7 +59,9 @@ class test_data_processing_basic_bls_run(unittest.TestCase):
     def test_basic_ls_run(self):
         # Test a basic run of the iterative deblending
         self.col_a.run_bls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False,
+                           nphasebins=200,
                           medianfilter=False,
+                           verbose=True,nworkers=1,
                           freq_window_epsilon_snr=10.,
                            snr_filter_size=50000,snr_threshold=40.)
 
@@ -80,6 +82,7 @@ class test_data_processing_basic_bls_run(unittest.TestCase):
     def test_basic_ls_run_medianfilter(self):
         # Test a basic run of the iterative deblending
         self.col_a2.run_bls(startp=6.,endp=7.,stepsize=0.00001,autofreq=False,
+                            nphasebins=200,
                           medianfilter=True,
                           freq_window_epsilon_mf=10.,
                           median_filter_size=500,
@@ -153,6 +156,7 @@ class test_data_processing_simple_blended_bls_run(unittest.TestCase):
 
     def test_simple_blended_ls_run(self):
         self.col_c.run_bls(startp=0.5,endp=2.,stepsize=5e-5,autofreq=False,
+                           nphasebins=200,
                           medianfilter=False,
                           freq_window_epsilon_snr=5.,
                            snr_filter_size=1500,snr_threshold=[40.,40.,15.])
@@ -207,6 +211,7 @@ class test_long_period_bls(unittest.TestCase):
         # Test a long period object
         self.col_d.run_bls(startp=20.,endp=50.,autofreq=False,
                           stepsize=1e-5,medianfilter=False,
+                          nphasebins=200,
                           freq_window_epsilon_snr=2.0,snr_filter_size=200,snr_threshold=60.)
 
         self.assertEqual(len(self.col_d.results['d1']['BLS'].good_periods_info),1)
@@ -270,6 +275,7 @@ class test_multiple_blends_bls(unittest.TestCase):
         # Test a long period object and also objects with multiple blends
         self.col_e.run_bls(startp=2.5,endp=4.7,autofreq=False,
                           stepsize=1e-5,
+                          nphasebins=200,
                           medianfilter=False,freq_window_epsilon_snr=3.5,
                            snr_filter_size=1000,snr_threshold=[42.,30.,30.,30])
 
@@ -327,6 +333,7 @@ class test_sinusoid_with_transit_bls(unittest.TestCase):
         # Test a long period object
         self.col.run_bls(startp=1.5,endp=15.,autofreq=False,
                          stepsize=1e-5,medianfilter=False,
+                         nphasebins=200,
                          maxtransitduration=0.5,
                          freq_window_epsilon_snr=2.0,snr_filter_size=200,
                          snr_threshold=25.)

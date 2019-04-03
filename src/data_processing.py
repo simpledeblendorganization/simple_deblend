@@ -137,6 +137,10 @@ class lc_collection_for_processing(lc_objects):
                       'maxtransitduration':maxtransitduration,
                       'sigclip':sigclip,'verbose':verbose}
         else:
+            if not stepsize:
+                raise ValueError("autofreq is false, but no value given for stepsize")
+            if not nphasebins:
+                raise ValueError("autofreq is false, but no value given for nphasebins")
             params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'mintransitduration':mintransitduration,
