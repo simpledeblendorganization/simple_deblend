@@ -183,7 +183,7 @@ class lc_collection_for_processing(lc_objects):
                               freq_window_epsilon_snr,median_filter_size,
                               snr_filter_size,snr_val,max_blend_recursion)
                              for o, snr_val in zip(self.objects,snr_threshold)]
-        elif callable(snr_threshold) or # If a callable thing of some kind
+        elif callable(snr_threshold): # If a callable thing of some kind
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
