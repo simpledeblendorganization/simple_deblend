@@ -7,3 +7,13 @@ M4 work.
 
 
 # Remember to make it return single-valued value
+
+
+ls_cutoff(p):
+    return 1.
+
+pdm_cutoff(p):
+    return 1.
+
+bls_cutoff(p):
+    return 1.

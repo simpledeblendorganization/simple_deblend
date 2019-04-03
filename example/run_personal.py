@@ -43,6 +43,7 @@ def get_input_light_curves(path_to_input_files):
     as long as the output format matches what is here.
     '''
     input_files = glob.glob(path_to_input_files + "/*")
+    input_files = input_files[:100]
     print("Number of input files: " + str(len(input_files)))
 
     return_dict = {}
@@ -150,7 +151,10 @@ def main():
                 snr_threshold=thresh.bls_cutoff)
 
 
-    
+    import pickle
+    pickle.dump(col,open("hi.pkl","wb"))
+
+
 
 
 
