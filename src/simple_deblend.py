@@ -4,6 +4,12 @@ import math
 import snr_calculation as snr
 
 
+def snr_threshold_tocomp(f,period=None):
+    if callable(f):
+        return f(period)
+    else:
+        return f
+
 
 def _2d(arr):
     """ Reshape 1d array to 2d array """
@@ -253,7 +259,7 @@ def iterative_deblend(t, y, dy, neighbors,
     else:
         print("PERIOD: %.5e days;  pSNR: %.5e"%(lsp_dict['periods'][best_pdgm_index],per_snr))
 
-    if per_snr < snr_threshold or np.isnan(lsp_dict['periods'][best_pdgm_index]):
+    if per_snr < snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods']]best_pdgm_index]) or np.isnan(lsp_dict['periods'][best_pdgm_index]):
         if ID:
             print("   -> not significant enough, for " + ID)
         else:
