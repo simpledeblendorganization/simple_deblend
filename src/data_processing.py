@@ -47,7 +47,7 @@ class lc_collection_for_processing(lc_objects):
 
     def run_ls(self,num_periods=3,
                startp=None,endp=None,autofreq=True,
-               nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
+               nbestpeaks=1,periodepsilon=0.1,stepsize=None,
                sigclip=float('inf'),nworkers=None,
                verbose=False,medianfilter=False,
                freq_window_epsilon_mf=None,
@@ -57,9 +57,18 @@ class lc_collection_for_processing(lc_objects):
                snr_threshold=0.,
                max_blend_recursion=8):
 
-        params = {'startp':startp,'endp':endp,'autofreq':autofreq,
+        if autofreq and stepsize:
+            raise ValueError("autofreq was set to True, but stepsize was given")
+
+        if autofreq:
+            params = {'startp':startp,'endp':endp,'autofreq':autofreq,
+                      'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
+                      'sigclip':sigclip,'verbose':verbose}
+        else:
+            params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
+
         self.run('LS',ls_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
                  freq_window_epsilon_mf=freq_window_epsilon_mf,
@@ -71,7 +80,7 @@ class lc_collection_for_processing(lc_objects):
         
     def run_pdm(self,num_periods=3,
                 startp=None,endp=None,autofreq=True,
-                nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
+                nbestpeaks=1,periodepsilon=0.1,stepsize=None,
                 sigclip=float('inf'),nworkers=None,
                 verbose=False,phasebinsize=0.05,medianfilter=False,
                 freq_window_epsilon_mf=None,
@@ -81,7 +90,16 @@ class lc_collection_for_processing(lc_objects):
                 snr_threshold=0.,
                 max_blend_recursion=8):
 
-        params = {'startp':startp,'endp':endp,'autofreq':autofreq,
+        if autofreq and stepsize:
+            raise ValueError("autofreq was set to True, but stepsize was given")
+
+        if autofreq:
+            params = {'startp':startp,'endp':endp,'autofreq':autofreq,
+                      'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
+                      'sigclip':sigclip,
+                      'verbose':verbose,'phasebinsize':phasebinsize}
+        else:
+            params = {'startp':startp,'endp':endp,'autofreq':autofreq,
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'stepsize':stepsize,'sigclip':sigclip,
                       'verbose':verbose,'phasebinsize':phasebinsize}
@@ -97,7 +115,8 @@ class lc_collection_for_processing(lc_objects):
 
     def run_bls(self,num_periods=3,
                 startp=None,endp=None,autofreq=True,
-                nbestpeaks=1,periodepsilon=0.1,stepsize=1.0e-4,
+                nbestpeaks=1,periodepsilon=0.1,
+                nphasebins=None,stepsize=None,
                 mintransitduration=0.01,maxtransitduration=0.4,
                 sigclip=float('inf'),nworkers=None,
                 verbose=False,medianfilter=False,
@@ -108,11 +127,22 @@ class lc_collection_for_processing(lc_objects):
                 snr_threshold=0.,
                 max_blend_recursion=3):
 
-        params = {'startp':startp,'endp':endp,'autofreq':autofreq,
-                  'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
-                  'mintransitduration':mintransitduration,
-                  'maxtransitduration':maxtransitduration,
-                  'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
+        if (autofreq and nphasebins) or (autofreq and stepsize):
+            raise ValueError("autofreq was set to true, but stepsize and/or nphasebins was given")
+
+        if autofreq:
+            params = {'startp':startp,'endp':endp,'autofreq':autofreq,
+                      'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
+                      'mintransitduration':mintransitduration,
+                      'maxtransitduration':maxtransitduration,
+                      'sigclip':sigclip,'verbose':verbose}
+        else:
+            params = {'startp':startp,'endp':endp,'autofreq':autofreq,
+                      'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
+                      'mintransitduration':mintransitduration,
+                      'maxtransitduration':maxtransitduration,
+                      'stepsize':stepsize,'nphasebins':nphasebins,
+                      'sigclip':sigclip,'verbose':verbose}
 
         self.run('BLS',bls_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
@@ -153,6 +183,12 @@ class lc_collection_for_processing(lc_objects):
                               freq_window_epsilon_snr,median_filter_size,
                               snr_filter_size,snr_val,max_blend_recursion)
                              for o, snr_val in zip(self.objects,snr_threshold)]
+        elif callable(snr_threshold) or # If a callable thing of some kind
+            running_tasks = [(o,which_method,ps_func,params,num_periods,
+                              medianfilter,freq_window_epsilon_mf,
+                              freq_window_epsilon_snr,median_filter_size,
+                              snr_filter_size,snr_threshold,max_blend_recursion)
+                             for o in self.objects]
         else:
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
