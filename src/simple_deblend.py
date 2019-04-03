@@ -259,7 +259,7 @@ def iterative_deblend(t, y, dy, neighbors,
     else:
         print("PERIOD: %.5e days;  pSNR: %.5e"%(lsp_dict['periods'][best_pdgm_index],per_snr))
 
-    if per_snr < snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods']]best_pdgm_index]) or np.isnan(lsp_dict['periods'][best_pdgm_index]):
+    if per_snr < snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]) or np.isnan(lsp_dict['periods'][best_pdgm_index]):
         if ID:
             print("   -> not significant enough, for " + ID)
         else:
