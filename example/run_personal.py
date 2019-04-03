@@ -12,6 +12,8 @@ sys.path.insert(1,os.path.abspath('../src'))
 import data_processing as dproc
 import glob
 import pickle
+from astrobase.lcmath import sigclip_magseries
+import personal_thresholds as thresh
 
 
 if len(sys.argv) != 5:
@@ -20,6 +22,16 @@ if len(sys.argv) != 5:
     print(" - neighbor inclusion radius")
     print(" - number of control workers")
     print(" - file with x,y position information")
+    print(" - starting period")
+    print(" - ending period")
+    print(" - stepsize LS")
+    print(" - stepsize PDM")
+    print(" - stepsize BLS")
+    print(" - freq_window_epsilon")
+    print(" - median filter window LS and PDM")
+    print(" - median filter window BLS")
+    print(" - min transit duration")
+    print(" - max transit duration")
     exit(-1)
 
 
@@ -41,6 +53,8 @@ def get_input_light_curves(path_to_input_files):
         if len(t) < 800:
             number_skipped += 1
             continue
+        t, lc, err = sigclip_magseries(t,lc,err,sigclip=3,iterative=True,
+                                 niterations=3)
         return_dict[f.split("/")[-1].split("_")[0]] = \
             (t,lc,err)
             
@@ -76,6 +90,17 @@ def main():
     neighbor_radius = float(sys.argv[2])
     n_control_workers = int(sys.argv[3])
     file_xy = sys.argv[4]
+    start_p = float(sys.argv[5])
+    end_p = float(sys.argv[6])
+    stepsize_ls = float(sys.argv[7])
+    stepsize_pdm = float(sys.argv[8])
+    stepsize_bls = float(sys.argv[9])
+    freq_window_epsilon = float(sys.argv[10])
+    median_filter_window_ls = int(sys.argv[11])
+    median_filter_window_pdm = median_filter_window_ls
+    median_filter_window_bls = int(sys.argv[12])
+    min_transit_duration = float(sys.argv[13])
+    max_transit_duration = float(sys.argv[14])
 
     # Get the light curves
     lcs = get_input_light_curves(path_to_input_files)
@@ -91,9 +116,38 @@ def main():
     for ID in lcs.keys():
         lc = lcs[ID]
         this_xy = xy[ID]
-        col.add_object(lc[0],lc[1],lc[2],this_xy[0],this_xy[1],ID)
+        col.add_object(lc_s[0],lc_s[1],lc_s[2],this_xy[0],this_xy[1],ID)
 
     
+    # Run Lomb-Scargle
+    col.run_ls(startp=start_p,endp=end_p,autofreq=False,
+               stepsize=stepsize_ls,
+               sigclip=np.inf,verbose=False,medianfilter=True,
+               freq_window_epsilon_mf=freq_window_epsilon,
+               freq_window_epsilon_snr=freq_window_epsilon,
+               median_filter_size=median_filter_window_ls,
+               snr_filter_size=median_filter_window_ls,
+               snr_threshold=thresh.ls_cutoff)
+
+    col.run_pdm(startp=start_p,endp=end_p,autofreq=False,
+                stepsize=stepsize_pdm,
+                sigclip=np.inf,verbose=False,medianfilter=True,
+                freq_window_epsilon_mf=freq_window_epsilon,
+                freq_window_epsilon_snr=freq_window_epsilon,
+                median_filter_size=median_filter_window_pdm,
+                snr_filter_size=median_filter_window_pdm,
+                snr_threshold=thresh.pdm_cutoff)
+
+    col.run_bls(startp=start_p,endp=end_p,autofreq=False,
+                stepsize=stepsize_bls,
+                mintransitduration=min_transit_duration,
+                maxtransitduration=max_transit_duration,
+                sigclip=np.inf,medianfilter=True,
+                freq_window_epsilon_mf=freq_window_epsilon,
+                freq_window_epsilon_snr=freq_window_epsilon,
+                median_filter_size=median_filter_window_bls,
+                snr_filter_size=median_filter_window_bls,
+                snr_threshold=thresh.bls_cutoff)
 
 
     
