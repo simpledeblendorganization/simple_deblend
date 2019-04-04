@@ -207,9 +207,9 @@ def iterative_deblend(t, y, dy, neighbors,
 
     if np.isnan(lsp_dict['bestperiod']):
         if ID:
-            print(ID + "\n   -> " + whichmethod + " found no period, for " + ID)
+            print(ID + "\n   -> " + which_method + " found no period, for " + ID)
         else:
-            print("   -> " + whichmethod + " found no period.")
+            print("   -> " + which_method + " found no period.")
         return None
 
     # Now median filter the periodogram if selected
@@ -234,7 +234,7 @@ def iterative_deblend(t, y, dy, neighbors,
         if abs(per_to_comp - lsp_dict['bestperiod'])/lsp_dict['bestperiod'] > 1e-7:
             print(" Periods: " + str(per_to_comp) + "   " +\
                   str(lsp_dict['bestperiod']))
-            raise ValueError("The bestperiod does not match the actual best period w/o median filtering, " + whichmethod)
+            raise ValueError("The bestperiod does not match the actual best period w/o median filtering, " + which_method)
 
     if which_method == 'PDM':
         best_pdgm_index = np.argmin(pdgm_values)
@@ -255,9 +255,9 @@ def iterative_deblend(t, y, dy, neighbors,
                                   freq_window_epsilon=freq_window_epsilon_snr,
                                   rms_window_bin_size=window_size_snr)
     if ID:
-        print("%s\n  %s PERIOD: %.5e days;  pSNR: %.5e"%(ID,whichmethod,lsp_dict['periods'][best_pdgm_index],per_snr))
+        print("%s\n  %s PERIOD: %.5e days;  pSNR: %.5e"%(ID,which_method,lsp_dict['periods'][best_pdgm_index],per_snr))
     else:
-        print("%s PERIOD: %.5e days;  pSNR: %.5e"%(whichmethod,lsp_dict['periods'][best_pdgm_index],per_snr))
+        print("%s PERIOD: %.5e days;  pSNR: %.5e"%(which_method,lsp_dict['periods'][best_pdgm_index],per_snr))
 
     if per_snr < snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]) or np.isnan(lsp_dict['periods'][best_pdgm_index]):
         if ID:
