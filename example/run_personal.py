@@ -46,7 +46,7 @@ def get_input_light_curves(path_to_input_files):
     as long as the output format matches what is here.
     '''
     input_files = glob.glob(path_to_input_files + "/*")
-    input_files = input_files[:10]
+    input_files = input_files[:4]
     print("Number of input files: " + str(len(input_files)))
 
     return_dict = {}
@@ -143,6 +143,7 @@ def main():
 
     col.run_bls(startp=start_p,endp=end_p,autofreq=False,
                 stepsize=stepsize_bls,
+                nphasebins=200,
                 mintransitduration=min_transit_duration,
                 maxtransitduration=max_transit_duration,
                 sigclip=np.inf,medianfilter=True,
@@ -153,8 +154,9 @@ def main():
                 snr_threshold=thresh.bls_cutoff)
 
 
-    import pickle
-    pickle.dump(col,open("hi.pkl","wb"))
+    #import pickle
+    #pickle.dump(col,open("hi.pkl","wb"))
+    col.save_periodsearch_results(".")
 
 
 
