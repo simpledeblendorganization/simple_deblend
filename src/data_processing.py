@@ -44,6 +44,8 @@ class lc_collection_for_processing(lc_objects):
 
         print("n_control_workers is: " + str(self.n_control_workers))
 
+        self.results_dict = {}
+
 
     def run_ls(self,num_periods=3,
                startp=None,endp=None,autofreq=True,
@@ -69,7 +71,10 @@ class lc_collection_for_processing(lc_objects):
                       'nbestpeaks':nbestpeaks,'periodepsilon':periodepsilon,
                       'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
 
-        self.run('LS',ls_p,params,num_periods,nworkers,
+        method = 'LS'
+        self.results_dict[method] = []
+
+        self.run(method,ls_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
                  freq_window_epsilon_mf=freq_window_epsilon_mf,
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
@@ -104,7 +109,10 @@ class lc_collection_for_processing(lc_objects):
                       'stepsize':stepsize,'sigclip':sigclip,
                       'verbose':verbose,'phasebinsize':phasebinsize}
 
-        self.run('PDM',pdm_p,params,num_periods,nworkers,
+        method = 'PDM'
+        self.results_dict[method] = []
+
+        self.run(method,pdm_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
                  freq_window_epsilon_mf=freq_window_epsilon_mf,
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
@@ -148,7 +156,10 @@ class lc_collection_for_processing(lc_objects):
                       'stepsize':stepsize,'nphasebins':nphasebins,
                       'sigclip':sigclip,'verbose':verbose}
 
-        self.run('BLS',bls_p,params,num_periods,nworkers,
+        method = 'BLS'
+        self.results_dict[method] = []
+
+        self.run(method,bls_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
                  freq_window_epsilon_mf=freq_window_epsilon_mf,
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
@@ -269,10 +280,7 @@ class lc_collection_for_processing(lc_objects):
                 #print(len(results_storage.good_periods_info))
                 break
 
-        if len(results_storage.good_periods_info) > 0 or len(results_storage.blends_info) > 0:
-            return results_storage
-        else:
-            return None
+        self.results_dict[which_method].append(results_storage)
 
         ###### So what kind of information do I want returned?
           # LSP of any well-found peak
@@ -281,9 +289,14 @@ class lc_collection_for_processing(lc_objects):
 
 
     def save_periodsearch_results(self,outputdir):
-        if len(results_storage.good_periods_info) > 0:
-            with open(self.outputdir + "ps_" + results_storage.ID + ".pkl","wb") as f:
-                pickle.dump(results_storage,f)
+        print("Saving results...")
+        for k in self.results_dict.keys():
+            print(k)
+            for result in self.results_dict[k]:
+                print(result.ID)
+                #if len(result.good_periods_info) > 0 or len(results.blends_info) > 0:
+                with open(self.outputdir + "ps_" + result.ID + "_" + k + ".pkl","wb") as f:
+                        pickle.dump(result,f)
         
 
             
