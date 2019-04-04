@@ -200,6 +200,12 @@ class lc_collection_for_processing(lc_objects):
                               snr_filter_size,snr_threshold,max_blend_recursion)
                              for o in self.objects]
 
+
+        print("**************************************")
+        print("******")
+        print("******       Starting " + which_method + " run")
+        print("******")
+        print("**************************************")
         with ProcessPoolExecutor(max_workers=self.n_control_workers) as executor:
             er = executor.map(self._run_single_object,running_tasks)
 
