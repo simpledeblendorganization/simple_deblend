@@ -46,7 +46,7 @@ def get_input_light_curves(path_to_input_files):
     as long as the output format matches what is here.
     '''
     input_files = glob.glob(path_to_input_files + "/*")
-    input_files = input_files[:100]
+    input_files = input_files[:10]
     print("Number of input files: " + str(len(input_files)))
 
     return_dict = {}
@@ -81,7 +81,6 @@ def get_xy(file_xy):
     return_dict = {}
     for line in lines:
         s = line.split()
-        print(s[0])
         if float(s[3]) < 19.:
             return_dict[s[0]] = (float(s[-2]),float(s[-1]))
 
