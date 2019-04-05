@@ -57,7 +57,7 @@ class lc_collection_for_processing(lc_objects):
                median_filter_size=None,
                snr_filter_size=None,
                snr_threshold=0.,
-               max_blend_recursion=8):
+               max_blend_recursion=4):
 
         if autofreq and stepsize:
             raise ValueError("autofreq was set to True, but stepsize was given")
@@ -92,7 +92,7 @@ class lc_collection_for_processing(lc_objects):
                 median_filter_size=None,
                 snr_filter_size=None,
                 snr_threshold=0.,
-                max_blend_recursion=8):
+                max_blend_recursion=4):
 
         if autofreq and stepsize:
             raise ValueError("autofreq was set to True, but stepsize was given")
