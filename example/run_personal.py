@@ -46,7 +46,7 @@ def get_input_light_curves(path_to_input_files):
     as long as the output format matches what is here.
     '''
     input_files = glob.glob(path_to_input_files + "/*")
-    input_files = input_files[:4]
+    input_files = input_files[:1]
     print("Number of input files: " + str(len(input_files)))
 
     return_dict = {}
@@ -114,12 +114,14 @@ def main():
     # Initialize the object to be ran
     col = dproc.lc_collection_for_processing(neighbor_radius,
                                              n_control_workers=n_control_workers)
-
+    print("........",col.results)
     # Add objects
     for ID in lcs.keys():
         lc = lcs[ID]
         this_xy = xy[ID]
         col.add_object(lc[0],lc[1],lc[2],this_xy[0],this_xy[1],ID)
+
+    print("--------",col.results)
 
     
     # Run Lomb-Scargle
@@ -140,7 +142,7 @@ def main():
                 median_filter_size=median_filter_window_pdm,
                 snr_filter_size=median_filter_window_pdm,
                 snr_threshold=thresh.pdm_cutoff)
-
+    """
     col.run_bls(startp=start_p,endp=end_p,autofreq=False,
                 stepsize=stepsize_bls,
                 nphasebins=200,
@@ -152,6 +154,7 @@ def main():
                 median_filter_size=median_filter_window_bls,
                 snr_filter_size=median_filter_window_bls,
                 snr_threshold=thresh.bls_cutoff)
+    """
 
 
     #import pickle

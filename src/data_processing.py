@@ -44,7 +44,7 @@ class lc_collection_for_processing(lc_objects):
 
         print("n_control_workers is: " + str(self.n_control_workers))
 
-        self.results_dict = {}
+
 
 
     def run_ls(self,num_periods=3,
@@ -72,7 +72,6 @@ class lc_collection_for_processing(lc_objects):
                       'stepsize':stepsize,'sigclip':sigclip,'verbose':verbose}
 
         method = 'LS'
-        self.results_dict[method] = []
 
         self.run(method,ls_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
@@ -110,7 +109,6 @@ class lc_collection_for_processing(lc_objects):
                       'verbose':verbose,'phasebinsize':phasebinsize}
 
         method = 'PDM'
-        self.results_dict[method] = []
 
         self.run(method,pdm_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
@@ -157,7 +155,6 @@ class lc_collection_for_processing(lc_objects):
                       'sigclip':sigclip,'verbose':verbose}
 
         method = 'BLS'
-        self.results_dict[method] = []
 
         self.run(method,bls_p,params,num_periods,nworkers,
                  medianfilter=medianfilter,
@@ -172,6 +169,7 @@ class lc_collection_for_processing(lc_objects):
             medianfilter=False,freq_window_epsilon_mf=None,
             freq_window_epsilon_snr=None,median_filter_size=None,
             snr_filter_size=None,snr_threshold=0.,max_blend_recursion=8):
+
 
         num_proc_per_run = max(1,cpu_count()//self.n_control_workers)
         if nworkers is None:
@@ -276,11 +274,14 @@ class lc_collection_for_processing(lc_objects):
                                            snr_threshold=snr_threshold,
                                            max_blend_recursion=max_blend_recursion)
             if yprime is None:
-                #print("yprime is None")
                 #print(len(results_storage.good_periods_info))
                 break
 
-        self.results_dict[which_method].append(results_storage)
+        if len(results_storage.good_periods_info) > 0 or\
+                len(results_storage.blends_info) > 0:
+            return results_storage
+        else:
+            return None
 
         ###### So what kind of information do I want returned?
           # LSP of any well-found peak
@@ -290,13 +291,14 @@ class lc_collection_for_processing(lc_objects):
 
     def save_periodsearch_results(self,outputdir):
         print("Saving results...")
-        for k in self.results_dict.keys():
-            print(k)
-            for result in self.results_dict[k]:
-                print(result.ID)
+        for k in self.results.keys():
+            for k2 in self.results[k].keys():
+                r = self.results[k][k2]
                 #if len(result.good_periods_info) > 0 or len(results.blends_info) > 0:
-                with open(self.outputdir + "ps_" + result.ID + "_" + k + ".pkl","wb") as f:
-                        pickle.dump(result,f)
+                with open(outputdir + "ps_" + r.ID + "_" + k2 + "_goodperiod.pkl","wb") as f:
+                        pickle.dump(r.good_periods_info,f)
+                with open(outputdir + "ps_" + r.ID + "_" + k2 + "_blends.pkl","wb") as f:
+                        pickle.dump(r.blends_info,f)
         
 
             

@@ -313,7 +313,8 @@ def iterative_deblend(t, y, dy, neighbors,
         if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude:
             if this_flux_amplitude < results_storage_container.stillcount_blend_factor * ffn_all[max_ffn_ID].flux_amplitude:
                 print("   -> blended! Trying again.")
-                results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,snr_threshold,
+                results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,
+                                                    snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
                                                     this_flux_amplitude)
                 if recursion_level >= max_blend_recursion:
                     print("   Reached the blend recursion level, no longer checking")
@@ -332,7 +333,7 @@ def iterative_deblend(t, y, dy, neighbors,
                                          freq_window_epsilon_snr=freq_window_epsilon_snr,
                                          window_size_mf=window_size_mf,
                                          window_size_snr=window_size_snr,
-                                         snr_threshold=snr_threshold,
+                                         snr_threshold=snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
                                          max_blend_recursion=max_blend_recursion,
                                          recursion_level=recursion_level+1)
             else:
@@ -342,7 +343,8 @@ def iterative_deblend(t, y, dy, neighbors,
     # Return the period and the pre-whitened light curve
     
     results_storage_container.add_good_period(lsp_dict,t,y,dy,
-                                              snr_threshold,this_flux_amplitude,
+                                              snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
+                                              this_flux_amplitude,
                                               significant_neighbor_blends,
                                               notmax=notmax)
     return y - ffr(t)
