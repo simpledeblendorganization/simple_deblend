@@ -46,7 +46,7 @@ def get_input_light_curves(path_to_input_files):
     as long as the output format matches what is here.
     '''
     input_files = glob.glob(path_to_input_files + "/*")
-    input_files = input_files[:1]
+    input_files = input_files[:10]
     print("Number of input files: " + str(len(input_files)))
 
     return_dict = {}
@@ -142,7 +142,7 @@ def main():
                 median_filter_size=median_filter_window_pdm,
                 snr_filter_size=median_filter_window_pdm,
                 snr_threshold=thresh.pdm_cutoff)
-    """
+    
     col.run_bls(startp=start_p,endp=end_p,autofreq=False,
                 stepsize=stepsize_bls,
                 nphasebins=200,
@@ -154,11 +154,9 @@ def main():
                 median_filter_size=median_filter_window_bls,
                 snr_filter_size=median_filter_window_bls,
                 snr_threshold=thresh.bls_cutoff)
-    """
+    
 
 
-    #import pickle
-    #pickle.dump(col,open("hi.pkl","wb"))
     col.save_periodsearch_results(".")
 
 
