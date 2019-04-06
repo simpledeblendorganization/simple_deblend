@@ -188,6 +188,9 @@ class lc_collection_for_processing(lc_objects):
                 num_proc_per_run = nworkers
             print("***\n")
         print("Number of worker processes per control process: " + str(num_proc_per_run) + "\n")
+
+        params['nworkers'] = num_proc_per_run
+
         if hasattr(snr_threshold,'__len__'):
             if len(snr_threshold) != len(self.objects):
                 raise ValueError("The length of snr_threshold is not the same as the length of objects")
@@ -203,12 +206,13 @@ class lc_collection_for_processing(lc_objects):
                               freq_window_epsilon_snr,median_filter_size,
                               snr_filter_size,snr_threshold,max_blend_recursion,
                               num_proc_per_run)
-                             for o in self.objects if o.ID=="6045466193420225536"]
+                             for o in self.objects]
         else:
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
-                              snr_filter_size,snr_threshold,max_blend_recursion)
+                              snr_filter_size,snr_threshold,max_blend_recursion,
+                              num_proc_per_run)
                              for o in self.objects]
 
 
@@ -244,7 +248,7 @@ class lc_collection_for_processing(lc_objects):
         (object,which_method,ps_func,params,num_periods,
          medianfilter,freq_window_epsilon_mf,freq_window_epsilon_snr,
          median_filter_size,snr_filter_size,snr_threshold,
-         max_blend_recursion) = task
+         max_blend_recursion,nworkers) = task
 
         if not medianfilter:
             if freq_window_epsilon_mf is not None:
@@ -274,7 +278,8 @@ class lc_collection_for_processing(lc_objects):
                                            window_size_mf=median_filter_size,
                                            window_size_snr=snr_filter_size,
                                            snr_threshold=snr_threshold,
-                                           max_blend_recursion=max_blend_recursion)
+                                           max_blend_recursion=max_blend_recursion,
+                                           nworkers=nworkers)
             if yprime is None:
                 break
 

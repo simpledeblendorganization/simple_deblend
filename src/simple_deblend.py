@@ -126,6 +126,21 @@ class FourierFit(object):
         return X @ self.params - self.params[0]
 
 
+def _median_filtering_one_job(task):
+    (i,lspvals,freq_window_index_size,median_filter_size) = task
+    window_vals = []
+    if i >= freq_window_index_size:
+        if i - freq_window_index_size < 0:
+            raise RuntimeError("Too small, " + str(i-freq_window_index_size))
+        window_vals.extend(lspvals[max(0,i-freq_window_index_size-median_filter_size+1):i-freq_window_index_size+1].tolist())
+    if i + freq_window_index_size < len(lspvals):
+        window_vals.extend(lspvals[i+freq_window_index_size:i+freq_window_index_size+median_filter_size].tolist())
+    window_vals = np.array(window_vals)
+    wherefinite = np.isfinite(window_vals)
+    vals, low, upp = sigmaclip(window_vals[wherefinite],low=3,high=3)
+
+    return np.median(vals)
+
 
 def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,
                      duration,which_method,nworkers=1):
@@ -138,6 +153,17 @@ def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,
     freq_window_size = freq_window_epsilon/duration
     freq_window_index_size = int(round(freq_window_size/abs(1./periods[0] - 1./periods[1])))
 
+    pool = Pool(nworkers)
+    
+    tasks = [(i,lspvals,freq_window_index_size,median_filter_size) for i in range(len(lspvals))]
+    median_filter_values = pool.map(_median_filtering_one_job,tasks)
+
+    pool.close()
+    pool.join()
+    del pool
+
+
+    """
     median_filter_values = []
     for i in range(len(lspvals)):
         window_vals = []
@@ -152,6 +178,7 @@ def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,
         vals, low, upp = sigmaclip(window_vals[wherefinite],low=3,high=3)
 
         median_filter_values.append(np.median(vals))
+    """
 
 
     if which_method == 'PDM':
@@ -175,7 +202,8 @@ def iterative_deblend(t, y, dy, neighbors,
                       window_size_snr=40,
                       snr_threshold=0.,
                       max_blend_recursion=8,
-                      recursion_level=0):
+                      recursion_level=0,
+                      nworkers=1):
     """
     Iteratively deblend a lightcurve against neighbors
 
@@ -219,7 +247,7 @@ def iterative_deblend(t, y, dy, neighbors,
         pdgm_values = median_filtering(lsp_dict['lspvals'],lsp_dict['periods'],
                                        freq_window_epsilon_mf,
                                        window_size_mf,
-                                       t[-1]-t[0],which_method)
+                                       t[-1]-t[0],which_method,nworkers=nworkers)
 
         lsp_dict['medianfilter'] = True
         lsp_dict['lspvalsmf'] = pdgm_values
@@ -336,7 +364,8 @@ def iterative_deblend(t, y, dy, neighbors,
                                          window_size_snr=window_size_snr,
                                          snr_threshold=snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
                                          max_blend_recursion=max_blend_recursion,
-                                         recursion_level=recursion_level+1)
+                                         recursion_level=recursion_level+1,
+                                         nworkers=nworkers)
             else:
                 notmax = True
 
