@@ -123,7 +123,7 @@ def main():
 
     
     # Run Lomb-Scargle
-    """
+    
     col.run_ls(startp=start_p,endp=end_p,autofreq=False,
                stepsize=stepsize_ls,
                sigclip=np.inf,verbose=False,medianfilter=True,
@@ -141,7 +141,7 @@ def main():
                 median_filter_size=median_filter_window_pdm,
                 snr_filter_size=median_filter_window_pdm,
                 snr_threshold=thresh.pdm_cutoff)
-    """
+
     
     col.run_bls(startp=start_p,endp=end_p,autofreq=False,
                 stepsize=stepsize_bls,
