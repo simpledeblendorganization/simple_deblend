@@ -3,6 +3,8 @@ import numpy as np
 import math
 import snr_calculation as snr
 
+from multiprocessing import Pool
+
 
 def snr_threshold_tocomp(f,period=None):
     if callable(f):
@@ -125,7 +127,8 @@ class FourierFit(object):
 
 
 
-def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,duration,which_method):
+def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,
+                     duration,which_method,nworkers=1):
     # First, make sure all the frequency values are equally spaced
     diff = np.diff(1./periods)
     for val in diff:
@@ -134,7 +137,6 @@ def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,dura
 
     freq_window_size = freq_window_epsilon/duration
     freq_window_index_size = int(round(freq_window_size/abs(1./periods[0] - 1./periods[1])))
-
 
     median_filter_values = []
     for i in range(len(lspvals)):
@@ -214,7 +216,6 @@ def iterative_deblend(t, y, dy, neighbors,
 
     # Now median filter the periodogram if selected
     if medianfilter:
-              
         pdgm_values = median_filtering(lsp_dict['lspvals'],lsp_dict['periods'],
                                        freq_window_epsilon_mf,
                                        window_size_mf,

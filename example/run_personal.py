@@ -91,7 +91,7 @@ def get_xy(file_xy):
 def main():
     path_to_input_files = sys.argv[1]
     neighbor_radius = float(sys.argv[2])
-    n_control_workers = int(sys.argv[3])
+    n_control_workers = 1#int(sys.argv[3])
     file_xy = sys.argv[4]
     start_p = float(sys.argv[5])
     end_p = float(sys.argv[6])
@@ -114,17 +114,16 @@ def main():
     # Initialize the object to be ran
     col = dproc.lc_collection_for_processing(neighbor_radius,
                                              n_control_workers=n_control_workers)
-    print("........",col.results)
     # Add objects
     for ID in lcs.keys():
         lc = lcs[ID]
         this_xy = xy[ID]
         col.add_object(lc[0],lc[1],lc[2],this_xy[0],this_xy[1],ID)
 
-    print("--------",col.results)
 
     
     # Run Lomb-Scargle
+    """
     col.run_ls(startp=start_p,endp=end_p,autofreq=False,
                stepsize=stepsize_ls,
                sigclip=np.inf,verbose=False,medianfilter=True,
@@ -142,6 +141,7 @@ def main():
                 median_filter_size=median_filter_window_pdm,
                 snr_filter_size=median_filter_window_pdm,
                 snr_threshold=thresh.pdm_cutoff)
+    """
     
     col.run_bls(startp=start_p,endp=end_p,autofreq=False,
                 stepsize=stepsize_bls,
@@ -161,8 +161,70 @@ def main():
 
 
 
-
-
+"""
+6045466193420224896
+  PDM PERIOD: 1.71874e+00 days;  pSNR: 2.10418e+01
+    checking blends
+    6045466193420210816
+     n: 1.0537190427208654e-07 vs.  1.0323214044661785e-20
+   -> blended! Trying again.
+6045466193420225536
+  PDM PERIOD: 6.64019e-02 days;  pSNR: 7.04094e+01
+    checking blends
+    6045466193420214016
+     n: 5.093358098759847e-07 vs.  2.0844951436336297e-20
+   -> blended! Trying again.
+6045466193420224896
+  PDM PERIOD: 1.71874e+00 days;  pSNR: 2.10418e+01
+    checking blends
+    6045466193420210816
+     n: 1.0537190427208654e-07 vs.  1.376428539288238e-20
+   -> blended! Trying again.
+6045466193420225536
+  PDM PERIOD: 6.64019e-02 days;  pSNR: 7.04094e+01
+    checking blends
+    6045466193420214016
+     n: 5.093358098759847e-07 vs.  1.1432297809972885e-19
+   -> blended! Trying again.
+6045466193420224896
+  PDM PERIOD: 1.71874e+00 days;  pSNR: 2.10418e+01
+    checking blends
+    6045466193420210816
+     n: 1.0537190427208654e-07 vs.  8.946785505373547e-21
+   -> blended! Trying again.
+6045466193420225536
+  PDM PERIOD: 6.64019e-02 days;  pSNR: 7.04094e+01
+    checking blends
+    6045466193420214016
+     n: 5.093358098759847e-07 vs.  2.1146706923795642e-19
+   -> blended! Trying again.
+6045466193420224896
+  PDM PERIOD: 1.71874e+00 days;  pSNR: 2.10418e+01
+    checking blends
+    6045466193420210816
+     n: 1.0537190427208654e-07 vs.  1.1011428314305904e-20
+   -> blended! Trying again.
+6045466193420225536
+  PDM PERIOD: 6.64019e-02 days;  pSNR: 7.04094e+01
+    checking blends
+    6045466193420214016
+     n: 5.093358098759847e-07 vs.  1.3998542942357398e-19
+   -> blended! Trying again.
+6045466193420224896
+  PDM PERIOD: 1.71874e+00 days;  pSNR: 2.10418e+01
+    checking blends
+    6045466193420210816
+     n: 1.0537190427208654e-07 vs.  8.946785505373547e-21
+   -> blended! Trying again.
+   Reached the blend recursion level, no longer checking
+6045466193420225536
+  PDM PERIOD: 6.64019e-02 days;  pSNR: 7.04094e+01
+    checking blends
+    6045466193420214016
+     n: 5.093358098759847e-07 vs.  4.765883817285524e-20
+   -> blended! Trying again.
+   Reached the blend recursion level, no longer checking
+"""
 
 
 

@@ -194,14 +194,16 @@ class lc_collection_for_processing(lc_objects):
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
-                              snr_filter_size,snr_val,max_blend_recursion)
+                              snr_filter_size,snr_val,max_blend_recursion,
+                              num_proc_per_run)
                              for o, snr_val in zip(self.objects,snr_threshold)]
         elif callable(snr_threshold): # If a callable thing of some kind
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
-                              snr_filter_size,snr_threshold,max_blend_recursion)
-                             for o in self.objects]
+                              snr_filter_size,snr_threshold,max_blend_recursion,
+                              num_proc_per_run)
+                             for o in self.objects if o.ID=="6045466193420225536"]
         else:
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
@@ -274,7 +276,6 @@ class lc_collection_for_processing(lc_objects):
                                            snr_threshold=snr_threshold,
                                            max_blend_recursion=max_blend_recursion)
             if yprime is None:
-                #print(len(results_storage.good_periods_info))
                 break
 
         if len(results_storage.good_periods_info) > 0 or\
