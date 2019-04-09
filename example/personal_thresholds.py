@@ -5,6 +5,9 @@ M4 work.
 
 '''
 
+import numpy as np
+
+
 def pdm_cutoff(p):
 
     p1_y = 7.5
@@ -131,7 +134,6 @@ def bls_cutoff(p):
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    import numpy as np
 
     xes = np.linspace(0.05,90,10000)
 
