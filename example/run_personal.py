@@ -17,9 +17,10 @@ import numpy as np
 import personal_thresholds as thresh
 
 
+print(sys.argv)
 
 
-if len(sys.argv) != 15:
+if len(sys.argv) != 16 and not (len(sys.argv) == 17 and sys.argv[-1] == '\\'):
     print("Expecting 14 arguments:")
     print(" - path to input light curve files")
     print(" - neighbor inclusion radius")
@@ -27,6 +28,7 @@ if len(sys.argv) != 15:
     print(" - file with x,y position information")
     print(" - starting period")
     print(" - ending period")
+    print(" - autofreq")
     print(" - stepsize LS")
     print(" - stepsize PDM")
     print(" - stepsize BLS")
@@ -95,15 +97,32 @@ def main():
     file_xy = sys.argv[4]
     start_p = float(sys.argv[5])
     end_p = float(sys.argv[6])
-    stepsize_ls = float(sys.argv[7])
-    stepsize_pdm = float(sys.argv[8])
-    stepsize_bls = float(sys.argv[9])
-    freq_window_epsilon = float(sys.argv[10])
-    median_filter_window_ls = int(sys.argv[11])
+    if sys.argv[7] in ['true','True','t','T']:
+        autofreq = True
+    elif sys.argv[7] in ['false','False','f','F']:
+        autofreq = False
+    else:
+        raise ValueError("did not recognize autofreq value")
+    if autofreq:
+        if sys.argv[8] not in ['None','none','-']:
+            raise ValueError("autofreq is True, but stepsize_ls was not None")
+        if sys.argv[9] not in ['None','none','-']:
+            raise ValueError("autofreq is True, but stepsize_pdm was not None")
+        if sys.argv[10] not in ['None','none','-']:
+            raise ValueError("autofreq is True, but stepsize_bls was not None")
+        stepsize_ls = None#np.inf
+        stepsize_pdm = None#np.inf
+        stepsize_bls = None#np.inf
+    else:
+        stepsize_ls = float(sys.argv[8])
+        stepsize_pdm = float(sys.argv[9])
+        stepsize_bls = float(sys.argv[10])
+    freq_window_epsilon = float(sys.argv[11])
+    median_filter_window_ls = int(sys.argv[12])
     median_filter_window_pdm = median_filter_window_ls
-    median_filter_window_bls = int(sys.argv[12])
-    min_transit_duration = float(sys.argv[13])
-    max_transit_duration = float(sys.argv[14])
+    median_filter_window_bls = int(sys.argv[13])
+    min_transit_duration = float(sys.argv[14])
+    max_transit_duration = float(sys.argv[15])
 
     # Get the light curves
     lcs = get_input_light_curves(path_to_input_files)
@@ -124,7 +143,7 @@ def main():
     
     # Run Lomb-Scargle
     
-    col.run_ls(startp=start_p,endp=end_p,autofreq=False,
+    col.run_ls(startp=start_p,endp=end_p,autofreq=autofreq,
                stepsize=stepsize_ls,
                sigclip=np.inf,verbose=False,medianfilter=True,
                freq_window_epsilon_mf=freq_window_epsilon,
@@ -133,7 +152,7 @@ def main():
                snr_filter_size=median_filter_window_ls,
                snr_threshold=thresh.ls_cutoff)
 
-    col.run_pdm(startp=start_p,endp=end_p,autofreq=False,
+    col.run_pdm(startp=start_p,endp=end_p,autofreq=autofreq,
                 stepsize=stepsize_pdm,
                 sigclip=np.inf,verbose=False,medianfilter=True,
                 freq_window_epsilon_mf=freq_window_epsilon,
@@ -143,7 +162,7 @@ def main():
                 snr_threshold=thresh.pdm_cutoff)
 
     
-    col.run_bls(startp=start_p,endp=end_p,autofreq=False,
+    col.run_bls(startp=start_p,endp=end_p,autofreq=autofreq,
                 stepsize=stepsize_bls,
                 nphasebins=200,
                 mintransitduration=min_transit_duration,
@@ -154,6 +173,7 @@ def main():
                 median_filter_size=median_filter_window_bls,
                 snr_filter_size=median_filter_window_bls,
                 snr_threshold=thresh.bls_cutoff)
+    
     
 
 
