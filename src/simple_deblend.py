@@ -249,9 +249,9 @@ def median_filtering(periodogramvals,periods,freq_window_epsilon,median_filter_s
 
     # Return median-filtered periodogram
     if which_method == 'PDM':
-        return lspvals + (1. - np.array(median_filter_values))
+        return periodogramvals + (1. - np.array(median_filter_values))
     else:
-        return lspvals - np.array(median_filter_values)
+        return periodogramvals - np.array(median_filter_values)
 
 
 def iterative_deblend(t, y, dy, neighbors,
