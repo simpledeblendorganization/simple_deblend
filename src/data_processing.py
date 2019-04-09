@@ -301,7 +301,7 @@ class lc_collection_for_processing(lc_objects):
             for k2 in self.results[k].keys():
                 r = self.results[k][k2]
                 #if len(result.good_periods_info) > 0 or len(results.blends_info) > 0:
-                with open(outputdir + "ps_" + r.ID + "_" + k2 + "_goodperiod.pkl","wb") as f:
+                with open(outputdir + "/ps_" + r.ID + "_" + k2 + "_goodperiod.pkl","wb") as f:
                         pickle.dump(r.good_periods_info,f)
                 with open(outputdir + "ps_" + r.ID + "_" + k2 + "_blends.pkl","wb") as f:
                         pickle.dump(r.blends_info,f)
