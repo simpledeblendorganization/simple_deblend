@@ -1,3 +1,10 @@
+'''simple_deblend.py - John Hoffman & Joshua Wallace - Feb 2019
+
+This code is where the period search results are calculate, analyzed,
+and taken care of
+'''
+
+
 from scipy.stats import sigmaclip
 import numpy as np
 import math
@@ -6,7 +13,17 @@ import snr_calculation as snr
 from multiprocessing import Pool
 
 
+
 def snr_threshold_tocomp(f,period=None):
+    '''
+    Wrapper function to agnostically return either a 
+    straight value or a value from a function
+
+    f - either the value or the function
+
+    period - (necessary if f is a function) the period
+             to give to the function f; ignored if f is a value
+    '''
     if callable(f):
         return f(period)
     else:
@@ -14,12 +31,12 @@ def snr_threshold_tocomp(f,period=None):
 
 
 def _2d(arr):
-    """ Reshape 1d array to 2d array """
+    ''' Reshape 1d array to 2d array '''
     return np.reshape(arr, (len(arr), 1))
 
 
 def design_matrix(t, freq, nharms):
-    """
+    '''
     Design matrix for truncated Fourier series
     Parameters
     ----------
@@ -35,7 +52,7 @@ def design_matrix(t, freq, nharms):
         Design matrix, shape = ``(N, 2 * nharms + 1)``, where
         ``N`` is the number of observations, and ``nharms`` is the
         number of harmonics
-    """
+    '''
 
     omega = 2 * np.pi * freq
     phi = omega * t
@@ -55,6 +72,11 @@ def design_matrix(t, freq, nharms):
     return np.hstack(cols)
 
 class FourierFit(object):
+    '''
+    Class for fitting a Fourier series to a light curve
+    
+    nharmonics - the number of harmonics to use in the fit
+    '''
     def __init__(self, nharmonics=5):
         self.nharmonics = nharmonics
 
@@ -62,7 +84,27 @@ class FourierFit(object):
     def fit(self, t, y, dy, freq, nharmonics=None,
             dy_as_weights=False,
             y_as_flux=False):
+        '''
+        Fit a Fourier series
 
+        t - times of the data
+
+        y - values of the data
+
+        dy - errors on the data
+
+        freq - frequency to fit on
+
+        nharmonics - (optional) number of harmonics to fit on
+
+        dy_as_weights - (optional) whether to use the dy values
+                        as weights for the fit
+
+        y_as_flux - (optional) whether the y values are flux 
+                    values instead of magnitudes
+        '''
+
+        # Some initialization stuff
         if nharmonics is not None:
             self.nharmonics = nharmonics
 
@@ -85,13 +127,13 @@ class FourierFit(object):
 
         S = X.T @ W @ X# + self.V
 
+        # Parameters of the fit
         self.params = np.linalg.solve(S, z)
 
         return self
 
     @property
     def flux_amplitude(self):
-
         # delta flux / f0
 
         phase = np.linspace(0, 1, 200)
@@ -121,66 +163,91 @@ class FourierFit(object):
         return ff
 
     def __call__(self, t, in_phase=False):
+        # Return the value of the fit Fourier series at t
         freq = 1 if in_phase else self.freq
         X = design_matrix(t, freq, self.nharmonics)
         return X @ self.params - self.params[0]
 
 
 def _median_filtering_one_job(task):
-    (i,lspvals,freq_window_index_size,median_filter_size) = task
-    window_vals = []
+    '''
+    Median filter worker function for parallelization,
+    works on determining the median filter
+
+    task - the task being passed to this worker, see
+           median_filtering function for details
+    '''
+
+    # Extract parameters
+    (i,periodogramvals,freq_window_index_size,median_filter_size) = task
+
+    window_vals = [] # For storing values to use in median filtering
+
+    # Get the values to be used for the filter
     if i >= freq_window_index_size:
         if i - freq_window_index_size < 0:
             raise RuntimeError("Too small, " + str(i-freq_window_index_size))
-        window_vals.extend(lspvals[max(0,i-freq_window_index_size-median_filter_size+1):i-freq_window_index_size+1].tolist())
-    if i + freq_window_index_size < len(lspvals):
-        window_vals.extend(lspvals[i+freq_window_index_size:i+freq_window_index_size+median_filter_size].tolist())
+        window_vals.extend(periodogramvals[max(0,i-freq_window_index_size-median_filter_size+1):i-freq_window_index_size+1].tolist())
+    if i + freq_window_index_size < len(periodogramvals):
+        window_vals.extend(periodogramvals[i+freq_window_index_size:i+freq_window_index_size+median_filter_size].tolist())
     window_vals = np.array(window_vals)
+
+    # Keep only finite ones
     wherefinite = np.isfinite(window_vals)
+
+    # Sigma clipping
     vals, low, upp = sigmaclip(window_vals[wherefinite],low=3,high=3)
 
+    # Return the median value
     return np.median(vals)
 
 
-def median_filtering(lspvals,periods,freq_window_epsilon,median_filter_size,
+def median_filtering(periodogramvals,periods,freq_window_epsilon,median_filter_size,
                      duration,which_method,nworkers=1):
+    '''Median filter a periodogram
+
+    periodogramvals - the periodogram values
+
+    periods - the periods associated with periodogramvals
+
+    freq_window_epsilon - sets the size of the exclusion area
+               in the periodogram for the calculation
+
+    median_filter_size - number of points to include in
+               calculating the RMS for the SNR
+
+    duration - total duration of the observations
+    
+    which_method - which period search algorithm was used
+
+    nworkers - (optional) number of worker processes
+    '''
+
+
     # First, make sure all the frequency values are equally spaced
     diff = np.diff(1./periods)
     for val in diff:
         if not math.isclose(val,diff[0],rel_tol=1e-5,abs_tol=1e-5):
             raise ValueError("The frequency differences are not equal spacing, which this function assumes")
 
+    # Initializing some values
     freq_window_size = freq_window_epsilon/duration
     freq_window_index_size = int(round(freq_window_size/abs(1./periods[0] - 1./periods[1])))
 
+    # Set up processing pool
     pool = Pool(nworkers)
     
-    tasks = [(i,lspvals,freq_window_index_size,median_filter_size) for i in range(len(lspvals))]
+    # Set up tasks for processing
+    tasks = [(i,periodogramvals,freq_window_index_size,median_filter_size) for i in range(len(periodogramvals))]
+
+    # Run, collect results
     median_filter_values = pool.map(_median_filtering_one_job,tasks)
 
     pool.close()
     pool.join()
     del pool
 
-
-    """
-    median_filter_values = []
-    for i in range(len(lspvals)):
-        window_vals = []
-        if i >= freq_window_index_size:
-            if i - freq_window_index_size < 0:
-                raise RuntimeError("Too small, " + str(i-freq_window_index_size))
-            window_vals.extend(lspvals[max(0,i-freq_window_index_size-median_filter_size+1):i-freq_window_index_size+1].tolist())
-        if i + freq_window_index_size < len(lspvals):
-            window_vals.extend(lspvals[i+freq_window_index_size:i+freq_window_index_size+median_filter_size].tolist())
-        window_vals = np.array(window_vals)
-        wherefinite = np.isfinite(window_vals)
-        vals, low, upp = sigmaclip(window_vals[wherefinite],low=3,high=3)
-
-        median_filter_values.append(np.median(vals))
-    """
-
-
+    # Return median-filtered periodogram
     if which_method == 'PDM':
         return lspvals + (1. - np.array(median_filter_values))
     else:
@@ -221,20 +288,56 @@ def iterative_deblend(t, y, dy, neighbors,
     period_finding_func: function
         Function used to find the period.  Output format assumed to
         be the same as that used in astrobase.periodbase
+    results_storage_container: instance of data_processing.periodsearch_results
+        Used to store the results
+    which_method: string
+        Which period search method is being used
+    (optional from here below):
     function_params: dictionary
         A dictionary containing parameters for the function in
         period_finding_func
-    nharmonics_fit:
+    nharmonics_fit: int
         Number of harmonics to use in the fit (used to estimate
         flux amplitude)
-    nharmonics_resid:
+    nharmonics_resid: int
         Number of harmonics to use to obtain the residual if we
         find that the signal is a blend of a neighboring signal
+    ID: string
+        ID of the object
+    medianfilter: boolean
+        whether to median filter the periodogram
+    freq_window_epsilon_mf: int
+        sets the size of the exclusion area
+        in the periodogram for the median filter calculation
+    freq_window_epsilon_snr: int
+        sets the size of the exclusion area
+        in the periodogram for the SNR calculation
+    window_size_mf: int
+        number of points to include in 
+        calculating the median value for median filter
+    window_size_snr: int
+        number of points to include in
+        calculating the standard deviation for the SNR
+    snr_threshold=0: float, array_like, or callable
+        threshold value or function for
+        counting a signal as robust, can be:
+             single value -- applies to all objects and periods
+             iterable -- length of number of objects, applies
+                                each value to each object
+             callable -- function of period
+    max_blend_recursion: int
+        maximum number of blends to try and fit
+        out before giving up
+    recursion_level: int
+        current recursion level
+    nworkers: int
+        number of child workers
     """
 
-    # use the function to find the best period
+    # Use the period finding function to find the best period
     lsp_dict = period_finding_func(t,y,dy,**function_params)
 
+    # If no period is found at all, quit
     if np.isnan(lsp_dict['bestperiod']):
         if ID:
             print(ID + "\n   -> " + which_method + " found no period, for " + ID)
@@ -252,9 +355,11 @@ def iterative_deblend(t, y, dy, neighbors,
         lsp_dict['medianfilter'] = True
         lsp_dict['lspvalsmf'] = pdgm_values
 
+    # Otherwise just copy periodogram values over
     else:
         pdgm_values = lsp_dict['lspvals']
 
+        # Check that the best period matches what period_finding_func says is best period
         lsp_dict['medianfilter'] = False
         if which_method == 'PDM':
             per_to_comp = lsp_dict['periods'][np.argmin(pdgm_values)]
@@ -265,11 +370,13 @@ def iterative_deblend(t, y, dy, neighbors,
                   str(lsp_dict['bestperiod']))
             raise ValueError("The bestperiod does not match the actual best period w/o median filtering, " + which_method)
 
+    # Get index for the best periodogram value
     if which_method == 'PDM':
         best_pdgm_index = np.argmin(pdgm_values)
     else:
         best_pdgm_index = np.argmax(pdgm_values)
 
+    # Set some values
     freq_window_size = freq_window_epsilon_snr/(max(t)-min(t))
     delta_frequency = abs(1./lsp_dict['periods'][1] - 1./lsp_dict['periods'][0])
     freq_window_index_size = int(round(freq_window_size/delta_frequency))
@@ -283,11 +390,13 @@ def iterative_deblend(t, y, dy, neighbors,
                                   max(t)-min(t),which_method,
                                   freq_window_epsilon=freq_window_epsilon_snr,
                                   rms_window_bin_size=window_size_snr)
+    # Print out results
     if ID:
         print("%s\n  %s PERIOD: %.5e days;  pSNR: %.5e"%(ID,which_method,lsp_dict['periods'][best_pdgm_index],per_snr))
     else:
         print("%s PERIOD: %.5e days;  pSNR: %.5e"%(which_method,lsp_dict['periods'][best_pdgm_index],per_snr))
 
+    # Compare to the threshold, if below quit
     if per_snr < snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]) or np.isnan(lsp_dict['periods'][best_pdgm_index]):
         if ID:
             print("   -> not significant enough, for " + ID)
@@ -300,15 +409,14 @@ def iterative_deblend(t, y, dy, neighbors,
           .fit(t, y, dy, best_freq))
     this_flux_amplitude = ff.flux_amplitude
 
-    # fit another truncated Fourier series with more harmonics
+    # Fit another truncated Fourier series with more harmonics
     ffr = (FourierFit(nharmonics=nharmonics_resid)
            .fit(t, y, dy, best_freq)) 
 
 
-
+    # Now fit Fourier series to all the neighbor light curves
     ffn_all = {}
     for n_ID in neighbors.keys():
-
 
         # fit neighbor's lightcurve at this frequency
         ffn = (FourierFit(nharmonics=nharmonics_fit)
@@ -330,7 +438,7 @@ def iterative_deblend(t, y, dy, neighbors,
 
         
 
-    # if neighbor has larger flux amplitude,
+    # If neighbor has larger flux amplitude,
     # then we consider this signal to be a blend.
     # subtract off model signal to get residual
     # lightcurve, and try again
@@ -370,66 +478,10 @@ def iterative_deblend(t, y, dy, neighbors,
                 notmax = True
 
 
-    # Return the period and the pre-whitened light curve
-    
+    # Save the period info and return the pre-whitened light curve    
     results_storage_container.add_good_period(lsp_dict,t,y,dy,
                                               snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
                                               this_flux_amplitude,
                                               significant_neighbor_blends,
                                               notmax=notmax)
     return y - ffr(t)
-
-
-if __name__ == '__main__':
-    def fake_lc(c, s, n=100, freq=1, sigma=0.1, baseline=1):
-        rand = np.random.RandomState(100)
-
-        t = baseline * 365 * np.sort(rand.rand(n))
-        y = np.zeros_like(t)
-        for h, (C, S) in enumerate(zip(c, s)):
-            phi = 2 * np.pi * (h+1) * t * freq
-
-            y += C * np.cos(phi) + S * np.sin(phi)
-
-        y += sigma * rand.randn(n)
-        dy = sigma * np.ones_like(y)
-
-        return t, y, dy
-
-    # example signal
-    c = np.array([0.1, 0.2, 0.1])
-    s = np.array([0.2, 0.1, 0.])
-    freq=1
-
-
-    # create the original lightcurve
-    t, y, dy = fake_lc(c, s, freq=freq)
-
-    # now create a neighbor with the same signal but smaller amplitude
-    # (i.e., the blend)
-    tb, yb, dyb = fake_lc(c * 0.5, s * 0.5, freq=freq)
-
-    # visualize the signal to check that the Fourier fitting
-    # is doing OK
-    ff = FourierFit().fit(t, y, dy, freq)
-
-    ff_true = FourierFit.from_params(c, s, 0, freq)
-
-    phase = np.linspace(0, 1, 200)
-    yfit = ff(phase, in_phase=True)
-    ytrue = ff_true(phase, in_phase=True)
-
-    #import matplotlib.pyplot as plt
-    #f, ax = plt.subplots()
-    #ax.plot(phase, yfit, label='Fit')
-    #ax.plot(phase, ytrue, label='True')
-    #ax.errorbar((t * freq) % 1.0, y,
-    #            yerr=dy, capsize=0, color='k', lw=2, fmt='o',
-    #            alpha=0.2)
-    #ax.legend(loc='best')
-    #plt.show()
-
-    # Now test the deblending -- we'll feed in the
-    # smaller-amplitude lightcurve with its neighboring
-    # larger amplitude lightcurve.
-    iterative_deblend(tb, yb, dyb, [(t, y, dy)])
