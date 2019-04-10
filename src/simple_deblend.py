@@ -363,6 +363,8 @@ def iterative_deblend(t, y, dy, neighbors,
         lsp_dict['medianfilter'] = False
         if which_method == 'PDM':
             per_to_comp = lsp_dict['periods'][np.argmin(pdgm_values)]
+        elif which_method == 'BLS': # Special handling of inf for BLS
+            per_to_comp = lsp_dict['periods'][np.where(np.isinf(pdgm_values),-np.inf,pdgm_values).argmax()]
         else:
             per_to_comp = lsp_dict['periods'][np.argmax(pdgm_values)]
         if abs(per_to_comp - lsp_dict['bestperiod'])/lsp_dict['bestperiod'] > 1e-7:
@@ -373,6 +375,8 @@ def iterative_deblend(t, y, dy, neighbors,
     # Get index for the best periodogram value
     if which_method == 'PDM':
         best_pdgm_index = np.argmin(pdgm_values)
+    elif which_method == 'BLS': # Special handling of inf for BLS
+        best_pdgm_index = np.where(np.isinf(pdgm_values),-np.inf,pdgm_values).argmax()
     else:
         best_pdgm_index = np.argmax(pdgm_values)
 
