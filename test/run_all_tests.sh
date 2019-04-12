@@ -1,0 +1,13 @@
+python test_lc_class_initialization.py
+
+python test_snr_calculation.py
+
+python test_simple_deblend_functions.py
+
+python test_data_processing_generalstuff.py
+
+python test_data_processing_ls.py
+
+python test_data_processing_pdm.py
+
+python test_data_processing_bls.py
