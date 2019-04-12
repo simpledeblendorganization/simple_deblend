@@ -62,7 +62,8 @@ class lc_collection_for_processing(lc_objects):
                median_filter_size=None,
                snr_filter_size=None,
                snr_threshold=0.,
-               max_blend_recursion=4):
+               max_blend_recursion=4,
+               outputdir="."):
         '''Run a Lomb-Scargle period search
 
         This takes a number of optional arguments:
@@ -114,6 +115,9 @@ class lc_collection_for_processing(lc_objects):
 
         max_blend_recursion   - maximum number of blends to try and fit
                out before giving up
+
+        outputdir - directory for where to save the output
+
         '''
 
         # Value checking
@@ -140,7 +144,8 @@ class lc_collection_for_processing(lc_objects):
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
                  median_filter_size=median_filter_size,
                  snr_filter_size=snr_filter_size,snr_threshold=snr_threshold,
-                 max_blend_recursion=max_blend_recursion)
+                 max_blend_recursion=max_blend_recursion,
+                 outputdir=outputdir)
 
         
     def run_pdm(self,num_periods=3,
@@ -153,7 +158,8 @@ class lc_collection_for_processing(lc_objects):
                 median_filter_size=None,
                 snr_filter_size=None,
                 snr_threshold=0.,
-                max_blend_recursion=4):
+                max_blend_recursion=4,
+                outputdir="."):
         '''Run a Phase Dispersion Minimization period search
 
         This takes a number of optional arguments:
@@ -207,6 +213,9 @@ class lc_collection_for_processing(lc_objects):
 
         max_blend_recursion   - maximum number of blends to try and fit
                out before giving up
+
+        outputdir - directory for where to save the output
+
         '''
 
         # Value checking
@@ -235,7 +244,8 @@ class lc_collection_for_processing(lc_objects):
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
                  median_filter_size=median_filter_size,
                  snr_filter_size=snr_filter_size,snr_threshold=snr_threshold,
-                 max_blend_recursion=max_blend_recursion)
+                 max_blend_recursion=max_blend_recursion,
+                 outputdir=outputdir)
 
 
     def run_bls(self,num_periods=3,
@@ -250,7 +260,8 @@ class lc_collection_for_processing(lc_objects):
                 median_filter_size=None,
                 snr_filter_size=None,
                 snr_threshold=0.,
-                max_blend_recursion=3):
+                max_blend_recursion=3,
+                outputdir="."):
         '''Run a Box-fitting Least Squares period search
 
         This takes a number of optional arguments:
@@ -312,6 +323,9 @@ class lc_collection_for_processing(lc_objects):
 
         max_blend_recursion   - maximum number of blends to try and fit
                out before giving up
+
+        outputdir - directory for where to save the output
+
         '''
 
         # Value checking
@@ -347,13 +361,15 @@ class lc_collection_for_processing(lc_objects):
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
                  median_filter_size=median_filter_size,
                  snr_filter_size=snr_filter_size,snr_threshold=snr_threshold,
-                 max_blend_recursion=max_blend_recursion)
+                 max_blend_recursion=max_blend_recursion,
+                 outputdir=outputdir)
         
 
     def run(self,which_method,ps_func,params,num_periods,nworkers,
             medianfilter=False,freq_window_epsilon_mf=None,
             freq_window_epsilon_snr=None,median_filter_size=None,
-            snr_filter_size=None,snr_threshold=0.,max_blend_recursion=8):
+            snr_filter_size=None,snr_threshold=0.,max_blend_recursion=8,
+            outputdir="."):
         '''Run a given period search method
 
         which_method  - the name of the period search method being used
@@ -389,6 +405,8 @@ class lc_collection_for_processing(lc_objects):
         max_blend_recursion - maximum number of blends to try and fit
                out before giving up
 
+        outputdir - directory for where to save the output
+
         '''
 
 
@@ -421,21 +439,21 @@ class lc_collection_for_processing(lc_objects):
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
                               snr_filter_size,snr_val,max_blend_recursion,
-                              num_proc_per_run)
+                              num_proc_per_run,outputdir)
                              for o, snr_val in zip(self.objects,snr_threshold)]
         elif callable(snr_threshold): # If a callable thing of some kind
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
                               snr_filter_size,snr_threshold,max_blend_recursion,
-                              num_proc_per_run)
+                              num_proc_per_run,outputdir)
                              for o in self.objects]
         else:
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
                               snr_filter_size,snr_threshold,max_blend_recursion,
-                              num_proc_per_run)
+                              num_proc_per_run,outputdir)
                              for o in self.objects]
 
 
@@ -468,7 +486,7 @@ class lc_collection_for_processing(lc_objects):
         (object,which_method,ps_func,params,num_periods,
          medianfilter,freq_window_epsilon_mf,freq_window_epsilon_snr,
          median_filter_size,snr_filter_size,snr_threshold,
-         max_blend_recursion,nworkers) = task
+         max_blend_recursion,nworkers,outputdir) = task
 
         # Value checking
         if not medianfilter:
@@ -507,12 +525,23 @@ class lc_collection_for_processing(lc_objects):
             if yprime is None: # No more results to be had
                 break
 
-        # Return based on whether we have info to retur
+        # Return based on whether we have info to return
         if len(results_storage.good_periods_info) > 0 or\
                 len(results_storage.blends_info) > 0:
+            # Save as we go
+            with open(outputdir + "/ps_" + str(object.ID) + "_" +\
+                          which_method + "_goodperiod.pkl","wb") as f:
+                pickle.dump(results_storage.good_periods_info,f)
+            with open(outputdir + "/ps_" + str(object.ID) + "_" +\
+                          which_method + "_blends.pkl","wb") as f:
+                pickle.dump(results_storage.blends_info,f)
+
+            # And return
             return results_storage
+
         else:
             return None
+
 
 
     def save_periodsearch_results(self,outputdir):
@@ -530,9 +559,11 @@ class lc_collection_for_processing(lc_objects):
                 r = self.results[k][k2]
                 with open(outputdir + "/ps_" + r.ID + "_" + k2 + "_goodperiod.pkl","wb") as f:
                         pickle.dump(r.good_periods_info,f)
-                with open(outputdir + "ps_" + r.ID + "_" + k2 + "_blends.pkl","wb") as f:
+                with open(outputdir + "/ps_" + r.ID + "_" + k2 + "_blends.pkl","wb") as f:
                         pickle.dump(r.blends_info,f)
-        
+
+
+          
 
             
 
