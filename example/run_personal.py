@@ -177,7 +177,7 @@ def main():
     
 
 
-    col.save_periodsearch_results(".")
+    #col.save_periodsearch_results(".")
 
 
 
