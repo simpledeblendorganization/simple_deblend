@@ -262,6 +262,7 @@ class lc_collection_for_processing(lc_objects):
                 median_filter_size=None,
                 snr_filter_size=None,
                 snr_threshold=0.,
+                spn_threshold=0.,
                 max_blend_recursion=3,
                 outputdir="."):
         '''Run a Box-fitting Least Squares period search
@@ -317,10 +318,15 @@ class lc_collection_for_processing(lc_objects):
                calculating the standard deviation for the SNR
 
         snr_threshold         - threshold value or function for
-               counting a signal as robust, can be:
+               counting a signal as robust, in the periodogram, can be:
                     single value -- applies to all objects and periods
                     iterable -- length of number of objects, applies
                                 each value to each object
+                    callable -- function of period
+
+        spn_threshold         - threshold value or function for
+               counting signal-to-pink-noise as robust, can be:
+                    single value -- applies to all objects and periods
                     callable -- function of period
 
         max_blend_recursion   - maximum number of blends to try and fit
@@ -363,6 +369,7 @@ class lc_collection_for_processing(lc_objects):
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
                  median_filter_size=median_filter_size,
                  snr_filter_size=snr_filter_size,snr_threshold=snr_threshold,
+                 spn_threshold=spn_threshold,
                  max_blend_recursion=max_blend_recursion,
                  outputdir=outputdir)
         
@@ -370,8 +377,8 @@ class lc_collection_for_processing(lc_objects):
     def run(self,which_method,ps_func,params,num_periods,nworkers,
             medianfilter=False,freq_window_epsilon_mf=None,
             freq_window_epsilon_snr=None,median_filter_size=None,
-            snr_filter_size=None,snr_threshold=0.,max_blend_recursion=8,
-            outputdir="."):
+            snr_filter_size=None,snr_threshold=0.,spn_threshold=None,
+            max_blend_recursion=8,outputdir="."):
         '''Run a given period search method
 
         which_method  - the name of the period search method being used
@@ -397,11 +404,16 @@ class lc_collection_for_processing(lc_objects):
         snr_filter_size    - number of points to include in
                calculating the standard deviation for the SNR
 
-                snr_threshold         - threshold value or function for
+        snr_threshold         - threshold value or function for
                counting a signal as robust, can be:
                     single value -- applies to all objects and periods
                     iterable -- length of number of objects, applies
                                 each value to each object
+                    callable -- function of period
+
+        spn_threshold         - threshold value or function for
+               counting signal-to-pink-noise as robust, can be:
+                    single value -- applies to all objects and periods
                     callable -- function of period
 
         max_blend_recursion - maximum number of blends to try and fit
@@ -440,21 +452,24 @@ class lc_collection_for_processing(lc_objects):
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
-                              snr_filter_size,snr_val,max_blend_recursion,
+                              snr_filter_size,snr_val,spn_threshold,
+                              max_blend_recursion,
                               num_proc_per_run,outputdir)
                              for o, snr_val in zip(self.objects,snr_threshold)]
         elif callable(snr_threshold): # If a callable thing of some kind
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
-                              snr_filter_size,snr_threshold,max_blend_recursion,
+                              snr_filter_size,snr_threshold,spn_threshold,
+                              max_blend_recursion,
                               num_proc_per_run,outputdir)
                              for o in self.objects]
         else:
             running_tasks = [(o,which_method,ps_func,params,num_periods,
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
-                              snr_filter_size,snr_threshold,max_blend_recursion,
+                              snr_filter_size,snr_threshold,spn_threshold,
+                              max_blend_recursion,
                               num_proc_per_run,outputdir)
                              for o in self.objects]
 
@@ -496,7 +511,7 @@ class lc_collection_for_processing(lc_objects):
         # Extract parameters from task
         (object,which_method,ps_func,params,num_periods,
          medianfilter,freq_window_epsilon_mf,freq_window_epsilon_snr,
-         median_filter_size,snr_filter_size,snr_threshold,
+         median_filter_size,snr_filter_size,snr_threshold,spn_threshold,
          max_blend_recursion,nworkers,outputdir) = task
 
         # Value checking
@@ -505,6 +520,9 @@ class lc_collection_for_processing(lc_objects):
                 warnings.warn("medianfilter is False, but freq_window_epsilon_mf is not None, not using medianfilter")
             if median_filter_size is not None:
                 warnings.warn("medianfilter is False, but median_filter_size is not None, not using median filter")
+
+        if spn_threshold and which_method.lower() != 'bls':
+            raise ValueError("spn_threshold has a value, but the method is not BLS, ignoring spn_threshold")
 
         # Collect the neighbor light curves
         neighbor_lightcurves = {neighbor_ID:(self.objects[self.index_dict[neighbor_ID]].times,
@@ -531,6 +549,7 @@ class lc_collection_for_processing(lc_objects):
                                            window_size_mf=median_filter_size,
                                            window_size_snr=snr_filter_size,
                                            snr_threshold=snr_threshold,
+                                           spn_threshold=spn_threshold,
                                            max_blend_recursion=max_blend_recursion,
                                            nworkers=nworkers)
             if yprime is None: # No more results to be had

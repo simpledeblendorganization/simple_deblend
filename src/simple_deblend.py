@@ -9,6 +9,7 @@ from scipy.stats import sigmaclip
 import numpy as np
 import math
 import snr_calculation as snr
+import pinknoise
 
 from multiprocessing import Pool
 
@@ -268,6 +269,7 @@ def iterative_deblend(t, y, dy, neighbors,
                       window_size_mf=40,
                       window_size_snr=40,
                       snr_threshold=0.,
+                      spn_threshold=None,
                       max_blend_recursion=8,
                       recursion_level=0,
                       nworkers=1):
@@ -403,10 +405,39 @@ def iterative_deblend(t, y, dy, neighbors,
     # Compare to the threshold, if below quit
     if per_snr < snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]) or np.isnan(lsp_dict['periods'][best_pdgm_index]):
         if ID:
-            print("   -> not significant enough, for " + ID,flush=True)
+            print("   -> pSNR not significant enough, for " + ID,flush=True)
         else:
-            print("   -> not significant enough.",flush=True)
+            print("   -> pSNR not significant enough.",flush=True)
         return None
+
+    if spn_threshold:
+        if abs(1./lsp_dict['periods'][best_pdgm_index] - 1./lsp_dict['nbestperiods'][0]) >\
+                .5*delta_frequency: # If the periods are different, rerun period finding to get stats
+            function_params_temp = function_params
+            function_params_temp['startp'] = .999999*lsp_dict['periods'][best_pdgm_index+1]
+            function_params_temp['endp'] = lsp_dict['periods'][best_pdgm_index-1]
+            lsp_dict_temp = period_finding_func(t,y,dy,**function_params_temp)
+            bls_stats_touse = lsp_dict_temp['stats'][0]
+            per_temp = lsp_dict_temp['nbestperiods'][0]
+        else:
+            per_temp = lsp_dict['periods'][best_pdgm_index]
+            bls_stats_touse = lsp_dict['stats'][0]
+        per_spn = pinknoise.pinknoise_calc(t,y,dy,per_temp,
+                                           bls_stats_touse['transitduration'],
+                                           bls_stats_touse['transitdepth'],
+                                           bls_stats_touse['npoints_in_transit'],
+                                           bls_stats_touse['epoch'],
+                                           pinknoise.ntransits(t.min(),t.max(),
+                                                               bls_stats_touse['epoch'],
+                                                               per_temp))
+        if per_spn < snr_threshold_tocomp(spn_threshold,period=per_temp):
+            if ID:
+                print("   -> S/PN not significant enough, for " + ID,flush=True)
+            else:
+                print("   -> S/PN not significant enough.",flush=True)
+            return None
+    else:
+        per_spn=None
 
     # Fit truncated Fourier series at this frequency
     ff = (FourierFit(nharmonics=nharmonics_fit)
@@ -456,7 +487,8 @@ def iterative_deblend(t, y, dy, neighbors,
                 print("   -> blended! Trying again.",flush=True)
                 results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,
                                                     snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
-                                                    this_flux_amplitude)
+                                                    this_flux_amplitude,
+                                                    s_pinknoise=per_spn)
                 if recursion_level >= max_blend_recursion:
                     print("   Reached the blend recursion level, no longer checking",flush=True)
                     return None
@@ -474,7 +506,8 @@ def iterative_deblend(t, y, dy, neighbors,
                                          freq_window_epsilon_snr=freq_window_epsilon_snr,
                                          window_size_mf=window_size_mf,
                                          window_size_snr=window_size_snr,
-                                         snr_threshold=snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
+                                         snr_threshold=snr_threshold,
+                                         spn_threshold=spn_threshold,
                                          max_blend_recursion=max_blend_recursion,
                                          recursion_level=recursion_level+1,
                                          nworkers=nworkers)
@@ -487,5 +520,6 @@ def iterative_deblend(t, y, dy, neighbors,
                                               snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
                                               this_flux_amplitude,
                                               significant_neighbor_blends,
-                                              notmax=notmax)
+                                              notmax=notmax,
+                                              s_pinknoise=per_spn)
     return y - ffr(t)
