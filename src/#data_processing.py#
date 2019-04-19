@@ -323,6 +323,11 @@ class lc_collection_for_processing(lc_objects):
                                 each value to each object
                     callable -- function of period
 
+        spn_threshold         - threshold value or function for
+               counting signal-to-pink-noise as robust, can be:
+                    single value -- applies to all objects and periods
+                    callable -- function of period
+
         max_blend_recursion   - maximum number of blends to try and fit
                out before giving up
 

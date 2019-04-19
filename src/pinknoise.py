@@ -31,24 +31,11 @@ def weighted_rms(vals,errs):
 
 
 
-
-
-def dmax(a,b):
-    if a >= b:
-        return a
-    else:
-        return b
-
-def dmin(a,b):
-    if a <= b:
-        return a
-    else:
-        return b
-
-
-
-
 def binnedrms(times,mags,errs,binsize):
+    """
+    Calculate both the binned RMS and the expected binned RMS
+    """
+
 
     # Ensure sorted
     if any(np.diff(times)<0.):
@@ -58,6 +45,7 @@ def binnedrms(times,mags,errs,binsize):
     sumval2 = []
     sumval3 = []
 
+    # Sum various values together
     for i in range(len(times)):
         if i == 0:
             sumval1.append(mags[i]/errs[i]**2)
@@ -69,27 +57,24 @@ def binnedrms(times,mags,errs,binsize):
             sumval3.append(sumval3[i-1] + errs[i]**2)
 
 
-    #jminold = 0
-    #jmaxold = 0
-
+    # Lists to store stuff
     binmag = []
     binsig = []
 
     for i in range(len(mags)):
-        bin_min = dmax(times[i] - binsize, times[0])
-        bin_max = dmin(times[i] + binsize, times[-1])
+        # Determine bin edges
+        bin_min = max(times[i] - binsize, times[0])
+        bin_max = min(times[i] + binsize, times[-1])
 
         #Determine the id of the first point above the minimum t and the first point above the maximum t
         jmin = bisect.bisect_left(times,bin_min)
         jmax = bisect.bisect_right(times,bin_max)
-        #jmax = jmax - 1
 
+        # Adjust jmax if necessary
         jmax = (jmax-1 if times[jmax] > bin_max else jmax) if\
             jmax < len(times) else len(times)-1
-        #jminold = jmin
-        #jmaxold = jmax
 
-        if jmin < len(times) and jmin > 0:
+        if jmin < len(times) and jmin > 0: # If we're still in the array
             v = sumval2[jmax] - sumval2[jmin-1]
             if v > 0:
                 binmag.append((sumval1[jmax] - sumval1[jmin-1]) / v)
@@ -107,7 +92,7 @@ def binnedrms(times,mags,errs,binsize):
             binmag.append(0.)
             binsig.append(0.)
 
-
+    # Now calculate some average values
     avesum1 = 0.
     avesum2 = 0.
     avesum3 = 0.
@@ -120,6 +105,7 @@ def binnedrms(times,mags,errs,binsize):
             n += 1
     if n > 0:
         ave = avesum1 / float(n)
+        # Calculate the theoretical and actual value
         rmsthy = np.sqrt(avesum3 / float(n))
         rmsval = np.sqrt((avesum2 / float(n)) - (ave * ave))
     else:
@@ -131,18 +117,24 @@ def binnedrms(times,mags,errs,binsize):
 
 
 def redwhitenoise_calc(times,mags,errs,period,q):
+    """
+    Calculate the red and white noise of a light curve
+    """
 
+    # White noise RMS value
     rmsval = weighted_rms(mags,errs)
-    print("White noise: " + str(rmsval))
 
+    # White noise theoretical value
     rmsval_thy = np.sqrt(np.average(np.power(errs,2)))
-    #rmsval, rmsval_thy =  getrms(times,mags,errs)
 
+    # Get binned RMS values
     rmsbinval, rmsbinval_thy = binnedrms(times,mags,errs,q*period)
 
+    # Calculate expected binned RMS value
     rmsbinval_expected = rmsval * rmsbinval_thy / rmsval_thy
 
 
+    # Return white noise and red noise tuple
     rednoise_squared = rmsbinval**2 - rmsbinval_expected**2
     if rednoise_squared > 0.:
         return (rmsval, np.sqrt(rednoise_squared))
@@ -163,31 +155,34 @@ def pinknoise_calc(times,mags,errs,period,transitduration,depth,
                                                  wrap=False,
                                                  sort=False)
 
+    # Get the phased values
     tphase = phased_magseries['phase']
     tmags = phased_magseries['mags']
     terrs = phased_magseries['errs']
 
+    # Figure out which are in phase to correct for box transit
     transitphase = transitduration/2.0
     transitindices = ((tphase < transitphase) |
                       (tphase > (1.0 - transitphase)))
 
+    # Correct for box transit
     corrected_mags = copy.copy(tmags)
+    #if depth < 0.:
+    #    raise ValueError("Expected a positive or zero depth value")
     if magsarefluxes:
-        # eebls.f returns +ve transit depth for fluxes
-        # so add it in to get "flat" light curve
         corrected_mags[transitindices] = (
             corrected_mags[transitindices] - depth
             )
     else:
-        # eebls.f returns -ve transit depth for magnitudes
-        # so add it in to get "flat" light curve
         corrected_mags[transitindices] = (
-            corrected_mags[transitindices] - depth
+            corrected_mags[transitindices] + depth
             )
 
     
-
+    # Calculate pink noise from red and white noise
     whitenoise, rednoise = redwhitenoise_calc(times,corrected_mags,errs,period,transitduration)
+
+    print("heretheyare",period,depth,whitenoise,npoints_transit,rednoise,ntransits)
 
     sigtopink2 = depth**2/(whitenoise**2/npoints_transit + rednoise**2/ntransits)
 

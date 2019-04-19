@@ -342,7 +342,7 @@ def iterative_deblend(t, y, dy, neighbors,
         if ID:
             print(ID + "\n   -> " + which_method + " found no period, for " + ID)
         else:
-            print("   -> " + which_method + " found no period.")
+            print("   -> " + which_method + " found no period.",flush=True)
         return None
 
     # Now median filter the periodogram if selected
@@ -403,9 +403,9 @@ def iterative_deblend(t, y, dy, neighbors,
     # Compare to the threshold, if below quit
     if per_snr < snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]) or np.isnan(lsp_dict['periods'][best_pdgm_index]):
         if ID:
-            print("   -> not significant enough, for " + ID)
+            print("   -> not significant enough, for " + ID,flush=True)
         else:
-            print("   -> not significant enough.")
+            print("   -> not significant enough.",flush=True)
         return None
 
     # Fit truncated Fourier series at this frequency
@@ -450,15 +450,15 @@ def iterative_deblend(t, y, dy, neighbors,
     if max_ffn_ID:
         print("    checking blends")
         print("    " + max_ffn_ID)
-        print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(this_flux_amplitude))
+        print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(this_flux_amplitude),flush=True)
         if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude:
             if this_flux_amplitude < results_storage_container.stillcount_blend_factor * ffn_all[max_ffn_ID].flux_amplitude:
-                print("   -> blended! Trying again.")
+                print("   -> blended! Trying again.",flush=True)
                 results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,
                                                     snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
                                                     this_flux_amplitude)
                 if recursion_level >= max_blend_recursion:
-                    print("   Reached the blend recursion level, no longer checking")
+                    print("   Reached the blend recursion level, no longer checking",flush=True)
                     return None
                 return iterative_deblend(t, y - ffr(t),
                                          dy, neighbors,
