@@ -388,5 +388,94 @@ class test_sinusoid_with_transit_bls(unittest.TestCase):
 
 
 
+class test_multiple_blends_bls_with_spn(unittest.TestCase):
+
+    def setUp(self):
+
+        ### col_e, multiple blended objects
+        rand5 = np.random.RandomState(seed=1893)
+        self.col_f = dproc.lc_collection_for_processing(10.,n_control_workers=1)#2)
+
+        sample_len_5 = 2855
+        t5 = np.linspace(0,100.5,sample_len_5)
+        self.omegaf = 2.*np.pi/3.48208#3.47464
+        phi_f = .3
+        sigma5 = .1
+        self.mag_f = 4.
+        self.depth_f1 = 1.
+        self.depth_f2 = .4
+        self.depth_f3 = .3
+        self.depth_f4 = .15
+        self.fluxamp_f1 = 10**(-0.4*self.mag_f) -\
+                          10**(-0.4*(self.mag_f+self.depth_f1))
+        self.fluxamp_f2 = 10**(-0.4*self.mag_f) -\
+                          10**(-0.4*(self.mag_f+self.depth_f2))
+        self.fluxamp_f3 = 10**(-0.4*self.mag_f) -\
+                          10**(-0.4*(self.mag_f+self.depth_f3))
+        self.fluxamp_f4 = 10**(-0.4*self.mag_f) -\
+                          10**(-0.4*(self.mag_f+self.depth_f4))
+        epoch = 6.57
+        q = .06
+        self.col_f.add_object(t5,transit_insert([self.mag_f]*sample_len_5,
+                                                t5,self.depth_f1,epoch,
+                                                q,2.*np.pi/self.omegaf)+
+                              sigma5*rand5.randn(sample_len_5),
+                              [sigma5]*sample_len_5,0.,0.5,'f1')
+        self.col_f.add_object(t5,transit_insert([self.mag_f]*sample_len_5,
+                                                t5,self.depth_f2,epoch,
+                                                q,2.*np.pi/self.omegaf)+
+                              sigma5*rand5.randn(sample_len_5),
+                              [sigma5]*sample_len_5,0.5,0.,'f2')
+        self.col_f.add_object(t5,transit_insert([self.mag_f]*sample_len_5,
+                                                t5,self.depth_f3,epoch,
+                                                q,2.*np.pi/self.omegaf)+
+                              sigma5*rand5.randn(sample_len_5),
+                              [sigma5]*sample_len_5,0.7,0.1,'f3')
+        self.col_f.add_object(t5,transit_insert([self.mag_f]*sample_len_5,
+                                                t5,self.depth_f4,epoch,
+                                                q,2.*np.pi/self.omegaf)+
+                              sigma5*rand5.randn(sample_len_5),
+                              [sigma5]*sample_len_5,3.0,0.9,'f4')
+
+    
+    def test_multipleblend_spn(self):
+        # Remove save files so tests work no problem
+        os.system("rm -f ps_f1_BLS_blends.pkl")
+        os.system("rm -f ps_f1_BLS_goodperiod.pkl")
+        os.system("rm -f ps_f2_BLS_blends.pkl")
+        os.system("rm -f ps_f2_BLS_goodperiod.pkl")
+        os.system("rm -f ps_f3_BLS_blends.pkl")
+        os.system("rm -f ps_f3_BLS_goodperiod.pkl")
+        os.system("rm -f ps_f4_BLS_blends.pkl")
+        os.system("rm -f ps_f4_BLS_goodperiod.pkl")
+
+        # Test a long period object and also objects with multiple blends
+        self.col_f.run_bls(startp=2.5,endp=4.7,autofreq=False,
+                          stepsize=1e-5,
+                          nphasebins=200,
+                          medianfilter=False,freq_window_epsilon_snr=3.5,
+                           snr_filter_size=1000,snr_threshold=[42.,30.,30.,30],spn_threshold=3.)
+
+        self.assertEqual(len(self.col_f.results['f1']['BLS'].good_periods_info),1)
+        self.assertAlmostEqual(self.col_f.results['f1']['BLS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegaf,places=2)
+        self.assertAlmostEqual(self.col_f.results['f1']['BLS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_f1,places=2)
+        self.assertEqual(self.col_f.results['f1']['BLS'].good_periods_info[0]['significant_blends'],['f2','f3'])
+        self.assertEqual(self.col_f.results['f1']['BLS'].good_periods_info[0]['num_previous_blends'],0)
+        self.assertEqual(len(self.col_f.results['f2']['BLS'].good_periods_info),0)
+        self.assertEqual(len(self.col_f.results['f3']['BLS'].good_periods_info),0)
+        self.assertEqual(len(self.col_f.results['f4']['BLS'].good_periods_info),0)
+        self.assertEqual(len(self.col_f.results['f2']['BLS'].blends_info),1)
+        self.assertAlmostEqual(self.col_f.results['f2']['BLS'].blends_info[0]['flux_amplitude'],self.fluxamp_f2,places=3)
+        self.assertEqual(len(self.col_f.results['f3']['BLS'].blends_info),1)
+        self.assertAlmostEqual(self.col_f.results['f3']['BLS'].blends_info[0]['flux_amplitude'],self.fluxamp_f3,places=3)
+        self.assertEqual(len(self.col_f.results['f4']['BLS'].blends_info),1)
+        self.assertAlmostEqual(self.col_f.results['f4']['BLS'].blends_info[0]['flux_amplitude'],self.fluxamp_f4,places=3)
+        self.assertEqual(self.col_f.results['f2']['BLS'].blends_info[0]['ID_of_blend'],'f1')
+        self.assertEqual(self.col_f.results['f3']['BLS'].blends_info[0]['ID_of_blend'],'f1')
+        self.assertEqual(self.col_f.results['f4']['BLS'].blends_info[0]['ID_of_blend'],'f1')
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

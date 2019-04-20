@@ -12,6 +12,25 @@ import copy
 import bisect
 
 
+
+def ntransits(tmin, tmax, epoch, period):
+    
+    t_totrack = epoch
+    while t_totrack > tmin:
+        t_totrack = t_totrack - period
+
+    # Add back in to get up to first period
+    t_totrack = t_totrack + period
+    ntransits = 0
+
+    while t_totrack < tmax:
+        ntransits += 1
+        t_totrack = t_totrack + period
+
+    return ntransits
+
+
+
 def weighted_rms(vals,errs):
     """
     Thanks to https://stackoverflow.com/questions/2413522/weighted-standard-deviation-in-numpy

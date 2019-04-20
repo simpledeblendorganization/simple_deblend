@@ -435,6 +435,7 @@ def iterative_deblend(t, y, dy, neighbors,
                                            pinknoise.ntransits(t.min(),t.max(),
                                                                bls_stats_touse['epoch'],
                                                                per_temp))
+        print("SPN: " + str(per_spn))
         if per_spn < snr_threshold_tocomp(spn_threshold,period=per_temp):
             if ID:
                 print("   -> S/PN not significant enough, for " + ID,flush=True)

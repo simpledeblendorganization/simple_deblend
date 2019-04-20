@@ -10,7 +10,10 @@ from multiprocessing import cpu_count
 from concurrent.futures import ProcessPoolExecutor
 from astrobase.periodbase.zgls import pgen_lsp as ls_p
 from astrobase.periodbase.spdm import stellingwerf_pdm as pdm_p
-from astrobase.periodbase.kbls import bls_parallel_pfind as bls_p
+#from astrobase.periodbase.kbls import bls_parallel_pfind as bls_p
+import sys
+sys.path.insert(0,"/home/jwallace/phs3-workspace/m4/vetting_signals/periodogram_snr_analysis/transit_inject/")
+from astrobase_aaa.periodbase.kbls import bls_parallel_pfind as bls_p
 import copy
 import pickle
 import warnings
