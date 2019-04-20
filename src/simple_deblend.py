@@ -270,6 +270,7 @@ def iterative_deblend(t, y, dy, neighbors,
                       window_size_snr=40,
                       snr_threshold=0.,
                       spn_threshold=None,
+                      neighbor_peaks_tocheck=8,
                       max_blend_recursion=8,
                       recursion_level=0,
                       nworkers=1):
@@ -332,6 +333,9 @@ def iterative_deblend(t, y, dy, neighbors,
         counting a signal as robust, can be:
              single value -- applies to all objects and periods
              callable -- function of period
+    neighbor_peaks_tocheck: int
+        when blend is determined, number of neighbor peak periods
+        to check that the blended period is actually in the neighbor
     max_blend_recursion: int
         maximum number of blends to try and fit
         out before giving up
@@ -490,6 +494,28 @@ def iterative_deblend(t, y, dy, neighbors,
         print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(this_flux_amplitude),flush=True)
         if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude:
             if this_flux_amplitude < results_storage_container.stillcount_blend_factor * ffn_all[max_ffn_ID].flux_amplitude:
+                # Check that the neighbor actually has this period
+                if neighbor_peaks_tocheck > 0:
+                    function_params_neighbor = function_params
+                    function_params_neighbor['nbestpeaks'] = neighbor_peaks_tocheck
+                    lsp_dict = period_finding_func(neighbors[max_ffn_ID][0],neighbors[max_ffn_ID][1],
+                                                   neighbors[max_ffn_ID][2],**function_params_neighbor)
+
+                    if not any(np.isclose(lsp_dict['nbestperiods'], lsp_dict['periods'][best_pdgm_index], rtol=1e-2, atol=1e-5)):
+                        # If the highest-amp blended neighbor doesn't have this period as one of its top periods
+                        # Count as a good period
+                        print("   -> this isn't a peak period for the neighbor, so ignoring blend.",flush=True)
+
+                        results_storage_container.add_good_period(lsp_dict,t,y,dy,
+                                              snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
+                                              this_flux_amplitude,
+                                              significant_neighbor_blends,
+                                              notmax=notmax,
+                                              s_pinknoise=per_spn,
+                                              ignore_blend=True)
+                        return y - ffr(t)
+
+
                 print("   -> blended! Trying again.",flush=True)
                 results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,
                                                     snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),

@@ -486,6 +486,7 @@ class lc_collection_for_processing(lc_objects):
                                    "_" + which_method + "_blends.pkl"))]
 
 
+
         # Start the run
         print("**************************************")
         print("******")
@@ -628,7 +629,8 @@ class periodsearch_results():
 
     def add_good_period(self,lsp_dict,times,mags,errs,snr_value,
                         flux_amplitude,significant_blends,
-                        notmax=False,s_pinknoise=None):
+                        notmax=False,s_pinknoise=None,
+                        ignore_blend=False):
         '''add a good period for the object
 
         lsp_dict   - the astrobase lsp_dict
@@ -643,6 +645,7 @@ class periodsearch_results():
                      flux amplitude but is greater than
                      self.stillcount_blend_factor
         s_pinknoise -signal to pink noise value, only for BLS
+        ignore_blend - True if ignoring a blend for some reason
         '''
         dict_to_add = {'lsp_dict':lsp_dict,'times':times,
                        'mags':mags,'errs':errs,
@@ -650,7 +653,7 @@ class periodsearch_results():
                        'flux_amplitude':flux_amplitude,
                        'num_previous_blends':len(self.blends_info),
                        'significant_blends':significant_blends,
-                       'not_max':notmax}
+                       'not_max':notmax,'ignore_blend':ignore_blend}
         if s_pinknoise:
             dict_to_add['s_pinknoise'] = s_pinknoise
         self.good_periods_info.append(dict_to_add)
