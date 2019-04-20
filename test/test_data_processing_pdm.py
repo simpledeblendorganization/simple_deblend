@@ -100,6 +100,12 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
 
                              
     def test_basic_pdm_run(self):
+        # Remove save files so subsequent tests work no problem
+        os.system("rm -f ps_object1_PDM_blends.pkl")
+        os.system("rm -f ps_object1_PDM_goodperiod.pkl")
+        os.system("rm -f ps_object2_PDM_blends.pkl")
+        os.system("rm -f ps_object2_PDM_goodperiod.pkl")
+
         # Test a basic run of the iterative deblending
         self.col_a.run_pdm(startp=6.,endp=7.,stepsize=0.0000001,
                            autofreq=False,medianfilter=False,
@@ -116,7 +122,15 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
         self.assertEqual(len(self.col_a.results['object1']['PDM'].good_periods_info),1)
         self.assertEqual(len(self.col_a.results['object1']['PDM'].blends_info),0)
 
+
+
     def test_basic_pdm_run_medianfilter(self):
+        # Remove save files so subsequent tests work no problem
+        os.system("rm -f ps_object1_PDM_blends.pkl")
+        os.system("rm -f ps_object1_PDM_goodperiod.pkl")
+        os.system("rm -f ps_object2_PDM_blends.pkl")
+        os.system("rm -f ps_object2_PDM_goodperiod.pkl")
+
         # Test a basic run of the iterative deblending
         self.col_a2.run_pdm(startp=6.,endp=7.,stepsize=0.00001,
                            autofreq=False,medianfilter=True,
@@ -136,6 +150,14 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
         self.assertEqual(len(self.col_a2.results['object1']['PDM'].blends_info),0)
 
     def test_simple_blended_pdm_run(self):
+        # Remove save files so subsequent tests work no problem
+        os.system("rm -f ps_c1_PDM_blends.pkl")
+        os.system("rm -f ps_c1_PDM_goodperiod.pkl")
+        os.system("rm -f ps_c2_PDM_blends.pkl")
+        os.system("rm -f ps_c2_PDM_goodperiod.pkl")
+        os.system("rm -f ps_c3_PDM_blends.pkl")
+        os.system("rm -f ps_c3_PDM_goodperiod.pkl")
+
         self.col_c.run_pdm(startp=0.5,endp=2.,stepsize=5e-5,
                            autofreq=False,medianfilter=False,
                           freq_window_epsilon_snr=5.,
@@ -161,6 +183,10 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
 
 
     def test_longperiod(self):
+        # Remove save files so subsequent tests work no problem
+        os.system("rm -f ps_d1_PDM_blends.pkl")
+        os.system("rm -f ps_d1_PDM_goodperiod.pkl")
+
         # Test a long period object
         self.col_d.run_pdm(startp=20.,endp=50.,autofreq=False,
                            stepsize=1e-5,medianfilter=False,
@@ -172,6 +198,16 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
         self.assertAlmostEqual(self.col_d.results['d1']['PDM'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegad,places=5)
 
     def test_multipleblend(self):
+        # Remove save files so subsequent tests work no problem
+        os.system("rm -f ps_e1_PDM_blends.pkl")
+        os.system("rm -f ps_e1_PDM_goodperiod.pkl")
+        os.system("rm -f ps_e2_PDM_blends.pkl")
+        os.system("rm -f ps_e2_PDM_goodperiod.pkl")
+        os.system("rm -f ps_e3_PDM_blends.pkl")
+        os.system("rm -f ps_e3_PDM_goodperiod.pkl")
+        os.system("rm -f ps_e4_PDM_blends.pkl")
+        os.system("rm -f ps_e4_PDM_goodperiod.pkl")
+
         # Test a long period object and also objects with multiple blends
         self.col_e.run_pdm(startp=2.5,endp=4.7,autofreq=False,
                            stepsize=1e-5,
@@ -235,6 +271,18 @@ class test_data_processing_run_sinusoidal_multiple_signals(unittest.TestCase):
 
         
     def test_blended_pdm_run(self):
+        # Remove save files so subsequent tests work no problem
+        os.system("rm -f ps_o1_PDM_blends.pkl")
+        os.system("rm -f ps_o1_PDM_goodperiod.pkl")
+        os.system("rm -f ps_o2_PDM_blends.pkl")
+        os.system("rm -f ps_o2_PDM_goodperiod.pkl")
+        os.system("rm -f ps_o3_PDM_blends.pkl")
+        os.system("rm -f ps_o3_PDM_goodperiod.pkl")
+        os.system("rm -f ps_o4_PDM_blends.pkl")
+        os.system("rm -f ps_o4_PDM_goodperiod.pkl")
+        os.system("rm -f ps_o5_PDM_blends.pkl")
+        os.system("rm -f ps_o5_PDM_goodperiod.pkl")
+
         self.col_b.run_pdm(startp=2.,endp=11.,stepsize=1e-5,autofreq=False,
                           medianfilter=False,freq_window_epsilon_snr=4.,
                           snr_filter_size=1000,snr_threshold=300.)
@@ -311,6 +359,12 @@ class test_data_processing_pdm_rrlyrae_signal(unittest.TestCase):
 
 
     def test_rrblend(self):
+        # Remove save files so subsequent tests work no problem
+        os.system("rm -f ps_rr1_PDM_blends.pkl")
+        os.system("rm -f ps_rr1_PDM_goodperiod.pkl")
+        os.system("rm -f ps_rr2_PDM_blends.pkl")
+        os.system("rm -f ps_rr2_PDM_goodperiod.pkl")
+
         # Test an RRab and a blend
         self.col.run_pdm(startp=.2,endp=1.,stepsize=1e-4,autofreq=False,
                          medianfilter=False,freq_window_epsilon_snr=4.,

@@ -320,12 +320,17 @@ def iterative_deblend(t, y, dy, neighbors,
     window_size_snr: int
         number of points to include in
         calculating the standard deviation for the SNR
-    snr_threshold=0: float, array_like, or callable
+    snr_threshold: float, array_like, or callable
         threshold value or function for
         counting a signal as robust, can be:
              single value -- applies to all objects and periods
              iterable -- length of number of objects, applies
                                 each value to each object
+             callable -- function of period
+    spn_threshold: float or callable
+        threshold value or function for
+        counting a signal as robust, can be:
+             single value -- applies to all objects and periods
              callable -- function of period
     max_blend_recursion: int
         maximum number of blends to try and fit
