@@ -479,11 +479,13 @@ class lc_collection_for_processing(lc_objects):
         #####Temporary change:
         # Remove the task if the output already exists
 
-        running_tasks = [r for r in running_tasks if \
-                             (not isfile(outputdir + "/ps_" + str(r[0].ID) +\
-                                   "_" + which_method + "_goodperiod.pkl")) and\
-                              (not isfile(outputdir + "/ps_" + str(r[0].ID) +\
-                                   "_" + which_method + "_blends.pkl"))]
+        #running_tasks = [r for r in running_tasks if \
+        #                     (not isfile(outputdir + "/ps_" + str(r[0].ID) +\
+        #                           "_" + which_method + "_goodperiod.pkl")) and\
+        #                      (not isfile(outputdir + "/ps_" + str(r[0].ID) +\
+        #                           "_" + which_method + "_blends.pkl"))]
+
+        running_tasks = [r for r in running_tasks if r[0].ID in ['6045466567081582080','6045478558624847488']]
 
 
 
@@ -629,6 +631,7 @@ class periodsearch_results():
 
     def add_good_period(self,lsp_dict,times,mags,errs,snr_value,
                         flux_amplitude,significant_blends,
+                        ff_params,
                         notmax=False,s_pinknoise=None,
                         ignore_blend=False):
         '''add a good period for the object
@@ -641,11 +644,13 @@ class periodsearch_results():
         flux_amplitude - flux amplitude
         significant_blends - neighbors with flux amplitudes above
                              self.count_neighbor_threshold
+        ffparams - Fourier fit parameters for the *current* LC
         notmax     - if the object does not have the maximum
                      flux amplitude but is greater than
                      self.stillcount_blend_factor
         s_pinknoise -signal to pink noise value, only for BLS
-        ignore_blend - True if ignoring a blend for some reason
+        ignore_blend - ID of blend being ignore if its being
+                       ignored, False otherwise
         '''
         dict_to_add = {'lsp_dict':lsp_dict,'times':times,
                        'mags':mags,'errs':errs,
@@ -653,13 +658,14 @@ class periodsearch_results():
                        'flux_amplitude':flux_amplitude,
                        'num_previous_blends':len(self.blends_info),
                        'significant_blends':significant_blends,
-                       'not_max':notmax,'ignore_blend':ignore_blend}
+                       'not_max':notmax,'ignore_blend':ignore_blend,
+                       'ff_params':ff_params}
         if s_pinknoise:
             dict_to_add['s_pinknoise'] = s_pinknoise
         self.good_periods_info.append(dict_to_add)
 
     def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,snr_value,
-                  flux_amplitude,s_pinknoise=None):
+                  flux_amplitude,ff_params,s_pinknoise=None):
         '''add info where the object is blended with another object,
         that object being determined as the variability source
 
@@ -670,6 +676,7 @@ class periodsearch_results():
         neighbor_ID - ID of the variability source
         snr_value  - value of the periodogram SNR
         flux_amplitude - flux amplitude
+        ffparams - Fourier fit parameters for the *current* LC
         s_pinknoise -signal to pink noise value, only for BLS
         '''
         dict_to_add = {'lsp_dict':lsp_dict,
@@ -677,7 +684,8 @@ class periodsearch_results():
                        'snr_value':snr_value,
                        'flux_amplitude':flux_amplitude,
                        'num_previous_signals':len(self.good_periods_info),
-                       'times':times,'mags':mags,'errs':errs}
+                       'times':times,'mags':mags,'errs':errs,
+                       'ff_params':ff_params}
         if s_pinknoise:
             dict_to_add['s_pinknoise'] = s_pinknoise
         self.blends_info.append(dict_to_add)

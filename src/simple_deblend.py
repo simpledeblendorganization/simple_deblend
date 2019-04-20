@@ -510,9 +510,10 @@ def iterative_deblend(t, y, dy, neighbors,
                                               snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
                                               this_flux_amplitude,
                                               significant_neighbor_blends,
+                                              ffr.params,
                                               notmax=notmax,
                                               s_pinknoise=per_spn,
-                                              ignore_blend=True)
+                                              ignore_blend=max_ffn_ID)
                         return y - ffr(t)
 
 
@@ -520,6 +521,7 @@ def iterative_deblend(t, y, dy, neighbors,
                 results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,
                                                     snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
                                                     this_flux_amplitude,
+                                                    ffr.params,
                                                     s_pinknoise=per_spn)
                 if recursion_level >= max_blend_recursion:
                     print("   Reached the blend recursion level, no longer checking",flush=True)
@@ -552,6 +554,7 @@ def iterative_deblend(t, y, dy, neighbors,
                                               snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
                                               this_flux_amplitude,
                                               significant_neighbor_blends,
+                                              ffr.params,
                                               notmax=notmax,
                                               s_pinknoise=per_spn)
     return y - ffr(t)
