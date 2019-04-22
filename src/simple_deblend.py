@@ -10,6 +10,7 @@ import numpy as np
 import math
 import snr_calculation as snr
 import pinknoise
+import copy
 
 from multiprocessing import Pool
 
@@ -422,7 +423,7 @@ def iterative_deblend(t, y, dy, neighbors,
     if spn_threshold:
         if abs(1./lsp_dict['periods'][best_pdgm_index] - 1./lsp_dict['nbestperiods'][0]) >\
                 .5*delta_frequency: # If the periods are different, rerun period finding to get stats
-            function_params_temp = function_params
+            function_params_temp = copy.deepcopy(function_params)
             function_params_temp['startp'] = .999999*lsp_dict['periods'][best_pdgm_index+1]
             function_params_temp['endp'] = lsp_dict['periods'][best_pdgm_index-1]
             lsp_dict_temp = period_finding_func(t,y,dy,**function_params_temp)
@@ -496,11 +497,12 @@ def iterative_deblend(t, y, dy, neighbors,
             if this_flux_amplitude < results_storage_container.stillcount_blend_factor * ffn_all[max_ffn_ID].flux_amplitude:
                 # Check that the neighbor actually has this period
                 if neighbor_peaks_tocheck > 0:
-                    function_params_neighbor = function_params
+                    function_params_neighbor = copy.deepcopy(function_params)
                     function_params_neighbor['nbestpeaks'] = neighbor_peaks_tocheck
                     n_lsp_dict = period_finding_func(neighbors[max_ffn_ID][0],neighbors[max_ffn_ID][1],
                                                    neighbors[max_ffn_ID][2],**function_params_neighbor)
-
+                    import pickle
+                    pickle.dump(n_lsp_dict,open(ID + '_neighbordict.pkl','wb'))
                     if not any(np.isclose(n_lsp_dict['nbestperiods'], lsp_dict['periods'][best_pdgm_index], rtol=1e-2, atol=1e-5)):
                         # If the highest-amp blended neighbor doesn't have this period as one of its top periods
                         # Count as a good period

@@ -481,7 +481,7 @@ class lc_collection_for_processing(lc_objects):
 
         running_tasks = [r for r in running_tasks if \
                              (not isfile(outputdir + "/ps_" + str(r[0].ID) +\
-                                   "_" + which_method + "_goodperiod.pkl")) and\
+                                   "_" + which_method + "_goodperiod.pkl")) and#\
                               (not isfile(outputdir + "/ps_" + str(r[0].ID) +\
                                    "_" + which_method + "_blends.pkl"))]
 
