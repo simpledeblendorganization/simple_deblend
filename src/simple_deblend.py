@@ -501,8 +501,7 @@ def iterative_deblend(t, y, dy, neighbors,
                     function_params_neighbor['nbestpeaks'] = neighbor_peaks_tocheck
                     n_lsp_dict = period_finding_func(neighbors[max_ffn_ID][0],neighbors[max_ffn_ID][1],
                                                    neighbors[max_ffn_ID][2],**function_params_neighbor)
-                    import pickle
-                    pickle.dump(n_lsp_dict,open(ID + '_neighbordict.pkl','wb'))
+
                     if not any(np.isclose(n_lsp_dict['nbestperiods'], lsp_dict['periods'][best_pdgm_index], rtol=1e-2, atol=1e-5)):
                         # If the highest-amp blended neighbor doesn't have this period as one of its top periods
                         # Count as a good period
