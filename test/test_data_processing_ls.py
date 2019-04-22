@@ -200,6 +200,7 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
         self.assertEqual(len(self.col_a.results['object2'].keys()),0)
 
         self.assertAlmostEqual(self.col_a.results['object1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi,places=6)
+        self.assertEqual(len(self.col_a.results['object1']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertEqual(len(self.col_a.results['object1']),1)
         self.assertEqual(len(self.col_a.results['object1']['LS'].good_periods_info),1)
         self.assertAlmostEqual(self.col_a.results['object1']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_a,places=5)
@@ -229,6 +230,7 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
         self.assertEqual(len(self.col_a2.results['object2'].keys()),0)
 
         self.assertAlmostEqual(self.col_a2.results['object1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi,places=3)
+        self.assertEqual(len(self.col_a2.results['object1']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertEqual(len(self.col_a2.results['object1']),1)
         self.assertEqual(len(self.col_a2.results['object1']['LS'].good_periods_info),1)
         self.assertAlmostEqual(self.col_a2.results['object1']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_a,places=5)
@@ -254,6 +256,7 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
         self.assertEqual(len(self.col_c.results['c1']['LS'].good_periods_info),1)
         self.assertEqual(len(self.col_c.results['c1']['LS'].blends_info),0)
         self.assertAlmostEqual(self.col_c.results['c1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
+        self.assertEqual(len(self.col_c.results['c1']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertEqual(self.col_c.results['c1']['LS'].good_periods_info[0]['num_previous_blends'],0)
         self.assertAlmostEqual(self.col_c.results['c1']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_c1,places=4)
 
@@ -262,12 +265,14 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
         self.assertEqual(len(self.col_c.results['c2']['LS'].blends_info),1)
         self.assertEqual(self.col_c.results['c2']['LS'].blends_info[0]['ID_of_blend'],'c1')
         self.assertAlmostEqual(self.col_c.results['c2']['LS'].blends_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
+        self.assertEqual(len(self.col_c.results['c2']['LS'].blends_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_c.results['c2']['LS'].blends_info[0]['flux_amplitude'],self.fluxamp_c2,places=2)
 
         #Check c3
         self.assertEqual(len(self.col_c.results['c3']['LS'].good_periods_info),1)
         self.assertEqual(len(self.col_c.results['c3']['LS'].blends_info),0)
         self.assertAlmostEqual(self.col_c.results['c3']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
+        self.assertEqual(len(self.col_c.results['c3']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertEqual(self.col_c.results['c3']['LS'].good_periods_info[0]['num_previous_blends'],0)
         self.assertAlmostEqual(self.col_c.results['c3']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_c3,places=3)
 
@@ -285,6 +290,7 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
         self.assertEqual(len(self.col_d.results['d1']['LS'].good_periods_info),1)
         self.assertEqual(len(self.col_d.results['d1']['LS'].blends_info),0)
         self.assertAlmostEqual(self.col_d.results['d1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegad,places=1)
+        self.assertEqual(len(self.col_d.results['d1']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_d.results['d1']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_d,places=2)
 
 
@@ -307,6 +313,7 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
 
         self.assertEqual(len(self.col_e.results['e1']['LS'].good_periods_info),1)
         self.assertAlmostEqual(self.col_e.results['e1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegae,places=2)
+        self.assertEqual(len(self.col_e.results['e1']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_e.results['e1']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_e1,places=2)
         self.assertEqual(self.col_e.results['e1']['LS'].good_periods_info[0]['significant_blends'],['e2','e3'])
         self.assertEqual(self.col_e.results['e1']['LS'].good_periods_info[0]['num_previous_blends'],0)
@@ -421,9 +428,11 @@ class test_data_processing_run_sinusoidal_multiple_signals(unittest.TestCase):
         # Check o1
         self.assertEqual(len(self.col_b.results['o1']['LS'].good_periods_info),1)
         self.assertAlmostEqual(self.col_b.results['o1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omega1,places=3)
+        self.assertEqual(len(self.col_b.results['o1']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_b.results['o1']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp11,places=4)
         self.assertEqual(len(self.col_b.results['o1']['LS'].blends_info),1)
         self.assertAlmostEqual(self.col_b.results['o1']['LS'].blends_info[0]['lsp_dict']['bestperiod'],2*np.pi/self.omega2,places=5)
+        self.assertEqual(len(self.col_b.results['o1']['LS'].blends_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertEqual(self.col_b.results['o1']['LS'].blends_info[0]['ID_of_blend'],'o3')
         self.assertAlmostEqual(self.col_b.results['o1']['LS'].blends_info[0]['flux_amplitude'],self.fluxamp12,places=3)
  
@@ -431,9 +440,11 @@ class test_data_processing_run_sinusoidal_multiple_signals(unittest.TestCase):
         # Check o2
         self.assertEqual(len(self.col_b.results['o2']['LS'].good_periods_info),1)
         self.assertAlmostEqual(self.col_b.results['o2']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omega3,places=3)
+        self.assertEqual(len(self.col_b.results['o2']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_b.results['o2']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp23,places=3)
         self.assertEqual(len(self.col_b.results['o2']['LS'].blends_info),1)
         self.assertAlmostEqual(self.col_b.results['o2']['LS'].blends_info[0]['lsp_dict']['bestperiod'],2*np.pi/self.omega2,places=5)
+        self.assertEqual(len(self.col_b.results['o2']['LS'].blends_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_b.results['o2']['LS'].blends_info[0]['flux_amplitude'],self.fluxamp22,places=4)
         self.assertEqual(self.col_b.results['o2']['LS'].blends_info[0]['ID_of_blend'],'o3')
 
@@ -441,6 +452,7 @@ class test_data_processing_run_sinusoidal_multiple_signals(unittest.TestCase):
         self.assertEqual(len(self.col_b.results['o3']['LS'].good_periods_info),1)
         self.assertEqual(len(self.col_b.results['o3']['LS'].blends_info),0)
         self.assertAlmostEqual(self.col_b.results['o3']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2*np.pi/self.omega2,places=5)
+        self.assertEqual(len(self.col_b.results['o3']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_b.results['o3']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp32,places=2)
 
         
@@ -454,8 +466,10 @@ class test_data_processing_run_sinusoidal_multiple_signals(unittest.TestCase):
         self.assertEqual(len(self.col_b.results['o5']['LS'].good_periods_info),2)
         self.assertEqual(len(self.col_b.results['o5']['LS'].blends_info),0)
         self.assertAlmostEqual(self.col_b.results['o5']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2*np.pi/self.omega2,places=5)
+        self.assertEqual(len(self.col_b.results['o5']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_b.results['o5']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp52,places=2)
         self.assertAlmostEqual(self.col_b.results['o5']['LS'].good_periods_info[1]['lsp_dict']['bestperiod'],2*np.pi/self.omega1,places=3)
+        self.assertEqual(len(self.col_b.results['o5']['LS'].good_periods_info[1]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_b.results['o5']['LS'].good_periods_info[1]['flux_amplitude'],self.fluxamp51,places=2)
 
 
@@ -519,6 +533,7 @@ class test_data_processing_ls_rrlyrae_signal(unittest.TestCase):
         self.assertEqual(len(self.col.results['rr1']['LS'].good_periods_info),1)
         self.assertEqual(len(self.col.results['rr1']['LS'].blends_info),0)
         self.assertAlmostEqual(self.col.results['rr1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],self.rr_period,places=2)
+        self.assertEqual(len(self.col.results['rr1']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col.results['rr1']['LS'].good_periods_info[0]['flux_amplitude'],4.1131184e-6,places=4)
 
 
@@ -573,6 +588,7 @@ class test_close_amplitudes_signal(unittest.TestCase):
         self.assertEqual(len(self.col.results['object2'].keys()),1)
 
         self.assertAlmostEqual(self.col.results['object1']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi,places=6)
+        self.assertEqual(len(self.col.results['object1']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertEqual(len(self.col.results['object1']),1)
         self.assertEqual(len(self.col.results['object1']['LS'].good_periods_info),1)
         self.assertAlmostEqual(self.col.results['object1']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_1,places=5)
@@ -581,6 +597,7 @@ class test_close_amplitudes_signal(unittest.TestCase):
         self.assertEqual(self.col.results['object1']['LS'].good_periods_info[0]['significant_blends'],['object2'])
 
         self.assertAlmostEqual(self.col.results['object2']['LS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi,places=3)
+        self.assertEqual(len(self.col.results['object2']['LS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertEqual(len(self.col.results['object2']),1)
         self.assertEqual(len(self.col.results['object2']['LS'].good_periods_info),1)
         self.assertAlmostEqual(self.col.results['object2']['LS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_2,places=3)

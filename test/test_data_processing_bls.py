@@ -79,6 +79,7 @@ class test_data_processing_basic_bls_run(unittest.TestCase):
         self.assertEqual(len(self.col_a.results['object2'].keys()),0)
 
         self.assertAlmostEqual(self.col_a.results['object1']['BLS'].good_periods_info[0]['lsp_dict']['bestperiod'],self.period,places=3)
+        self.assertEqual(len(self.col_a.results['object1']['BLS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertEqual(len(self.col_a.results['object1']),1)
         self.assertEqual(len(self.col_a.results['object1']['BLS'].good_periods_info),1)
         self.assertAlmostEqual(self.col_a.results['object1']['BLS'].good_periods_info[0]['flux_amplitude'],self.fluxamp,places=5)
@@ -112,6 +113,7 @@ class test_data_processing_basic_bls_run(unittest.TestCase):
         self.assertEqual(len(self.col_a2.results['object2'].keys()),0)
 
         self.assertAlmostEqual(self.col_a2.results['object1']['BLS'].good_periods_info[0]['lsp_dict']['bestperiod'],self.period,places=3)
+        self.assertEqual(len(self.col_a2.results['object1']['BLS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertEqual(len(self.col_a2.results['object1']),1)
         self.assertEqual(len(self.col_a2.results['object1']['BLS'].good_periods_info),1)
         self.assertAlmostEqual(self.col_a2.results['object1']['BLS'].good_periods_info[0]['flux_amplitude'],self.fluxamp,places=5)
@@ -188,6 +190,7 @@ class test_data_processing_simple_blended_bls_run(unittest.TestCase):
         self.assertEqual(len(self.col_c.results['c1']['BLS'].good_periods_info),1)
         self.assertEqual(len(self.col_c.results['c1']['BLS'].blends_info),0)
         self.assertAlmostEqual(self.col_c.results['c1']['BLS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
+        self.assertEqual(len(self.col_c.results['c1']['BLS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertEqual(self.col_c.results['c1']['BLS'].good_periods_info[0]['num_previous_blends'],0)
         self.assertAlmostEqual(self.col_c.results['c1']['BLS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_c1,places=4)
 
@@ -196,12 +199,14 @@ class test_data_processing_simple_blended_bls_run(unittest.TestCase):
         self.assertEqual(len(self.col_c.results['c2']['BLS'].blends_info),1)
         self.assertEqual(self.col_c.results['c2']['BLS'].blends_info[0]['ID_of_blend'],'c1')
         self.assertAlmostEqual(self.col_c.results['c2']['BLS'].blends_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
+        self.assertEqual(len(self.col_c.results['c2']['BLS'].blends_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_c.results['c2']['BLS'].blends_info[0]['flux_amplitude'],self.fluxamp_c2,places=2)
 
         #Check c3
         self.assertEqual(len(self.col_c.results['c3']['BLS'].good_periods_info),1)
         self.assertEqual(len(self.col_c.results['c3']['BLS'].blends_info),0)
         self.assertAlmostEqual(self.col_c.results['c3']['BLS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
+        self.assertEqual(len(self.col_c.results['c3']['BLS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertEqual(self.col_c.results['c3']['BLS'].good_periods_info[0]['num_previous_blends'],0)
         self.assertAlmostEqual(self.col_c.results['c3']['BLS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_c3,places=2)
 
@@ -244,6 +249,7 @@ class test_long_period_bls(unittest.TestCase):
         self.assertEqual(len(self.col_d.results['d1']['BLS'].good_periods_info),1)
         self.assertEqual(len(self.col_d.results['d1']['BLS'].blends_info),0)
         self.assertAlmostEqual(self.col_d.results['d1']['BLS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegad,places=1)
+        self.assertEqual(len(self.col_d.results['d1']['BLS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_d.results['d1']['BLS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_d,places=2)
 
 
@@ -318,6 +324,7 @@ class test_multiple_blends_bls(unittest.TestCase):
 
         self.assertEqual(len(self.col_e.results['e1']['BLS'].good_periods_info),1)
         self.assertAlmostEqual(self.col_e.results['e1']['BLS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegae,places=2)
+        self.assertEqual(len(self.col_e.results['e1']['BLS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_e.results['e1']['BLS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_e1,places=2)
         self.assertEqual(self.col_e.results['e1']['BLS'].good_periods_info[0]['significant_blends'],['e2','e3'])
         self.assertEqual(self.col_e.results['e1']['BLS'].good_periods_info[0]['num_previous_blends'],0)
@@ -382,8 +389,10 @@ class test_sinusoid_with_transit_bls(unittest.TestCase):
         self.assertEqual(len(self.col.results['s']['BLS'].good_periods_info),2)
         self.assertEqual(len(self.col.results['s']['BLS'].blends_info),0)
         self.assertAlmostEqual(self.col.results['s']['BLS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omega,places=3)
+        self.assertEqual(len(self.col.results['s']['BLS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col.results['s']['BLS'].good_periods_info[0]['flux_amplitude'],self.sin_fluxamp,places=2)
         self.assertAlmostEqual(self.col.results['s']['BLS'].good_periods_info[1]['lsp_dict']['bestperiod'],self.transit_period,places=4)
+        self.assertEqual(len(self.col.results['s']['BLS'].good_periods_info[1]['lsp_dict']['nbestperiods']),1)
         #self.assertAlmostEqual(self.col.results['s']['BLS'].good_periods_info[1]['flux_amplitude'],self.depth_fluxamp,places=4)
 
 
@@ -458,6 +467,7 @@ class test_multiple_blends_bls_with_spn(unittest.TestCase):
 
         self.assertEqual(len(self.col_f.results['f1']['BLS'].good_periods_info),1)
         self.assertAlmostEqual(self.col_f.results['f1']['BLS'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegaf,places=2)
+        self.assertEqual(len(self.col_f.results['f1']['BLS'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
         self.assertAlmostEqual(self.col_f.results['f1']['BLS'].good_periods_info[0]['flux_amplitude'],self.fluxamp_f1,places=2)
         self.assertEqual(self.col_f.results['f1']['BLS'].good_periods_info[0]['significant_blends'],['f2','f3'])
         self.assertEqual(self.col_f.results['f1']['BLS'].good_periods_info[0]['num_previous_blends'],0)
