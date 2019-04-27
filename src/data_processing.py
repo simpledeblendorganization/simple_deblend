@@ -629,7 +629,7 @@ class periodsearch_results():
         self.stillcount_blend_factor=stillcount_blend_factor
 
 
-    def add_good_period(self,lsp_dict,times,mags,errs,snr_value,
+    def add_good_period(self,lsp_dict,times,mags,errs,period,snr_value,
                         flux_amplitude,significant_blends,
                         ff_params,
                         notmax=False,s_pinknoise=None,
@@ -640,6 +640,7 @@ class periodsearch_results():
         times      - light curve times
         mags       - light curve magnitudes
         errs       - light curve errors
+        period     - the associated period
         snr_value  - value of the periodogram SNR
         flux_amplitude - flux amplitude
         significant_blends - neighbors with flux amplitudes above
@@ -652,7 +653,8 @@ class periodsearch_results():
         ignore_blend - ID of blend being ignore if its being
                        ignored, False otherwise
         '''
-        dict_to_add = {'lsp_dict':lsp_dict,'times':times,
+        dict_to_add = {'lsp_dict':lsp_dict,
+                       'period':period,'times':times,
                        'mags':mags,'errs':errs,
                        'snr_value':snr_value,
                        'flux_amplitude':flux_amplitude,
@@ -664,7 +666,8 @@ class periodsearch_results():
             dict_to_add['s_pinknoise'] = s_pinknoise
         self.good_periods_info.append(dict_to_add)
 
-    def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,snr_value,
+    def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,
+                  period,snr_value,
                   flux_amplitude,ff_params,s_pinknoise=None):
         '''add info where the object is blended with another object,
         that object being determined as the variability source
@@ -674,6 +677,7 @@ class periodsearch_results():
         mags       - light curve magnitudes
         errs       - light curve errors
         neighbor_ID - ID of the variability source
+        period     - the associated period
         snr_value  - value of the periodogram SNR
         flux_amplitude - flux amplitude
         ffparams - Fourier fit parameters for the *current* LC
@@ -681,6 +685,7 @@ class periodsearch_results():
         '''
         dict_to_add = {'lsp_dict':lsp_dict,
                        'ID_of_blend':neighbor_ID,
+                       'period':period,
                        'snr_value':snr_value,
                        'flux_amplitude':flux_amplitude,
                        'num_previous_signals':len(self.good_periods_info),

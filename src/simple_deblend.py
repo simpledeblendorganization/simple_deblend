@@ -508,7 +508,8 @@ def iterative_deblend(t, y, dy, neighbors,
                         print("   -> this isn't a peak period for the neighbor, so ignoring blend.",flush=True)
 
                         results_storage_container.add_good_period(lsp_dict,t,y,dy,
-                                              snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
+                                                                  lsp_dict['periods'][best_pdgm_index],
+                                              per_snr,
                                               this_flux_amplitude,
                                               significant_neighbor_blends,
                                               ffr.params,
@@ -520,7 +521,8 @@ def iterative_deblend(t, y, dy, neighbors,
 
                 print("   -> blended! Trying again.",flush=True)
                 results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,
-                                                    snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
+                                                    lsp_dict['periods'][best_pdgm_index],
+                                                    per_snr,
                                                     this_flux_amplitude,
                                                     ffr.params,
                                                     s_pinknoise=per_spn)
@@ -552,7 +554,8 @@ def iterative_deblend(t, y, dy, neighbors,
 
     # Save the period info and return the pre-whitened light curve    
     results_storage_container.add_good_period(lsp_dict,t,y,dy,
-                                              snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]),
+                                              lsp_dict['periods'][best_pdgm_index],
+                                              per_snr,
                                               this_flux_amplitude,
                                               significant_neighbor_blends,
                                               ffr.params,
