@@ -341,6 +341,7 @@ def iterative_deblend(t, y, dy, neighbors,
                       window_size_snr=40,
                       snr_threshold=0.,
                       spn_threshold=None,
+                      fap_baluev_threshold=None,
                       neighbor_peaks_tocheck=8,
                       max_blend_recursion=8,
                       recursion_level=0,
@@ -490,6 +491,7 @@ def iterative_deblend(t, y, dy, neighbors,
             print("   -> pSNR not significant enough.",flush=True)
         return None
 
+    # Check the signal-to-pink-noise if a threshold is provided
     if spn_threshold:
         if abs(1./lsp_dict['periods'][best_pdgm_index] - 1./lsp_dict['nbestperiods'][0]) >\
                 .5*delta_frequency: # If the periods are different, rerun period finding to get stats
@@ -502,7 +504,7 @@ def iterative_deblend(t, y, dy, neighbors,
         else:
             per_temp = lsp_dict['periods'][best_pdgm_index]
             bls_stats_touse = lsp_dict['stats'][0]
-        per_spn = pinknoise.pinknoise_calc(t,y,dy,per_temp,
+        spn_val = pinknoise.pinknoise_calc(t,y,dy,per_temp,
                                            bls_stats_touse['transitduration'],
                                            bls_stats_touse['transitdepth'],
                                            bls_stats_touse['npoints_in_transit'],
@@ -510,15 +512,29 @@ def iterative_deblend(t, y, dy, neighbors,
                                            pinknoise.ntransits(t.min(),t.max(),
                                                                bls_stats_touse['epoch'],
                                                                per_temp))
-        print("SPN: " + str(per_spn))
-        if per_spn < snr_threshold_tocomp(spn_threshold,period=per_temp):
+        print("  SPN: %.5e" % spn_val)
+        if spn_val < snr_threshold_tocomp(spn_threshold,period=per_temp):
             if ID:
                 print("   -> S/PN not significant enough, for " + ID,flush=True)
             else:
                 print("   -> S/PN not significant enough.",flush=True)
             return None
     else:
-        per_spn=None
+        spn_val=None
+
+    # Check the Baluev FAP is a threshold is provided
+    if fap_baluev_threshold:
+        fap_baluev_val = fap_baluev(t,dy,lsp_dict['lspvals'][best_pdgm_index],1./lsp_dict['periods'].min())
+
+        print("  B. FAP: %.5e" % fap_baluev_val)
+        if fap_baluev_val < snr_threshold_tocomp(fap_baluev_threshold,period=lsp_dict['periods'][best_pdgm_index]):
+            if ID:
+                print("   -> B. FAP not significant enough, for " + ID,flush=True)
+            else:
+                print("   -> B. FAP not significant enough.",flush=True)
+            return None
+    else:
+        fap_baluev_val = None
 
     # Fit truncated Fourier series at this frequency
     ff = (FourierFit(nharmonics=nharmonics_fit)
@@ -584,7 +600,8 @@ def iterative_deblend(t, y, dy, neighbors,
                                               significant_neighbor_blends,
                                               ffr.params,
                                               notmax=notmax,
-                                              s_pinknoise=per_spn,
+                                              s_pinknoise=spn_val,
+                                              fap_baluev=fap_baluev_val,
                                               ignore_blend=max_ffn_ID)
                         return y - ffr(t)
 
@@ -595,7 +612,8 @@ def iterative_deblend(t, y, dy, neighbors,
                                                     per_snr,
                                                     this_flux_amplitude,
                                                     ffr.params,
-                                                    s_pinknoise=per_spn)
+                                                    s_pinknoise=spn_val,
+                                                    fap_baluev=fap_baluev_val)
                 if recursion_level >= max_blend_recursion:
                     print("   Reached the blend recursion level, no longer checking",flush=True)
                     return None
@@ -615,6 +633,7 @@ def iterative_deblend(t, y, dy, neighbors,
                                          window_size_snr=window_size_snr,
                                          snr_threshold=snr_threshold,
                                          spn_threshold=spn_threshold,
+                                         fap_baluev_threshold=fap_baluev_threshold,
                                          max_blend_recursion=max_blend_recursion,
                                          recursion_level=recursion_level+1,
                                          nworkers=nworkers)
@@ -630,5 +649,6 @@ def iterative_deblend(t, y, dy, neighbors,
                                               significant_neighbor_blends,
                                               ffr.params,
                                               notmax=notmax,
-                                              s_pinknoise=per_spn)
+                                              s_pinknoise=spn_val,
+                                              fap_baluev=fap_baluev_val)
     return y - ffr(t)

@@ -67,6 +67,7 @@ class lc_collection_for_processing(lc_objects):
                median_filter_size=None,
                snr_filter_size=None,
                snr_threshold=0.,
+               fap_baluev_threshold=0.,
                max_blend_recursion=4,
                outputdir="."):
         '''Run a Lomb-Scargle period search
@@ -112,10 +113,15 @@ class lc_collection_for_processing(lc_objects):
                calculating the standard deviation for the SNR
 
         snr_threshold         - threshold value or function for
-               counting a signal as robust, can be:
+               counting a signal as robust from periodogram SNR, can be:
                     single value -- applies to all objects and periods
                     iterable -- length of number of objects, applies
                                 each value to each object
+                    callable -- function of period
+
+        fap_baluev_threshold  - threshold value or function for
+               counting a signal as robust from sdb.fap_baluev(), can be:
+                    single value -- applies to all objects and periods
                     callable -- function of period
 
         max_blend_recursion   - maximum number of blends to try and fit
@@ -149,6 +155,7 @@ class lc_collection_for_processing(lc_objects):
                  freq_window_epsilon_snr=freq_window_epsilon_snr,
                  median_filter_size=median_filter_size,
                  snr_filter_size=snr_filter_size,snr_threshold=snr_threshold,
+                 fap_baluev_threshold=fap_baluev_threshold,
                  max_blend_recursion=max_blend_recursion,
                  outputdir=outputdir)
 
@@ -381,6 +388,7 @@ class lc_collection_for_processing(lc_objects):
             medianfilter=False,freq_window_epsilon_mf=None,
             freq_window_epsilon_snr=None,median_filter_size=None,
             snr_filter_size=None,snr_threshold=0.,spn_threshold=None,
+            fap_baluev_threshold=None,
             max_blend_recursion=8,outputdir="."):
         '''Run a given period search method
 
@@ -418,6 +426,13 @@ class lc_collection_for_processing(lc_objects):
                counting signal-to-pink-noise as robust, can be:
                     single value -- applies to all objects and periods
                     callable -- function of period
+                    None     -- ignore SPN calculation entirely
+
+        fap_baluev_threshold  - threshold value or function for
+               counting Baluev FAP measure as robust, can be:
+                    single value -- applies to all objects and periods
+                    callable -- function of period
+                    None     -- ignore fap_baluev calculation entirely
 
         max_blend_recursion - maximum number of blends to try and fit
                out before giving up
@@ -456,6 +471,7 @@ class lc_collection_for_processing(lc_objects):
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
                               snr_filter_size,snr_val,spn_threshold,
+                              fap_baluev_threshold,
                               max_blend_recursion,
                               num_proc_per_run,outputdir)
                              for o, snr_val in zip(self.objects,snr_threshold)]
@@ -464,6 +480,7 @@ class lc_collection_for_processing(lc_objects):
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
                               snr_filter_size,snr_threshold,spn_threshold,
+                              fap_baluev_threshold,
                               max_blend_recursion,
                               num_proc_per_run,outputdir)
                              for o in self.objects]
@@ -472,15 +489,16 @@ class lc_collection_for_processing(lc_objects):
                               medianfilter,freq_window_epsilon_mf,
                               freq_window_epsilon_snr,median_filter_size,
                               snr_filter_size,snr_threshold,spn_threshold,
+                              fap_baluev_threshold,
                               max_blend_recursion,
                               num_proc_per_run,outputdir)
                              for o in self.objects]
 
         #####Temporary change:
-        if False:
-        # Remove the task if the output already exists
+        if True:
+            # Remove the task if the output already exists
 
-        running_tasks = [r for r in running_tasks if \
+            running_tasks = [r for r in running_tasks if \
                              (not isfile(outputdir + "/ps_" + str(r[0].ID) +\
                                    "_" + which_method + "_goodperiod.pkl")) and#\
                               (not isfile(outputdir + "/ps_" + str(r[0].ID) +\
@@ -519,6 +537,7 @@ class lc_collection_for_processing(lc_objects):
         (object,which_method,ps_func,params,num_periods,
          medianfilter,freq_window_epsilon_mf,freq_window_epsilon_snr,
          median_filter_size,snr_filter_size,snr_threshold,spn_threshold,
+         fap_baluev_threshold,
          max_blend_recursion,nworkers,outputdir) = task
 
         # Value checking
@@ -529,7 +548,11 @@ class lc_collection_for_processing(lc_objects):
                 warnings.warn("medianfilter is False, but median_filter_size is not None, not using median filter")
 
         if spn_threshold and which_method.lower() != 'bls':
-            raise ValueError("spn_threshold has a value, but the method is not BLS, ignoring spn_threshold")
+            raise ValueError("spn_threshold has a value, but the method is not BLS")
+
+        if fap_baluev_threshold and which_method.lower() != 'ls':
+            raise ValueError("fap_baluev has a value, but the method is not LS,")
+
 
         # Collect the neighbor light curves
         neighbor_lightcurves = {neighbor_ID:(self.objects[self.index_dict[neighbor_ID]].times,
@@ -557,6 +580,7 @@ class lc_collection_for_processing(lc_objects):
                                            window_size_snr=snr_filter_size,
                                            snr_threshold=snr_threshold,
                                            spn_threshold=spn_threshold,
+                                           fap_baluev_threshold=fap_baluev_threshold,
                                            max_blend_recursion=max_blend_recursion,
                                            nworkers=nworkers)
             if yprime is None: # No more results to be had
@@ -634,6 +658,7 @@ class periodsearch_results():
                         flux_amplitude,significant_blends,
                         ff_params,
                         notmax=False,s_pinknoise=None,
+                        fap_baluev=None,
                         ignore_blend=False):
         '''add a good period for the object
 
@@ -665,11 +690,14 @@ class periodsearch_results():
                        'ff_params':ff_params}
         if s_pinknoise:
             dict_to_add['s_pinknoise'] = s_pinknoise
+        if fap_baluev:
+            dict_to_add['fap_baluev'] = fap_baluev
         self.good_periods_info.append(dict_to_add)
 
     def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,
                   period,snr_value,
-                  flux_amplitude,ff_params,s_pinknoise=None):
+                  flux_amplitude,ff_params,s_pinknoise=None,
+                  fap_baluev=None):
         '''add info where the object is blended with another object,
         that object being determined as the variability source
 
@@ -694,6 +722,8 @@ class periodsearch_results():
                        'ff_params':ff_params}
         if s_pinknoise:
             dict_to_add['s_pinknoise'] = s_pinknoise
+        if fap_baluev:
+            dict_to_add['fap_baluev'] = fap_baluev
         self.blends_info.append(dict_to_add)
 
 
