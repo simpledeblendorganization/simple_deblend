@@ -477,6 +477,7 @@ class lc_collection_for_processing(lc_objects):
                              for o in self.objects]
 
         #####Temporary change:
+        if False:
         # Remove the task if the output already exists
 
         running_tasks = [r for r in running_tasks if \
@@ -485,7 +486,7 @@ class lc_collection_for_processing(lc_objects):
                               (not isfile(outputdir + "/ps_" + str(r[0].ID) +\
                                    "_" + which_method + "_blends.pkl"))]
 
-        #running_tasks = [r for r in running_tasks if r[0].ID in ['6045466567081582080','6045478558624847488']]
+        #running_tasks = [r for r in running_tasks if r[0].ID in ['6045478799150146688']]
 
 
 
