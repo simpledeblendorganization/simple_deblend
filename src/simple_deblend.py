@@ -171,6 +171,76 @@ class FourierFit(object):
         return X @ self.params - self.params[0]
 
 
+def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
+    """
+    False alarm probability for periodogram peak
+    based on Baluev (2008) [2008MNRAS.385.1279B]
+    Parameters
+    ----------
+    t: array_like
+        Observation times.
+    dy: array_like
+        Observation uncertainties.
+    z: array_like or float
+        Periodogram value(s)
+    fmax: float
+        Maximum frequency searched
+    d_K: int, optional (default: 3)
+        Number of degrees of fredom for periodgram model.
+        2H - 1 where H is the number of harmonics
+    d_H: int, optional (default: 1)
+        Number of degrees of freedom for default model.
+    use_gamma: bool, optional (default: True)
+        Use gamma function for computation of numerical
+        coefficient; replaced with scipy.special.gammaln
+        and should be stable now
+    Returns
+    -------
+    fap: float
+        False alarm probability
+    Example
+    -------
+    >>> rand = np.random.RandomState(100)
+    >>> t = np.sort(rand.rand(100))
+    >>> y = 12 + 0.01 * np.cos(2 * np.pi * 10. * t)
+    >>> dy = 0.01 * np.ones_like(y)
+    >>> y += dy * rand.rand(len(t))
+    >>> proc = LombScargleAsyncProcess()
+    >>> results = proc.run([(t, y, dy)])
+    >>> freqs, powers = results[0]
+    >>> fap_baluev(t, dy, powers, max(freqs))
+    """
+
+    N = len(t)
+    d = d_K - d_H
+
+    N_K = N - d_K
+    N_H = N - d_H
+    g = (0.5 * N_H) ** (0.5 * (d - 1))
+
+    if use_gamma:
+        g = np.exp(gammaln(0.5 * N_H) - gammaln(0.5 * (N_K + 1)))
+
+    w = np.power(dy, -2)
+
+    tbar = np.dot(w, t) / sum(w)
+    Dt = np.dot(w, np.power(t - tbar, 2)) / sum(w)
+
+    Teff = np.sqrt(4 * np.pi * Dt)
+
+    W = fmax * Teff
+    A = (2 * np.pi ** 1.5) * W
+
+    eZ1 = (z / np.pi) ** 0.5 * (d - 1)
+    eZ2 = (1 - z) ** (0.5 * (N_K - 1))
+
+    tau = (g * A / (2 * np.pi)) * eZ1 * eZ2
+
+    Psing = 1 - (1 - z) ** (0.5 * N_K)
+
+    return 1 - Psing * np.exp(-tau)
+
+
 def _median_filtering_one_job(task):
     '''
     Median filter worker function for parallelization,
