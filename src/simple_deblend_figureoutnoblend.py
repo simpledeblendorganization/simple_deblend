@@ -521,7 +521,7 @@ def iterative_deblend(t, y, dy, neighbors,
 
 
                         ##### Plot stuffs
-
+                        print("plotting")
                         fig = plt.figure(figsize=(8,6))
 
                         left = 0.11
@@ -539,9 +539,9 @@ def iterative_deblend(t, y, dy, neighbors,
                         ax2 = fig.add_axes(np.array([left+width+h_gap,bottom,width,height]))
 
 
-                        main_phased, main_binned = phasefold(t,y,dy,lsp_dict['periods'][best_pdgm_index],epoch=2000.)
+                        main_phased, main_binned = phasefold(t,y,dy,lsp_dict['periods'][best_pdgm_index],epoch=0.)
                         secondary_phased, secondary_binned = phasefold(neighbors[max_ffn_ID][0],neighbors[max_ffn_ID][1],
-                                                   neighbors[max_ffn_ID][2],lsp_dict['periods'][best_pdgm_index],epoch=2000.)
+                                                   neighbors[max_ffn_ID][2],lsp_dict['periods'][best_pdgm_index],epoch=0.)
 
                         phase = np.array(list(np.linspace(-1,0,200)) + list(np.linspace(0,1,200)))
 
@@ -550,7 +550,7 @@ def iterative_deblend(t, y, dy, neighbors,
                         ax1.plot(phase,ff(phase,in_phase=True)+ff.params[0],color='red',lw=1.2)
 
                         ax1_text = "p: " + str(round(lsp_dict['periods'][best_pdgm_index],3)) + "\n"
-                        ax1_text += "amp: %e.2\n" % this_flux_amplitude
+                        ax1_text += "amp: %.2e\n" % this_flux_amplitude
                         ax1_text += "pSNR: " + str(round(per_snr,1))
                         ax1.text(.08,.98,ax1_text,fontsize=9.5,color='blue',
                                    horizontalalignment='left',
@@ -572,7 +572,7 @@ def iterative_deblend(t, y, dy, neighbors,
                             ax2_text += str(round(n_lsp_dict['nbestperiods'][i],2)) + "  "
                             if i == 3:
                                 ax2_text += "\n"
-                        ax2_text += "amp: %e.2\n" % ffn_all[max_ffn_ID].flux_amplitude
+                        ax2_text += "\namp: %.2e" % ffn_all[max_ffn_ID].flux_amplitude
                         ax2.text(.08,.98,ax2_text,fontsize=9.5,color='blue',
                                    horizontalalignment='left',
                                   verticalalignment='top',
