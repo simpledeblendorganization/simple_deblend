@@ -6,6 +6,7 @@ and taken care of
 
 
 from scipy.stats import sigmaclip
+from scipy.special import gammaln
 import numpy as np
 import math
 import snr_calculation as snr
@@ -492,7 +493,7 @@ def iterative_deblend(t, y, dy, neighbors,
         return None
 
     # Check the signal-to-pink-noise if a threshold is provided
-    if spn_threshold:
+    if spn_threshold is not None:
         if abs(1./lsp_dict['periods'][best_pdgm_index] - 1./lsp_dict['nbestperiods'][0]) >\
                 .5*delta_frequency: # If the periods are different, rerun period finding to get stats
             function_params_temp = copy.deepcopy(function_params)
@@ -523,10 +524,10 @@ def iterative_deblend(t, y, dy, neighbors,
         spn_val=None
 
     # Check the Baluev FAP is a threshold is provided
-    if fap_baluev_threshold:
+    if fap_baluev_threshold is not None:
         fap_baluev_val = fap_baluev(t,dy,lsp_dict['lspvals'][best_pdgm_index],1./lsp_dict['periods'].min())
 
-        print("  B. FAP: %.5e" % fap_baluev_val)
+        print("  B. FAP: %.5e" % fap_baluev_val,flush=True)
         if fap_baluev_val < snr_threshold_tocomp(fap_baluev_threshold,period=lsp_dict['periods'][best_pdgm_index]):
             if ID:
                 print("   -> B. FAP not significant enough, for " + ID,flush=True)
