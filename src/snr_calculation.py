@@ -65,7 +65,7 @@ def periodogram_snr(periodogram,periods,index_to_evaluate,duration,per_type,
 
     # Which values to include in perdgm_window
     if index_to_evaluate > freq_window_index_size:
-        perdgm_window.extend(periodogram[max(0,index_to_evaluate-freq_window_index_size-rms_window_bin_size):index_to_evaluate-freq_window_index_size].tolist())
+        perdgm_window.extend(periodogram[max(0,index_to_evaluate-freq_window_index_size-rms_window_bin_size+1):index_to_evaluate-freq_window_index_size+1].tolist())
     if index_to_evaluate + freq_window_index_size < len(periodogram):
         perdgm_window.extend(periodogram[index_to_evaluate+freq_window_index_size:index_to_evaluate+freq_window_index_size+rms_window_bin_size].tolist())
     perdgm_window = np.array(perdgm_window)
