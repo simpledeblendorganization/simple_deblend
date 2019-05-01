@@ -504,7 +504,7 @@ class lc_collection_for_processing(lc_objects):
                               (not isfile(outputdir + "/ps_" + str(r[0].ID) +\
                                    "_" + which_method + "_blends.pkl"))]
 
-        #running_tasks = [r for r in running_tasks if r[0].ID in ['6045478799150146688']]
+        #running_tasks = [r for r in running_tasks if r[0].ID in ['6045466193420246784']]#['6045466193420210816']]
 
 
 
@@ -688,9 +688,9 @@ class periodsearch_results():
                        'significant_blends':significant_blends,
                        'not_max':notmax,'ignore_blend':ignore_blend,
                        'ff_params':ff_params}
-        if s_pinknoise:
+        if s_pinknoise is not None:
             dict_to_add['s_pinknoise'] = s_pinknoise
-        if fap_baluev:
+        if fap_baluev is not None:
             dict_to_add['fap_baluev'] = fap_baluev
         self.good_periods_info.append(dict_to_add)
 
@@ -720,9 +720,9 @@ class periodsearch_results():
                        'num_previous_signals':len(self.good_periods_info),
                        'times':times,'mags':mags,'errs':errs,
                        'ff_params':ff_params}
-        if s_pinknoise:
+        if s_pinknoise is not None:
             dict_to_add['s_pinknoise'] = s_pinknoise
-        if fap_baluev:
+        if fap_baluev is not None:
             dict_to_add['fap_baluev'] = fap_baluev
         self.blends_info.append(dict_to_add)
 
