@@ -19,7 +19,7 @@ from multiprocessing import Pool
 
 def snr_threshold_tocomp(f,period=None):
     '''
-    Wrapper function to agnostically return either a 
+    Wrapper function to agnostically return either a
     straight value or a value from a function
 
     f - either the value or the function
@@ -77,7 +77,7 @@ def design_matrix(t, freq, nharms):
 class FourierFit(object):
     '''
     Class for fitting a Fourier series to a light curve
-    
+
     nharmonics - the number of harmonics to use in the fit
     '''
     def __init__(self, nharmonics=5):
@@ -103,7 +103,7 @@ class FourierFit(object):
         dy_as_weights - (optional) whether to use the dy values
                         as weights for the fit
 
-        y_as_flux - (optional) whether the y values are flux 
+        y_as_flux - (optional) whether the y values are flux
                     values instead of magnitudes
         '''
 
@@ -171,11 +171,11 @@ class FourierFit(object):
         X = design_matrix(t, freq, self.nharmonics)
         return X @ self.params - self.params[0]
 
-
-def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
+def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True, use_log=True):
     """
     False alarm probability for periodogram peak
     based on Baluev (2008) [2008MNRAS.385.1279B]
+
     Parameters
     ----------
     t: array_like
@@ -195,10 +195,14 @@ def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
         Use gamma function for computation of numerical
         coefficient; replaced with scipy.special.gammaln
         and should be stable now
+    use_log: bool, optional (default: True)
+        Return (natural) logarithm of false alarm probability
+
     Returns
     -------
     fap: float
         False alarm probability
+
     Example
     -------
     >>> rand = np.random.RandomState(100)
@@ -232,6 +236,18 @@ def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
     W = fmax * Teff
     A = (2 * np.pi ** 1.5) * W
 
+    if (0.5 * N_K * np.log10(z) < -2):
+        log_gamma = gammaln(0.5 * N_H) - gammaln(0.5 * (N_K + 1))
+        log_A_fmax = np.log(2) + 1.5 * np.log(np.pi) + np.log(W)
+
+        log_tau = log_gamma - np.log(2 * np.pi) + log_A_fmax
+
+        log_tau += 0.5 * (d - 1) * np.log(z / np.pi)
+
+        log_tau += 0.5 * (N_K - 1) * np.log(1 - z)
+
+        return (log_tau if use_log else np.exp(log_tau))
+
     eZ1 = (z / np.pi) ** 0.5 * (d - 1)
     eZ2 = (1 - z) ** (0.5 * (N_K - 1))
 
@@ -239,8 +255,9 @@ def fap_baluev(t, dy, z, fmax, d_K=3, d_H=1, use_gamma=True):
 
     Psing = 1 - (1 - z) ** (0.5 * N_K)
 
-    return 1 - Psing * np.exp(-tau)
+    fap = 1 - Psing * np.exp(-tau)
 
+    return np.log(fap) if use_log else fap
 
 def _median_filtering_one_job(task):
     '''
@@ -290,7 +307,7 @@ def median_filtering(periodogramvals,periods,freq_window_epsilon,median_filter_s
                calculating the RMS for the SNR
 
     duration - total duration of the observations
-    
+
     which_method - which period search algorithm was used
 
     nworkers - (optional) number of worker processes
@@ -309,7 +326,7 @@ def median_filtering(periodogramvals,periods,freq_window_epsilon,median_filter_s
 
     # Set up processing pool
     pool = Pool(nworkers)
-    
+
     # Set up tasks for processing
     tasks = [(i,periodogramvals,freq_window_index_size,median_filter_size) for i in range(len(periodogramvals))]
 
@@ -389,7 +406,7 @@ def iterative_deblend(t, y, dy, neighbors,
         sets the size of the exclusion area
         in the periodogram for the SNR calculation
     window_size_mf: int
-        number of points to include in 
+        number of points to include in
         calculating the median value for median filter
     window_size_snr: int
         number of points to include in
@@ -468,10 +485,10 @@ def iterative_deblend(t, y, dy, neighbors,
     freq_window_size = freq_window_epsilon_snr/(max(t)-min(t))
     delta_frequency = abs(1./lsp_dict['periods'][1] - 1./lsp_dict['periods'][0])
     freq_window_index_size = int(round(freq_window_size/delta_frequency))
-    
+
     best_freq = 1./lsp_dict['periods'][best_pdgm_index]
 
-    
+
     # Compute periodogram SNR, compare to threshold
     per_snr = snr.periodogram_snr(pdgm_values,lsp_dict['periods'],
                                   best_pdgm_index,
@@ -544,7 +561,7 @@ def iterative_deblend(t, y, dy, neighbors,
 
     # Fit another truncated Fourier series with more harmonics
     ffr = (FourierFit(nharmonics=nharmonics_resid)
-           .fit(t, y, dy, best_freq)) 
+           .fit(t, y, dy, best_freq))
 
 
     # Now fit Fourier series to all the neighbor light curves
@@ -553,7 +570,7 @@ def iterative_deblend(t, y, dy, neighbors,
 
         # fit neighbor's lightcurve at this frequency
         ffn = (FourierFit(nharmonics=nharmonics_fit)
-               .fit(neighbors[n_ID][0], neighbors[n_ID][1], 
+               .fit(neighbors[n_ID][0], neighbors[n_ID][1],
                     neighbors[n_ID][2], best_freq))
         ffn_all[n_ID] = ffn
 
@@ -569,7 +586,7 @@ def iterative_deblend(t, y, dy, neighbors,
             max_amp = ffn_all[n_ID].flux_amplitude
             max_ffn_ID = n_ID
 
-        
+
 
     # If neighbor has larger flux amplitude,
     # then we consider this signal to be a blend.
@@ -642,7 +659,7 @@ def iterative_deblend(t, y, dy, neighbors,
                 notmax = True
 
 
-    # Save the period info and return the pre-whitened light curve    
+    # Save the period info and return the pre-whitened light curve
     results_storage_container.add_good_period(lsp_dict,t,y,dy,
                                               lsp_dict['periods'][best_pdgm_index],
                                               per_snr,
