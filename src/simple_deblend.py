@@ -344,6 +344,222 @@ def median_filtering(periodogramvals,periods,freq_window_epsilon,median_filter_s
         return periodogramvals - np.array(median_filter_values)
 
 
+
+def rest_neighbor_check_and_continue(t,y,dy, neighbors,
+                                     period_finding_func,
+                                     results_storage_container,
+                                     which_method,
+                                     function_params=None,
+                                     nharmonics_fit=5,
+                                     nharmonics_resid=10,
+                                     ID=None,
+                                     medianfilter=False,
+                                     freq_window_epsilon_mf=1.,
+                                     freq_window_epsilon_snr=1.,
+                                     window_size_mf=40,
+                                     window_size_snr=40,
+                                     snr_threshold=0.,
+                                     spn_threshold=None
+                                     fap_baluev_threshold=None,
+                                     neighbor_peaks_tocheck=8,
+                                     max_blend_recursion=8,
+                                     recursion_level=0,
+                                     nworkers=1):
+
+    """
+    Check neighbor blending for specifically LS and PDM, which uses a
+    harmonic fit to determine amplitudes.
+
+    Parameters
+    ----------
+    t: array_like
+        Time coordinates of lightcurve
+    y: array_like
+        Brightness measurements (in mag)
+    dy: array_like
+        Uncertainties for each brightness measurement
+    neighbors: list
+        List of (t, y, dy) lightcurves for each
+        neighbor (NOT including the lightcurve we are deblending)
+    period_finding_func: function
+        Function used to find the period.  Output format assumed to
+        be the same as that used in astrobase.periodbase
+    results_storage_container: instance of data_processing.periodsearch_results
+        Used to store the results
+    which_method: string
+        Which period search method is being used
+    (optional from here below):
+    function_params: dictionary
+        A dictionary containing parameters for the function in
+        period_finding_func
+    nharmonics_fit: int
+        Number of harmonics to use in the fit (used to estimate
+        flux amplitude)
+    nharmonics_resid: int
+        Number of harmonics to use to obtain the residual if we
+        find that the signal is a blend of a neighboring signal
+    ID: string
+        ID of the object
+    medianfilter: boolean
+        whether to median filter the periodogram
+    freq_window_epsilon_mf: int
+        sets the size of the exclusion area
+        in the periodogram for the median filter calculation
+    freq_window_epsilon_snr: int
+        sets the size of the exclusion area
+        in the periodogram for the SNR calculation
+    window_size_mf: int
+        number of points to include in
+        calculating the median value for median filter
+    window_size_snr: int
+        number of points to include in
+        calculating the standard deviation for the SNR
+    snr_threshold: float, array_like, or callable
+        threshold value or function for
+        counting a signal as robust, can be:
+             single value -- applies to all objects and periods
+             iterable -- length of number of objects, applies
+                                each value to each object
+             callable -- function of period
+    spn_threshold: float or callable
+        threshold value or function for
+        counting a signal as robust, can be:
+             single value -- applies to all objects and periods
+             callable -- function of period
+    neighbor_peaks_tocheck: int
+        when blend is determined, number of neighbor peak periods
+        to check that the blended period is actually in the neighbor
+    max_blend_recursion: int
+        maximum number of blends to try and fit
+        out before giving up
+    recursion_level: int
+        current recursion level
+    nworkers: int
+        number of child workers
+    """
+
+
+    # Fit truncated Fourier series at this frequency
+    ff = (FourierFit(nharmonics=nharmonics_fit)
+          .fit(t, y, dy, best_freq))
+    this_flux_amplitude = ff.flux_amplitude
+
+    # Fit another truncated Fourier series with more harmonics
+    ffr = (FourierFit(nharmonics=nharmonics_resid)
+           .fit(t, y, dy, best_freq))
+
+
+    # Now fit Fourier series to all the neighbor light curves
+    ffn_all = {}
+    for n_ID in neighbors.keys():
+
+        # fit neighbor's lightcurve at this frequency
+        ffn = (FourierFit(nharmonics=nharmonics_fit)
+               .fit(neighbors[n_ID][0], neighbors[n_ID][1],
+                    neighbors[n_ID][2], best_freq))
+        ffn_all[n_ID] = ffn
+
+    # Figure out which has maximum amplitude
+    max_amp = 0.
+    max_ffn_ID = None
+    significant_neighbor_blends = []
+    for n_ID in ffn_all.keys():
+        if ffn_all[n_ID].flux_amplitude >\
+         results_storage_container.count_neighbor_threshold*this_flux_amplitude:
+            significant_neighbor_blends.append(n_ID)
+        if ffn_all[n_ID].flux_amplitude > max_amp:
+            max_amp = ffn_all[n_ID].flux_amplitude
+            max_ffn_ID = n_ID
+
+
+
+    # If neighbor has larger flux amplitude,
+    # then we consider this signal to be a blend.
+    # subtract off model signal to get residual
+    # lightcurve, and try again
+    notmax = False
+    if max_ffn_ID:
+        print("    checking blends")
+        print("    " + max_ffn_ID)
+        print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(this_flux_amplitude),flush=True)
+        if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude:
+            if this_flux_amplitude < results_storage_container.stillcount_blend_factor * ffn_all[max_ffn_ID].flux_amplitude:
+                # Check that the neighbor actually has this period
+                if neighbor_peaks_tocheck > 0:
+                    function_params_neighbor = copy.deepcopy(function_params)
+                    function_params_neighbor['nbestpeaks'] = neighbor_peaks_tocheck
+                    n_lsp_dict = period_finding_func(neighbors[max_ffn_ID][0],neighbors[max_ffn_ID][1],
+                                                   neighbors[max_ffn_ID][2],**function_params_neighbor)
+
+                    if not any(np.isclose(n_lsp_dict['nbestperiods'], lsp_dict['periods'][best_pdgm_index], rtol=1e-2, atol=1e-5)):
+                        # If the highest-amp blended neighbor doesn't have this period as one of its top periods
+                        # Count as a good period
+                        print("   -> this isn't a peak period for the neighbor, so ignoring blend.",flush=True)
+
+                        results_storage_container.add_good_period(lsp_dict,t,y,dy,
+                                                                  lsp_dict['periods'][best_pdgm_index],
+                                              per_snr,
+                                              this_flux_amplitude,
+                                              significant_neighbor_blends,
+                                              ffr.params,
+                                              notmax=notmax,
+                                              s_pinknoise=spn_val,
+                                              fap_baluev=fap_baluev_val,
+                                              ignore_blend=max_ffn_ID)
+                        return y - ffr(t)
+
+
+                print("   -> blended! Trying again.",flush=True)
+                results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,
+                                                    lsp_dict['periods'][best_pdgm_index],
+                                                    per_snr,
+                                                    this_flux_amplitude,
+                                                    ffr.params,
+                                                    s_pinknoise=spn_val,
+                                                    fap_baluev=fap_baluev_val)
+                if recursion_level >= max_blend_recursion:
+                    print("   Reached the blend recursion level, no longer checking",flush=True)
+                    return None
+                return iterative_deblend(t, y - ffr(t),
+                                         dy, neighbors,
+                                         period_finding_func,
+                                         results_storage_container,
+                                         which_method,
+                                         function_params=function_params,
+                                         nharmonics_fit=nharmonics_fit,
+                                         nharmonics_resid=nharmonics_resid,
+                                         ID=ID,
+                                         medianfilter=medianfilter,
+                                         freq_window_epsilon_mf=freq_window_epsilon_mf,
+                                         freq_window_epsilon_snr=freq_window_epsilon_snr,
+                                         window_size_mf=window_size_mf,
+                                         window_size_snr=window_size_snr,
+                                         snr_threshold=snr_threshold,
+                                         spn_threshold=spn_threshold,
+                                         fap_baluev_threshold=fap_baluev_threshold,
+                                         neighbor_peaks_tocheck=8,
+                                         max_blend_recursion=max_blend_recursion,
+                                         recursion_level=recursion_level+1,
+                                         nworkers=nworkers)
+            else:
+                notmax = True
+
+
+    # Save the period info and return the pre-whitened light curve
+    results_storage_container.add_good_period(lsp_dict,t,y,dy,
+                                              lsp_dict['periods'][best_pdgm_index],
+                                              per_snr,
+                                              this_flux_amplitude,
+                                              significant_neighbor_blends,
+                                              ffr.params,
+                                              notmax=notmax,
+                                              s_pinknoise=spn_val,
+                                              fap_baluev=fap_baluev_val)
+    return y - ffr(t)
+
+
+
+
 def iterative_deblend(t, y, dy, neighbors,
                       period_finding_func,
                       results_storage_container,
@@ -554,119 +770,12 @@ def iterative_deblend(t, y, dy, neighbors,
     else:
         fap_baluev_val = None
 
-    # Fit truncated Fourier series at this frequency
-    ff = (FourierFit(nharmonics=nharmonics_fit)
-          .fit(t, y, dy, best_freq))
-    this_flux_amplitude = ff.flux_amplitude
+    
+    # Time to do the neighbor comparison.  Different paths depending on whether BLS or not
 
-    # Fit another truncated Fourier series with more harmonics
-    ffr = (FourierFit(nharmonics=nharmonics_resid)
-           .fit(t, y, dy, best_freq))
+    if which_method == 'BLS':
+        pass
 
+    else:
+        pass
 
-    # Now fit Fourier series to all the neighbor light curves
-    ffn_all = {}
-    for n_ID in neighbors.keys():
-
-        # fit neighbor's lightcurve at this frequency
-        ffn = (FourierFit(nharmonics=nharmonics_fit)
-               .fit(neighbors[n_ID][0], neighbors[n_ID][1],
-                    neighbors[n_ID][2], best_freq))
-        ffn_all[n_ID] = ffn
-
-    # Figure out which has maximum amplitude
-    max_amp = 0.
-    max_ffn_ID = None
-    significant_neighbor_blends = []
-    for n_ID in ffn_all.keys():
-        if ffn_all[n_ID].flux_amplitude >\
-         results_storage_container.count_neighbor_threshold*this_flux_amplitude:
-            significant_neighbor_blends.append(n_ID)
-        if ffn_all[n_ID].flux_amplitude > max_amp:
-            max_amp = ffn_all[n_ID].flux_amplitude
-            max_ffn_ID = n_ID
-
-
-
-    # If neighbor has larger flux amplitude,
-    # then we consider this signal to be a blend.
-    # subtract off model signal to get residual
-    # lightcurve, and try again
-    notmax = False
-    if max_ffn_ID:
-        print("    checking blends")
-        print("    " + max_ffn_ID)
-        print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(this_flux_amplitude),flush=True)
-        if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude:
-            if this_flux_amplitude < results_storage_container.stillcount_blend_factor * ffn_all[max_ffn_ID].flux_amplitude:
-                # Check that the neighbor actually has this period
-                if neighbor_peaks_tocheck > 0:
-                    function_params_neighbor = copy.deepcopy(function_params)
-                    function_params_neighbor['nbestpeaks'] = neighbor_peaks_tocheck
-                    n_lsp_dict = period_finding_func(neighbors[max_ffn_ID][0],neighbors[max_ffn_ID][1],
-                                                   neighbors[max_ffn_ID][2],**function_params_neighbor)
-
-                    if not any(np.isclose(n_lsp_dict['nbestperiods'], lsp_dict['periods'][best_pdgm_index], rtol=1e-2, atol=1e-5)):
-                        # If the highest-amp blended neighbor doesn't have this period as one of its top periods
-                        # Count as a good period
-                        print("   -> this isn't a peak period for the neighbor, so ignoring blend.",flush=True)
-
-                        results_storage_container.add_good_period(lsp_dict,t,y,dy,
-                                                                  lsp_dict['periods'][best_pdgm_index],
-                                              per_snr,
-                                              this_flux_amplitude,
-                                              significant_neighbor_blends,
-                                              ffr.params,
-                                              notmax=notmax,
-                                              s_pinknoise=spn_val,
-                                              fap_baluev=fap_baluev_val,
-                                              ignore_blend=max_ffn_ID)
-                        return y - ffr(t)
-
-
-                print("   -> blended! Trying again.",flush=True)
-                results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,
-                                                    lsp_dict['periods'][best_pdgm_index],
-                                                    per_snr,
-                                                    this_flux_amplitude,
-                                                    ffr.params,
-                                                    s_pinknoise=spn_val,
-                                                    fap_baluev=fap_baluev_val)
-                if recursion_level >= max_blend_recursion:
-                    print("   Reached the blend recursion level, no longer checking",flush=True)
-                    return None
-                return iterative_deblend(t, y - ffr(t),
-                                         dy, neighbors,
-                                         period_finding_func,
-                                         results_storage_container,
-                                         which_method,
-                                         function_params=function_params,
-                                         nharmonics_fit=nharmonics_fit,
-                                         nharmonics_resid=nharmonics_resid,
-                                         ID=ID,
-                                         medianfilter=medianfilter,
-                                         freq_window_epsilon_mf=freq_window_epsilon_mf,
-                                         freq_window_epsilon_snr=freq_window_epsilon_snr,
-                                         window_size_mf=window_size_mf,
-                                         window_size_snr=window_size_snr,
-                                         snr_threshold=snr_threshold,
-                                         spn_threshold=spn_threshold,
-                                         fap_baluev_threshold=fap_baluev_threshold,
-                                         max_blend_recursion=max_blend_recursion,
-                                         recursion_level=recursion_level+1,
-                                         nworkers=nworkers)
-            else:
-                notmax = True
-
-
-    # Save the period info and return the pre-whitened light curve
-    results_storage_container.add_good_period(lsp_dict,t,y,dy,
-                                              lsp_dict['periods'][best_pdgm_index],
-                                              per_snr,
-                                              this_flux_amplitude,
-                                              significant_neighbor_blends,
-                                              ffr.params,
-                                              notmax=notmax,
-                                              s_pinknoise=spn_val,
-                                              fap_baluev=fap_baluev_val)
-    return y - ffr(t)
