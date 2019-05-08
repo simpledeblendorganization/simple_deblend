@@ -652,6 +652,7 @@ def iterative_deblend(t, y, dy, neighbors,
                                          snr_threshold=snr_threshold,
                                          spn_threshold=spn_threshold,
                                          fap_baluev_threshold=fap_baluev_threshold,
+                                         neighbor_peaks_tocheck=neighbor_peaks_tocheck,
                                          max_blend_recursion=max_blend_recursion,
                                          recursion_level=recursion_level+1,
                                          nworkers=nworkers)
