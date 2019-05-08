@@ -353,6 +353,8 @@ def rest_neighbor_check_and_continue(t,y,dy,
                                      period_finding_func,
                                      results_storage_container,
                                      which_method,
+                                     per_snr,
+                                     fap_baluev_val=None,
                                      function_params=None,
                                      nharmonics_fit=5,
                                      nharmonics_resid=10,
@@ -399,7 +401,11 @@ def rest_neighbor_check_and_continue(t,y,dy,
         Used to store the results
     which_method: string
         Which period search method is being used
+    per_snr: float
+        the periodogram SNR value
     (optional from here below):
+    fap_baluev: float
+        value of the fap_baluev calculation
     function_params: dictionary
         A dictionary containing parameters for the function in
         period_finding_func
@@ -527,7 +533,6 @@ def rest_neighbor_check_and_continue(t,y,dy,
                                                     per_snr,
                                                     this_flux_amplitude,
                                                     ffr.params,
-                                                    s_pinknoise=spn_val,
                                                     fap_baluev=fap_baluev_val)
                 if recursion_level >= max_blend_recursion:
                     print("   Reached the blend recursion level, no longer checking",flush=True)
@@ -578,6 +583,7 @@ def bls_neighbor_check_and_continue(t,y,dy,
                                     period_finding_func,
                                     results_storage_container,
                                     which_method,
+                                    per_snr,
                                     function_params=None,
                                     nharmonics_fit=5,
                                     nharmonics_resid=10,
@@ -625,6 +631,8 @@ def bls_neighbor_check_and_continue(t,y,dy,
         Used to store the results
     which_method: string
         Which period search method is being used
+    per_snr: float
+        the periodogram SNR value
     (optional from here below):
     function_params: dictionary
         A dictionary containing parameters for the function in
@@ -765,10 +773,9 @@ def bls_neighbor_check_and_continue(t,y,dy,
                                               per_snr,
                                               this_flux_amplitude,
                                               significant_neighbor_blends,
-                                              ffr.params,
+                                              None,
                                               notmax=notmax,
                                               s_pinknoise=spn_val,
-                                              fap_baluev=fap_baluev_val,
                                               ignore_blend=max_ffn_ID)
                         return y - ffr(t)
 
@@ -778,9 +785,7 @@ def bls_neighbor_check_and_continue(t,y,dy,
                                                     lsp_dict['periods'][best_pdgm_index],
                                                     per_snr,
                                                     this_flux_amplitude,
-                                                    ffr.params,
-                                                    s_pinknoise=spn_val,
-                                                    fap_baluev=fap_baluev_val)
+                                                    None)
                 if recursion_level >= max_blend_recursion:
                     print("   Reached the blend recursion level, no longer checking",flush=True)
                     return None
@@ -815,10 +820,7 @@ def bls_neighbor_check_and_continue(t,y,dy,
                                               per_snr,
                                               this_flux_amplitude,
                                               significant_neighbor_blends,
-                                              ffr.params,
-                                              notmax=notmax,
-                                              s_pinknoise=spn_val,
-                                              fap_baluev=fap_baluev_val)
+                                              notmax=notmax)
     return y - ffr(t)
 
 
@@ -1045,6 +1047,7 @@ def iterative_deblend(t, y, dy, neighbors,
                                      period_finding_func,
                                      results_storage_container,
                                      which_method,
+                                     per_snr,
                                      function_params=function_params,
                                      nharmonics_fit=nharmonics_fit,
                                      nharmonics_resid=nharmonics_resid,
@@ -1070,6 +1073,8 @@ def iterative_deblend(t, y, dy, neighbors,
                                      period_finding_func,
                                      results_storage_container,
                                      which_method,
+                                     per_snr,
+                                     fap_baluev_val=fap_baluev_val,
                                      function_params=function_params,
                                      nharmonics_fit=nharmonics_fit,
                                      nharmonics_resid=nharmonics_resid,
