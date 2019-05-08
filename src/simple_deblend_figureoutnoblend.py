@@ -284,7 +284,7 @@ def iterative_deblend(t, y, dy, neighbors,
                       snr_threshold=0.,
                       spn_threshold=None,
                       neighbor_peaks_tocheck=8,
-                      max_blend_recursion=8,
+                      max_blend_recursion=1,#8,
                       recursion_level=0,
                       nworkers=1):
     """
@@ -426,6 +426,12 @@ def iterative_deblend(t, y, dy, neighbors,
 
     # Compare to the threshold, if below quit
     if per_snr < snr_threshold_tocomp(snr_threshold,period=lsp_dict['periods'][best_pdgm_index]) or np.isnan(lsp_dict['periods'][best_pdgm_index]):
+        results_storage_container.add_good_period(lsp_dict,t,y,dy,
+                                                  lsp_dict['periods'][best_pdgm_index],
+                                                  per_snr,
+                                                  None,
+                                                  None,
+                                                  None)
         if ID:
             print("   -> pSNR not significant enough, for " + ID,flush=True)
         else:
@@ -514,110 +520,113 @@ def iterative_deblend(t, y, dy, neighbors,
                     n_lsp_dict = period_finding_func(neighbors[max_ffn_ID][0],neighbors[max_ffn_ID][1],
                                                    neighbors[max_ffn_ID][2],**function_params_neighbor)
 
+                    ##### Plot stuffs
+                    print("plotting")
+                    fig = plt.figure(figsize=(8,6))
+
+                    left = 0.11
+                    right = 0.98
+                    top = 0.97
+                    bottom = 0.12
+                    h_gap = .10
+                    v_gap = .14
+                    height = (top-bottom)/2 - v_gap/2
+                    width = (right-left)/2 - h_gap/2
+
+                    ax3 = fig.add_axes(np.array([left,bottom+height+v_gap,width,height]))
+                    ax1 = fig.add_axes(np.array([left,bottom,width,height]))
+                    ax4 = fig.add_axes(np.array([left+width+h_gap,bottom+height+v_gap,width,height]))
+                    ax2 = fig.add_axes(np.array([left+width+h_gap,bottom,width,height]))
+
+
+                    main_phased, main_binned = phasefold(t,y,dy,lsp_dict['periods'][best_pdgm_index],epoch=0.)
+                    secondary_phased, secondary_binned = phasefold(neighbors[max_ffn_ID][0],neighbors[max_ffn_ID][1],
+                                               neighbors[max_ffn_ID][2],lsp_dict['periods'][best_pdgm_index],epoch=0.)
+
+                    phase = np.array(list(np.linspace(-1,0,200)) + list(np.linspace(0,1,200)))
+
+                    ax1.scatter(main_phased['phase'],main_phased['mags'],s=.5,color='darkgray')
+                    ax1.scatter(main_binned['binnedphases'],main_binned['binnedmags'],color='#1c1e57',s=8)
+                    ax1.plot(phase,ff(phase,in_phase=True)+ff.params[0],color='red',lw=1.2)
+
+                    ax1_text = "p: " + str(round(lsp_dict['periods'][best_pdgm_index],3)) + "\n"
+                    ax1_text += "amp: %.2e\n" % this_flux_amplitude
+                    ax1_text += "pSNR: " + str(round(per_snr,1))
+                    ax1.text(.08,.98,ax1_text,fontsize=9.5,color='blue',
+                               horizontalalignment='left',
+                              verticalalignment='top',
+                              bbox=dict(facecolor='red', alpha=.5),
+                              transform=ax1.transAxes)
+
+                    ax1.set_xlabel("phase")
+                    ax1.set_ylabel("mag")
+                    ax1.set_xlim(-.75,.75)
+                    ax1.invert_yaxis()
+
+                    ax2.scatter(secondary_phased['phase'],secondary_phased['mags'],s=.5,color='darkgray')
+                    ax2.scatter(secondary_binned['binnedphases'],secondary_binned['binnedmags'],color='#1c1e57',s=8)
+                    ax2.plot(phase,ffn_all[max_ffn_ID](phase,in_phase=True)+ffn_all[max_ffn_ID].params[0],color='red',lw=1.2)
+
+                    ax2_text = "p: "
+                    for i in range(len(n_lsp_dict['nbestperiods'])):
+                        ax2_text += str(round(n_lsp_dict['nbestperiods'][i],2)) + "  "
+                        if i == 3:
+                            ax2_text += "\n"
+                    ax2_text += "\namp: %.2e" % ffn_all[max_ffn_ID].flux_amplitude
+                    ax2.text(.08,.98,ax2_text,fontsize=9.5,color='blue',
+                               horizontalalignment='left',
+                              verticalalignment='top',
+                              bbox=dict(facecolor='red', alpha=.5),
+                              transform=ax2.transAxes)
+
+                    ax2.set_xlabel("phase")
+                    ax2.set_ylabel("mag")
+                    ax2.set_xlim(-.75,.75)
+                    ax2.invert_yaxis()
+
+
+
+                    ax3.plot(lsp_dict['periods'],lsp_dict['lspvals'],lw=.5)
+                    if which_method == 'PDM':
+                        ax3.scatter(lsp_dict['periods'][best_pdgm_index],1.,s=4,color='red')
+                    else:
+                        ax3.scatter(lsp_dict['periods'][best_pdgm_index],0.,s=4,color='red')
+                    ax3.set_xscale('log')
+                    ax3.set_xlabel("Period (d)")
+                    ax3.set_ylabel("per. power")
+                    ax3.text(.08,.98,"Main one",fontsize=9.5,color='black',
+                              horizontalalignment='left',
+                              verticalalignment='top',
+                              transform=ax3.transAxes)
+
+                    ax4.plot(n_lsp_dict['periods'],n_lsp_dict['lspvals'],lw=.5)
+                    if which_method == 'PDM':
+                        ax4.scatter(n_lsp_dict['nbestperiods'],[1.]*len(n_lsp_dict['nbestperiods']),s=4,color='red')
+                    else:
+                        ax4.scatter(n_lsp_dict['nbestperiods'],[0.]*len(n_lsp_dict['nbestperiods']),s=4,color='red')
+                    ax4.set_xscale('log')
+                    ax4.set_xlabel("Period (d)")
+                    ax4.set_ylabel("per. power")
+                    ax4.text(.08,.98,"Ignored blend",fontsize=9.5,color='black',
+                              horizontalalignment='left',
+                              verticalalignment='top',
+                              transform=ax4.transAxes)
+
+                    fig.savefig("png_justone/" + ID + "_" + max_ffn_ID + "_" + str(len(results_storage_container.good_periods_info)+1) + "_" + str(recursion_level) + ".png",dpi=300)
+                    plt.close()
+
+
+
+                    ##### End plot stuffs
+
+
                     if not any(np.isclose(n_lsp_dict['nbestperiods'], lsp_dict['periods'][best_pdgm_index], rtol=1e-2, atol=1e-5)):
                         # If the highest-amp blended neighbor doesn't have this period as one of its top periods
                         # Count as a good period
                         print("   -> this isn't a peak period for the neighbor, so ignoring blend.",flush=True)
 
 
-                        ##### Plot stuffs
-                        print("plotting")
-                        fig = plt.figure(figsize=(8,6))
 
-                        left = 0.11
-                        right = 0.98
-                        top = 0.97
-                        bottom = 0.12
-                        h_gap = .10
-                        v_gap = .14
-                        height = (top-bottom)/2 - v_gap/2
-                        width = (right-left)/2 - h_gap/2
-
-                        ax3 = fig.add_axes(np.array([left,bottom+height+v_gap,width,height]))
-                        ax1 = fig.add_axes(np.array([left,bottom,width,height]))
-                        ax4 = fig.add_axes(np.array([left+width+h_gap,bottom+height+v_gap,width,height]))
-                        ax2 = fig.add_axes(np.array([left+width+h_gap,bottom,width,height]))
-
-
-                        main_phased, main_binned = phasefold(t,y,dy,lsp_dict['periods'][best_pdgm_index],epoch=0.)
-                        secondary_phased, secondary_binned = phasefold(neighbors[max_ffn_ID][0],neighbors[max_ffn_ID][1],
-                                                   neighbors[max_ffn_ID][2],lsp_dict['periods'][best_pdgm_index],epoch=0.)
-
-                        phase = np.array(list(np.linspace(-1,0,200)) + list(np.linspace(0,1,200)))
-
-                        ax1.scatter(main_phased['phase'],main_phased['mags'],s=.5,color='darkgray')
-                        ax1.scatter(main_binned['binnedphases'],main_binned['binnedmags'],color='#1c1e57',s=8)
-                        ax1.plot(phase,ff(phase,in_phase=True)+ff.params[0],color='red',lw=1.2)
-
-                        ax1_text = "p: " + str(round(lsp_dict['periods'][best_pdgm_index],3)) + "\n"
-                        ax1_text += "amp: %.2e\n" % this_flux_amplitude
-                        ax1_text += "pSNR: " + str(round(per_snr,1))
-                        ax1.text(.08,.98,ax1_text,fontsize=9.5,color='blue',
-                                   horizontalalignment='left',
-                                  verticalalignment='top',
-                                  bbox=dict(facecolor='red', alpha=.5),
-                                  transform=ax1.transAxes)
-
-                        ax1.set_xlabel("phase")
-                        ax1.set_ylabel("mag")
-                        ax1.set_xlim(-.75,.75)
-                        ax1.invert_yaxis()
-
-                        ax2.scatter(secondary_phased['phase'],secondary_phased['mags'],s=.5,color='darkgray')
-                        ax2.scatter(secondary_binned['binnedphases'],secondary_binned['binnedmags'],color='#1c1e57',s=8)
-                        ax2.plot(phase,ffn_all[max_ffn_ID](phase,in_phase=True)+ffn_all[max_ffn_ID].params[0],color='red',lw=1.2)
-
-                        ax2_text = "p: "
-                        for i in range(len(n_lsp_dict['nbestperiods'])):
-                            ax2_text += str(round(n_lsp_dict['nbestperiods'][i],2)) + "  "
-                            if i == 3:
-                                ax2_text += "\n"
-                        ax2_text += "\namp: %.2e" % ffn_all[max_ffn_ID].flux_amplitude
-                        ax2.text(.08,.98,ax2_text,fontsize=9.5,color='blue',
-                                   horizontalalignment='left',
-                                  verticalalignment='top',
-                                  bbox=dict(facecolor='red', alpha=.5),
-                                  transform=ax2.transAxes)
-
-                        ax2.set_xlabel("phase")
-                        ax2.set_ylabel("mag")
-                        ax2.set_xlim(-.75,.75)
-                        ax2.invert_yaxis()
-
-
-
-                        ax3.plot(lsp_dict['periods'],lsp_dict['lspvals'],lw=.5)
-                        if which_method == 'PDM':
-                            ax3.scatter(lsp_dict['periods'][best_pdgm_index],1.,s=4,color='red')
-                        else:
-                            ax3.scatter(lsp_dict['periods'][best_pdgm_index],0.,s=4,color='red')
-                        ax3.set_xscale('log')
-                        ax3.set_xlabel("Period (d)")
-                        ax3.set_ylabel("per. power")
-                        ax3.text(.08,.98,"Main one",fontsize=9.5,color='black',
-                                  horizontalalignment='left',
-                                  verticalalignment='top',
-                                  transform=ax3.transAxes)
-
-                        ax4.plot(n_lsp_dict['periods'],n_lsp_dict['lspvals'],lw=.5)
-                        if which_method == 'PDM':
-                            ax4.scatter(n_lsp_dict['nbestperiods'],[1.]*len(n_lsp_dict['nbestperiods']),s=4,color='red')
-                        else:
-                            ax4.scatter(n_lsp_dict['nbestperiods'],[0.]*len(n_lsp_dict['nbestperiods']),s=4,color='red')
-                        ax4.set_xscale('log')
-                        ax4.set_xlabel("Period (d)")
-                        ax4.set_ylabel("per. power")
-                        ax4.text(.08,.98,"Ignored blend",fontsize=9.5,color='black',
-                                  horizontalalignment='left',
-                                  verticalalignment='top',
-                                  transform=ax4.transAxes)
-
-                        fig.savefig("test_output_png/" + ID + "_" + max_ffn_ID + "_" + str(len(results_storage_container.good_periods_info)+1) + ".png",dpi=300)
-                        plt.close()
-
-
-
-                        ##### End plot stuffs
 
                         results_storage_container.add_good_period(lsp_dict,t,y,dy,
                                                                   lsp_dict['periods'][best_pdgm_index],

@@ -487,7 +487,7 @@ class lc_collection_for_processing(lc_objects):
 
         #running_tasks = [r for r in running_tasks if r[0].ID in ['6045466567081582080','6045478558624847488']]
 
-        running_tasks = [task for task in running_tasks if task[0].ID == '6045466330858789376']
+        running_tasks = [task for task in running_tasks if task[0].ID == '6045503263277056000']#'6045466330858789376']
 
 
 
