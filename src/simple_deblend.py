@@ -545,11 +545,11 @@ def iterative_deblend(t, y, dy, neighbors,
         fap_baluev_val = fap_baluev(t,dy,lsp_dict['lspvals'][best_pdgm_index],1./lsp_dict['periods'].min())
 
         print("  B. FAP: %.5e" % fap_baluev_val,flush=True)
-        if fap_baluev_val < snr_threshold_tocomp(fap_baluev_threshold,period=lsp_dict['periods'][best_pdgm_index]):
+        if fap_baluev_val > snr_threshold_tocomp(fap_baluev_threshold,period=lsp_dict['periods'][best_pdgm_index]):
             if ID:
-                print("   -> B. FAP not significant enough, for " + ID,flush=True)
+                print("   -> B. FAP too large, for " + ID,flush=True)
             else:
-                print("   -> B. FAP not significant enough.",flush=True)
+                print("   -> B. FAP too large.",flush=True)
             return None
     else:
         fap_baluev_val = None
