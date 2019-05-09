@@ -460,7 +460,7 @@ def rest_neighbor_check_and_continue(t,y,dy,
     nworkers: int
         number of child workers
     """
-    print("now here")
+
     #Get best_freq again
     best_freq = 1./lsp_dict['periods'][best_pdgm_index]
 
@@ -497,11 +497,10 @@ def rest_neighbor_check_and_continue(t,y,dy,
 
     # And order the neighbor IDs  by decreasing flux
     ordering_list = []
-    for n_ID in ffn_allkeys():
+    for n_ID in ffn_all.keys():
         ordering_list.append( (ffn_all[n_ID].flux_amplitude,n_ID) )
 
     n_IDs_amp_sorted = list(zip(*sorted(ordering_list,key=lambda x: x[0],reverse=True)))[1]
-    print(n_IDs_amp_sorted)
 
 
 
@@ -525,9 +524,7 @@ def rest_neighbor_check_and_continue(t,y,dy,
                                                        neighbors[n_ID_blend][2],**function_params_neighbor)
 
                         df = frequency_window_size(1./lsp_dict['periods'][best_pdgm_index],t[-1]-t[0])
-                        print("           df: " + str(df))
-                        frequency_deltas = np.abs(  np.divide(1./n_lsp_dict['nbestperiods']) - 1./lsp_dict['periods'][best_pdgm_index])
-                        print("           freq deltas: ", frequency_deltas)
+                        frequency_deltas = np.abs(  np.divide(1.,n_lsp_dict['nbestperiods']) - 1./lsp_dict['periods'][best_pdgm_index])
                         if np.any(frequency_deltas < df): # We have ourselves a blend!
                             print("   -> blended!  w/ " + n_ID_blend + ", trying again.",flush=True)
                             print("   n: " + str(ffn_all[n_ID_blend].flux_amplitude) + " vs.  " + str(this_flux_amplitude),flush=True)
@@ -1067,7 +1064,6 @@ def iterative_deblend(t, y, dy, neighbors,
                                      nworkers=nworkers)
 
     else:
-        print('in else')
         return rest_neighbor_check_and_continue(t,y,dy,
                                      lsp_dict,
                                      best_pdgm_index,
