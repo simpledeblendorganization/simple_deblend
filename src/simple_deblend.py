@@ -521,7 +521,6 @@ def rest_neighbor_check_and_continue(t,y,dy,
                                               significant_neighbor_blends,
                                               ffr.params,
                                               notmax=notmax,
-                                              s_pinknoise=spn_val,
                                               fap_baluev=fap_baluev_val,
                                               ignore_blend=max_ffn_ID)
                         return y - ffr(t)
@@ -570,7 +569,6 @@ def rest_neighbor_check_and_continue(t,y,dy,
                                               significant_neighbor_blends,
                                               ffr.params,
                                               notmax=notmax,
-                                              s_pinknoise=spn_val,
                                               fap_baluev=fap_baluev_val)
     return y - ffr(t)
 
@@ -775,7 +773,6 @@ def bls_neighbor_check_and_continue(t,y,dy,
                                               significant_neighbor_blends,
                                               None,
                                               notmax=notmax,
-                                              s_pinknoise=spn_val,
                                               ignore_blend=max_ffn_ID)
                         return y - ffr(t)
 
