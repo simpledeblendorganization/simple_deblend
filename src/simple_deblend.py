@@ -460,7 +460,7 @@ def rest_neighbor_check_and_continue(t,y,dy,
     nworkers: int
         number of child workers
     """
-
+    print("now here")
     #Get best_freq again
     best_freq = 1./lsp_dict['periods'][best_pdgm_index]
 
@@ -501,6 +501,7 @@ def rest_neighbor_check_and_continue(t,y,dy,
         ordering_list.append( (ffn_all[n_ID].flux_amplitude,n_ID) )
 
     n_IDs_amp_sorted = list(zip(*sorted(ordering_list,key=lambda x: x[0],reverse=True)))[1]
+    print(n_IDs_amp_sorted)
 
 
 
@@ -1066,6 +1067,7 @@ def iterative_deblend(t, y, dy, neighbors,
                                      nworkers=nworkers)
 
     else:
+        print('in else')
         return rest_neighbor_check_and_continue(t,y,dy,
                                      lsp_dict,
                                      best_pdgm_index,
