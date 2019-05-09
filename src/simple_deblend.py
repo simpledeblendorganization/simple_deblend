@@ -694,7 +694,7 @@ def bls_neighbor_check_and_continue(t,y,dy,
     else:
         raise ValueError("Did not find a blsresult period corresponding to the best period")
 
-    # Now fit Fourier series to all the neighbor light curves
+    # Now get BLS fit parameters for all the neighbor light curves
     blsresult_all = {}
 
     for n_ID in neighbors.keys():
@@ -706,15 +706,18 @@ def bls_neighbor_check_and_continue(t,y,dy,
                                  1./lsp_dict['periods'][best_pdgm_index],
                                  1.,
                                  lsp_dict['nphasebins'],
-                                 0.75*individual_blsresult,
-                                 1.25*individual_blsresult)
+                                 0.75*blsresult_touse['transduration'],
+                                 1.25*blsresult_touse['transduration'])
 
         blsresult_all[n_ID] = blsr
 
     # Get this object's flux amplitude
     this_depth_pos = abs(blsresult_touse['transdepth'])
     this_med_mag = np.nanmedian(y)
-    this_flux_amplitude = 10 ** (-0.4 * (this_med_mag - .5*this_depth_pos)) - 10 ** (-0.4 * (this_med_mag + .5*this_depth_pos))
+    if blsresult_touse['transdepth'] < 0.: # per eebls, this actually means a *deficit* of light
+        this_flux_amplitude = 10 ** (-0.4 * this_med_mag) - 10 ** (-0.4 * (this_med_mag + this_depth_pos))
+    else:
+        this_flux_amplitude = 10 ** (-0.4 * (this_med_mag - this_depth_pos)) - 10 ** (-0.4 * this_med_mag )
     if this_flux_amplitude < 0.:
         raise ValueError("flux_amp is less than zero")
 
@@ -727,10 +730,13 @@ def bls_neighbor_check_and_continue(t,y,dy,
         if not np.sign(blsresult_touse['transdepth']) == np.sign( blsresult_all[n_ID]['transdepth']):
             blsresult_all[n_ID]['fluxtransdepth'] = None
             continue
-        # Calculate a proxy for the actual flux amplitude of the transit from a magnitude depth
+        # Calculate the actual flux amplitude of the transit from a magnitude depth
         depth_pos = abs(blsresult_all[n_ID]['transdepth'])
         med_mag = np.nanmedian(neighbors[n_ID][1])
-        n_flux_amp = 10 ** (-0.4 * (med_mag - .5*depth_pos)) - 10 ** (-0.4 * (med_mag + .5*depth_pos))
+        if blsresult_touse['transdepth'] < 0.: # per eebls, this actually means a *deficit* of light
+            n_flux_amp = 10 ** (-0.4 * med_mag) - 10 ** (-0.4 * (med_mag + depth_pos))
+        else:
+            n_flux_amp = 10 ** (-0.4 * (med_mag - depth_pos)) - 10 ** (-0.4 * med_mag )
         blsresult_all[n_ID]['fluxtransdepth'] = n_flux_amp
         if n_flux_amp < 0.:
             raise ValueError("flux_amp is less than zero")
@@ -761,6 +767,7 @@ def bls_neighbor_check_and_continue(t,y,dy,
                     n_lsp_dict = period_finding_func(neighbors[max_ffn_ID][0],neighbors[max_ffn_ID][1],
                                                    neighbors[max_ffn_ID][2],**function_params_neighbor)
 
+                    df = blsresult_touse['transduration']
                     if not any(np.isclose(n_lsp_dict['nbestperiods'], lsp_dict['periods'][best_pdgm_index], rtol=1e-2, atol=1e-5)):
                         # If the highest-amp blended neighbor doesn't have this period as one of its top periods
                         # Count as a good period
