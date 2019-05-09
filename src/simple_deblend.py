@@ -768,7 +768,8 @@ def bls_neighbor_check_and_continue(t,y,dy,
                                                    neighbors[max_ffn_ID][2],**function_params_neighbor)
 
                     df = blsresult_touse['transduration']
-                    if not any(np.isclose(n_lsp_dict['nbestperiods'], lsp_dict['periods'][best_pdgm_index], rtol=1e-2, atol=1e-5)):
+                    frequency_deltas = np.abs(np.divide(1.,n_lsp_dict['nbestperiods']) - 1./lsp_dict['periods'][best_pdgm_index])
+                    if np.any(frequency_deltas < df): # We have ourselves a blend!
                         # If the highest-amp blended neighbor doesn't have this period as one of its top periods
                         # Count as a good period
                         print("   -> this isn't a peak period for the neighbor, so ignoring blend.",flush=True)
