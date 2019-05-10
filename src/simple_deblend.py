@@ -686,13 +686,22 @@ def bls_neighbor_check_and_continue(t,y,dy,
 
 
 
-    # Get the duration of the BLS fit
+    # Get the actual BLS fit
+    print(lsp_dict['periods'][best_pdgm_index+1])
     for individual_blsresult in lsp_dict['blsresult']:
+        print(individual_blsresult['bestperiod'])
         if np.isclose(individual_blsresult['bestperiod'],lsp_dict['periods'][best_pdgm_index]):
             blsresult_touse = individual_blsresult
             break
     else:
         raise ValueError("Did not find a blsresult period corresponding to the best period")
+
+
+    # Harmonic model to subtract out if needs be.  BLS model would be better,
+    # but I don't have the epoch information on hand right now.
+    ffr = (FourierFit(nharmonics=nharmonics_resid)
+           .fit(t, y, dy, 1./lsp_dict['periods'][best_pdgm_index]))
+   
 
     # Now get BLS fit parameters for all the neighbor light curves
     blsresult_all = {}
@@ -715,10 +724,10 @@ def bls_neighbor_check_and_continue(t,y,dy,
     this_depth_pos = abs(blsresult_touse['transdepth'])
     this_med_mag = np.nanmedian(y)
     if blsresult_touse['transdepth'] < 0.: # per eebls, this actually means a *deficit* of light
-        this_flux_amplitude = 10 ** (-0.4 * this_med_mag) - 10 ** (-0.4 * (this_med_mag + this_depth_pos))
+        this_flux_depth = 10 ** (-0.4 * this_med_mag) - 10 ** (-0.4 * (this_med_mag + this_depth_pos))
     else:
-        this_flux_amplitude = 10 ** (-0.4 * (this_med_mag - this_depth_pos)) - 10 ** (-0.4 * this_med_mag )
-    if this_flux_amplitude < 0.:
+        this_flux_depth = 10 ** (-0.4 * (this_med_mag - this_depth_pos)) - 10 ** (-0.4 * this_med_mag )
+    if this_flux_depth < 0.:
         raise ValueError("flux_amp is less than zero")
 
     # Figure out which has maximum amplitude
@@ -734,38 +743,38 @@ def bls_neighbor_check_and_continue(t,y,dy,
         depth_pos = abs(blsresult_all[n_ID]['transdepth'])
         med_mag = np.nanmedian(neighbors[n_ID][1])
         if blsresult_touse['transdepth'] < 0.: # per eebls, this actually means a *deficit* of light
-            n_flux_amp = 10 ** (-0.4 * med_mag) - 10 ** (-0.4 * (med_mag + depth_pos))
+            n_flux_depth = 10 ** (-0.4 * med_mag) - 10 ** (-0.4 * (med_mag + depth_pos))
         else:
-            n_flux_amp = 10 ** (-0.4 * (med_mag - depth_pos)) - 10 ** (-0.4 * med_mag )
-        blsresult_all[n_ID]['fluxtransdepth'] = n_flux_amp
-        if n_flux_amp < 0.:
+            n_flux_depth = 10 ** (-0.4 * (med_mag - depth_pos)) - 10 ** (-0.4 * med_mag )
+        blsresult_all[n_ID]['fluxtransdepth'] = n_flux_depth
+        if n_flux_depth < 0.:
             raise ValueError("flux_amp is less than zero")
-        if n_flux_amp >\
-         results_storage_container.count_neighbor_threshold*this_flux_amplitude:
+        if n_flux_depth >\
+         results_storage_container.count_neighbor_threshold*this_flux_depth:
             significant_neighbor_blends.append(n_ID)
-        if n_flux_amp > max_amp:
-            max_amp = n_flux_amp
-            max_ffn_ID = n_ID
+        if n_flux_depth > max_depth:
+            max_depth = n_flux_depth
+            max_depth_ID = n_ID
 
-
+    del n_ID
 
     # If neighbor has larger flux amplitude,
     # then we consider this signal to be a blend.
     # subtract off model signal to get residual
     # lightcurve, and try again
     notmax = False
-    if max_ffn_ID:
+    if max_depth_ID:
         print("    checking blends")
-        print("    " + max_ffn_ID)
-        print("     n: " + str(blsresult_all[max_ffn_ID]['fluxtransdepth']) + " vs.  " + str(this_flux_amplitude),flush=True)
-        if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude:
-            if this_flux_amplitude < results_storage_container.stillcount_blend_factor * blsresult_all[max_ffn_ID]['fluxtransdepth']:
+        print("    " + max_depth_ID)
+        print("     n: " + str(blsresult_all[max_depth_ID]['fluxtransdepth']) + " vs.  " + str(this_flux_depth),flush=True)
+        if blsresult_all[max_depth_ID]['fluxtransdepth'] > this_flux_depth:
+            if this_flux_depth < results_storage_container.stillcount_blend_factor * blsresult_all[max_depth_ID]['fluxtransdepth']:
                 # Check that the neighbor actually has this period
                 if neighbor_peaks_tocheck > 0:
                     function_params_neighbor = copy.deepcopy(function_params)
                     function_params_neighbor['nbestpeaks'] = neighbor_peaks_tocheck
-                    n_lsp_dict = period_finding_func(neighbors[max_ffn_ID][0],neighbors[max_ffn_ID][1],
-                                                   neighbors[max_ffn_ID][2],**function_params_neighbor)
+                    n_lsp_dict = period_finding_func(neighbors[max_depth_ID][0],neighbors[max_depth_ID][1],
+                                                   neighbors[max_depth_ID][2],**function_params_neighbor)
 
                     df = blsresult_touse['transduration']
                     frequency_deltas = np.abs(np.divide(1.,n_lsp_dict['nbestperiods']) - 1./lsp_dict['periods'][best_pdgm_index])
@@ -777,19 +786,19 @@ def bls_neighbor_check_and_continue(t,y,dy,
                         results_storage_container.add_good_period(lsp_dict,t,y,dy,
                                                                   lsp_dict['periods'][best_pdgm_index],
                                               per_snr,
-                                              this_flux_amplitude,
+                                              this_flux_depth,
                                               significant_neighbor_blends,
                                               None,
                                               notmax=notmax,
-                                              ignore_blend=max_ffn_ID)
+                                              ignore_blend=max_depth_ID)
                         return y - ffr(t)
 
 
                 print("   -> blended! Trying again.",flush=True)
-                results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,
+                results_storage_container.add_blend(lsp_dict,t,y,dy,max_depth_ID,
                                                     lsp_dict['periods'][best_pdgm_index],
                                                     per_snr,
-                                                    this_flux_amplitude,
+                                                    this_flux_depth,
                                                     None)
                 if recursion_level >= max_blend_recursion:
                     print("   Reached the blend recursion level, no longer checking",flush=True)
@@ -823,8 +832,9 @@ def bls_neighbor_check_and_continue(t,y,dy,
     results_storage_container.add_good_period(lsp_dict,t,y,dy,
                                               lsp_dict['periods'][best_pdgm_index],
                                               per_snr,
-                                              this_flux_amplitude,
+                                              this_flux_depth,
                                               significant_neighbor_blends,
+                                              None,
                                               notmax=notmax)
     return y - ffr(t)
 
