@@ -505,7 +505,7 @@ class lc_collection_for_processing(lc_objects):
                                    "_" + which_method + "_blends.pkl"))]
 
         #running_tasks = [r for r in running_tasks if r[0].ID in ['6045466193420246784']]#['6045466193420210816']]
-        running_tasks = [r for r in running_tasks if r[0].ID == '6045503331994968320']
+        #running_tasks = [r for r in running_tasks if r[0].ID == '6045503331994968320']
 
 
 
