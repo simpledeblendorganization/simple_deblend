@@ -598,7 +598,7 @@ def bls_neighbor_check_and_continue(t,y,dy,
                                     max_blend_recursion=8,
                                     recursion_level=0,
                                     nworkers=1,
-                                    neighbor_bls_func=_bls_runner):
+                                    single_bls_func=_bls_runner):
 
     """
     Check neighbor blending for specifically BLS, which 
@@ -679,8 +679,10 @@ def bls_neighbor_check_and_continue(t,y,dy,
         current recursion level
     nworkers: int
         number of child workers
-    neighbor_bls_func: callable
-        a function used to calculate BLS for the neighbors
+    single_bls_func: callable
+        a function used to calculate BLS for the neighbors, and for
+        the object itself in case the passed BLS results don't have 
+        what we need
     """
 
 
@@ -694,7 +696,15 @@ def bls_neighbor_check_and_continue(t,y,dy,
             blsresult_touse = individual_blsresult
             break
     else:
-        raise ValueError("Did not find a blsresult period corresponding to the best period")
+        # This will happen if the median-filtered periodogram reveals a different 
+        # peak period than the BLS run that produced the peridogram in the first place
+        blsresult_touse = single_bls_func(t,y,
+                                 1,
+                                 1./lsp_dict['periods'][best_pdgm_index],
+                                 1.,
+                                 lsp_dict['nphasebins'],
+                                 lsp_dict['kwargs']['mintransitduration'],
+                                 lsp_dict['kwargs']['maxtransitduration'])
 
 
     # Harmonic model to subtract out if needs be.  BLS model would be better,
@@ -709,7 +719,7 @@ def bls_neighbor_check_and_continue(t,y,dy,
     for n_ID in neighbors.keys():
 
         # run BLS at this frequency to get transit depth
-        blsr = neighbor_bls_func(neighbors[n_ID][0],
+        blsr = single_bls_func(neighbors[n_ID][0],
                                  neighbors[n_ID][1],
                                  1,
                                  1./lsp_dict['periods'][best_pdgm_index],
