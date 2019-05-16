@@ -587,6 +587,7 @@ def iterative_deblend(t, y, dy, neighbors,
     for n_ID in ffn_all.keys():
         if ffn_all[n_ID].flux_amplitude > max_neighbor_amp:
             # Amplitude is too large, don't consider this neighbor
+            print("      this neighbor's flux amplitude too large: " + n_ID + " " + str(ffn_all[n_ID].flux_amplitude))
             toolargeamp_neighbor_blends.append(n_ID)
             continue
         if ffn_all[n_ID].flux_amplitude >\
