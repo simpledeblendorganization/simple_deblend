@@ -363,7 +363,8 @@ def iterative_deblend(t, y, dy, neighbors,
                       neighbor_peaks_tocheck=8,
                       max_blend_recursion=8,
                       recursion_level=0,
-                      nworkers=1):
+                      nworkers=1,
+                      max_neighbor_amp=3.):
     """
     Iteratively deblend a lightcurve against neighbors
 
@@ -433,6 +434,10 @@ def iterative_deblend(t, y, dy, neighbors,
         current recursion level
     nworkers: int
         number of child workers
+    max_neighbor_amp: float
+        the maximum delta F / F0 amplitude a neighbor can have to
+        still be counted as a legitimate amplitude; not considered
+        for blend checking otherwise
     """
 
     # Use the period finding function to find the best period
@@ -578,7 +583,12 @@ def iterative_deblend(t, y, dy, neighbors,
     max_amp = 0.
     max_ffn_ID = None
     significant_neighbor_blends = []
+    toolargeamp_neighbor_bends = []
     for n_ID in ffn_all.keys():
+        if ffn_all[n_ID].flux_amplitude > max_neighbor_amp:
+            # Amplitude is too large, don't consider this neighbor
+            toolargeamp_neighbor_blends.append(n_ID)
+            continue
         if ffn_all[n_ID].flux_amplitude >\
          results_storage_container.count_neighbor_threshold*this_flux_amplitude:
             significant_neighbor_blends.append(n_ID)
@@ -620,7 +630,8 @@ def iterative_deblend(t, y, dy, neighbors,
                                               notmax=notmax,
                                               s_pinknoise=spn_val,
                                               fap_baluev=fap_baluev_val,
-                                              ignore_blend=max_ffn_ID)
+                                              ignore_blend=max_ffn_ID,
+                                              toolargeamp_neighbors=toolargeamp_neighbor_blends)
                         return y - ffr(t)
 
 
@@ -631,7 +642,8 @@ def iterative_deblend(t, y, dy, neighbors,
                                                     this_flux_amplitude,
                                                     ffr.params,
                                                     s_pinknoise=spn_val,
-                                                    fap_baluev=fap_baluev_val)
+                                                    fap_baluev=fap_baluev_val,
+                                                    toolargeamp_neighbors=toolargeamp_neighbor_blends)
                 if recursion_level >= max_blend_recursion:
                     print("   Reached the blend recursion level, no longer checking",flush=True)
                     return None
@@ -655,7 +667,8 @@ def iterative_deblend(t, y, dy, neighbors,
                                          neighbor_peaks_tocheck=neighbor_peaks_tocheck,
                                          max_blend_recursion=max_blend_recursion,
                                          recursion_level=recursion_level+1,
-                                         nworkers=nworkers)
+                                         nworkers=nworkers,
+                                         max_neighbor_amp=max_neighbor_amp)
             else:
                 notmax = True
 
@@ -669,5 +682,6 @@ def iterative_deblend(t, y, dy, neighbors,
                                               ffr.params,
                                               notmax=notmax,
                                               s_pinknoise=spn_val,
-                                              fap_baluev=fap_baluev_val)
+                                              fap_baluev=fap_baluev_val,
+                                              toolargeamp_neighbors=toolargeamp_neighbor_blends)
     return y - ffr(t)
