@@ -79,10 +79,10 @@ class FourierFit(object):
     Class for fitting a Fourier series to a light curve
 
     nharmonics - the number of harmonics to use in the fit
+    
     '''
     def __init__(self, nharmonics=5):
         self.nharmonics = nharmonics
-
 
     def fit(self, t, y, dy, freq, nharmonics=None,
             dy_as_weights=False,
@@ -135,9 +135,9 @@ class FourierFit(object):
 
         return self
 
-    @property
-    def flux_amplitude(self):
-        # delta flux / f0
+    #@property
+    def flux_amplitude(self,return_df_f0=False):
+        # delta flux
 
         phase = np.linspace(0, 1, 200)
 
@@ -149,7 +149,13 @@ class FourierFit(object):
         mbrite = min(yfit)
         mdim = max(yfit)
 
-        return 10 ** (-0.4 * mbrite) - 10 ** (-0.4 * mdim)
+        delta_f = 10 ** (-0.4 * mbrite) - 10 ** (-0.4 * mdim)
+        if return_df_f0:
+            df_f0 = 10**(0.4 * (mbrite+mdim)/2.) * delta_f
+            print("----  " + str(mbrite) + "  " + str(mdim) + "  "  + str(delta_f) + "    " + str(df_f0))
+            return (delta_f, df_f0)
+        else:
+            return delta_f
 
 
     @classmethod
@@ -562,7 +568,9 @@ def iterative_deblend(t, y, dy, neighbors,
     # Fit truncated Fourier series at this frequency
     ff = (FourierFit(nharmonics=nharmonics_fit)
           .fit(t, y, dy, best_freq))
-    this_flux_amplitude = ff.flux_amplitude
+    this_flux_amplitude = ff.flux_amplitude()
+    print("THISSSSSSSSSSSSSSSSSSS:")
+    _=ff.flux_amplitude(return_df_f0=True)
 
     # Fit another truncated Fourier series with more harmonics
     ffr = (FourierFit(nharmonics=nharmonics_resid)
@@ -585,16 +593,17 @@ def iterative_deblend(t, y, dy, neighbors,
     significant_neighbor_blends = []
     toolargeamp_neighbor_blends = []
     for n_ID in ffn_all.keys():
-        if ffn_all[n_ID].flux_amplitude > max_neighbor_amp:
+        n_flux_amp, n_df_f = ffn_all[n_ID].flux_amplitude(return_df_f0=True)
+        if n_df_f > max_neighbor_amp or np.isnan(n_df_f):
             # Amplitude is too large, don't consider this neighbor
-            print("      this neighbor's flux amplitude too large: " + n_ID + " " + str(ffn_all[n_ID].flux_amplitude))
+            print("      this neighbor's flux amplitude too large: " + n_ID + "   " + str(n_flux_amp) + "   " + str(n_df_f))
             toolargeamp_neighbor_blends.append(n_ID)
             continue
-        if ffn_all[n_ID].flux_amplitude >\
+        if n_flux_amp >\
          results_storage_container.count_neighbor_threshold*this_flux_amplitude:
             significant_neighbor_blends.append(n_ID)
-        if ffn_all[n_ID].flux_amplitude > max_amp:
-            max_amp = ffn_all[n_ID].flux_amplitude
+        if n_flux_amp > max_amp:
+            max_amp = n_flux_amp
             max_ffn_ID = n_ID
 
 
@@ -607,9 +616,9 @@ def iterative_deblend(t, y, dy, neighbors,
     if max_ffn_ID:
         print("    checking blends")
         print("    " + max_ffn_ID)
-        print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude) + " vs.  " + str(this_flux_amplitude),flush=True)
-        if ffn_all[max_ffn_ID].flux_amplitude > this_flux_amplitude:
-            if this_flux_amplitude < results_storage_container.stillcount_blend_factor * ffn_all[max_ffn_ID].flux_amplitude:
+        print("     n: " + str(ffn_all[max_ffn_ID].flux_amplitude()) + " vs.  " + str(this_flux_amplitude),flush=True)
+        if ffn_all[max_ffn_ID].flux_amplitude() > this_flux_amplitude:
+            if this_flux_amplitude < results_storage_container.stillcount_blend_factor * ffn_all[max_ffn_ID].flux_amplitude():
                 # Check that the neighbor actually has this period
                 if neighbor_peaks_tocheck > 0:
                     function_params_neighbor = copy.deepcopy(function_params)
@@ -636,11 +645,12 @@ def iterative_deblend(t, y, dy, neighbors,
                         return y - ffr(t)
 
 
-                print("   -> blended! Trying again.",flush=True)
+                print("   -> blended! Trying again.  " + str(ffn_all[max_ffn_ID].flux_amplitude(return_df_f0=True)[1]),flush=True)
                 results_storage_container.add_blend(lsp_dict,t,y,dy,max_ffn_ID,
                                                     lsp_dict['periods'][best_pdgm_index],
                                                     per_snr,
                                                     this_flux_amplitude,
+                                                    ffn_all[max_ffn_ID].flux_amplitude(),
                                                     ffr.params,
                                                     s_pinknoise=spn_val,
                                                     fap_baluev=fap_baluev_val,

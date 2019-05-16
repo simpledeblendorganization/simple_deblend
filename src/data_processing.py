@@ -706,7 +706,8 @@ class periodsearch_results():
 
     def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,
                   period,snr_value,
-                  flux_amplitude,ff_params,s_pinknoise=None,
+                  flux_amplitude,neighbor_flux_amplitude,
+                  ff_params,s_pinknoise=None,
                   fap_baluev=None,toolargeamp_neighbors=[]):
         '''add info where the object is blended with another object,
         that object being determined as the variability source
@@ -719,6 +720,7 @@ class periodsearch_results():
         period     - the associated period
         snr_value  - value of the periodogram SNR
         flux_amplitude - flux amplitude
+        neighbor_flux_amplitude - flux amplitude of blended neighbor
         ffparams - Fourier fit parameters for the *current* LC
         s_pinknoise -signal to pink noise value, only for BLS
         toolargeamp_neighbors - list of IDs of neighbors with
@@ -729,6 +731,7 @@ class periodsearch_results():
                        'period':period,
                        'snr_value':snr_value,
                        'flux_amplitude':flux_amplitude,
+                       'neigh_flux_amplitude':neighbor_flux_amplitude,
                        'num_previous_signals':len(self.good_periods_info),
                        'times':times,'mags':mags,'errs':errs,
                        'ff_params':ff_params}
