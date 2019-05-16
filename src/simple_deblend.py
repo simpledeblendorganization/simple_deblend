@@ -152,7 +152,6 @@ class FourierFit(object):
         delta_f = 10 ** (-0.4 * mbrite) - 10 ** (-0.4 * mdim)
         if return_df_f0:
             df_f0 = 10**(0.4 * (mbrite+mdim)/2.) * delta_f
-            print("----  " + str(mbrite) + "  " + str(mdim) + "  "  + str(delta_f) + "    " + str(df_f0))
             return (delta_f, df_f0)
         else:
             return delta_f
@@ -569,8 +568,6 @@ def iterative_deblend(t, y, dy, neighbors,
     ff = (FourierFit(nharmonics=nharmonics_fit)
           .fit(t, y, dy, best_freq))
     this_flux_amplitude = ff.flux_amplitude()
-    print("THISSSSSSSSSSSSSSSSSSS:")
-    _=ff.flux_amplitude(return_df_f0=True)
 
     # Fit another truncated Fourier series with more harmonics
     ffr = (FourierFit(nharmonics=nharmonics_resid)
