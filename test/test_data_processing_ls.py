@@ -182,11 +182,6 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
                              
     
     def test_basic_ls_run(self):
-        # Remove save files so tests work no problem
-        os.system("rm -f ps_object1_LS_blends.pkl")
-        os.system("rm -f ps_object1_LS_goodperiod.pkl")
-        os.system("rm -f ps_object2_LS_blends.pkl")
-        os.system("rm -f ps_object2_LS_goodperiod.pkl")
 
         # Test a basic run of the iterative deblending
         self.col_a.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False,
@@ -210,11 +205,6 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
 
 
     def test_basic_ls_run_medianfilter(self):
-        # Remove save files so tests work no problem
-        os.system("rm -f ps_object1_LS_blends.pkl")
-        os.system("rm -f ps_object1_LS_goodperiod.pkl")
-        os.system("rm -f ps_object2_LS_blends.pkl")
-        os.system("rm -f ps_object2_LS_goodperiod.pkl")
 
         # Test a basic run of the iterative deblending
         self.col_a2.run_ls(startp=6.,endp=7.,stepsize=0.00001,autofreq=False,
@@ -238,14 +228,6 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
 
        
     def test_simple_blended_ls_run(self):
-        # Remove save files so subsequent tests work no problem
-        os.system("rm -f ps_c1_LS_blends.pkl")
-        os.system("rm -f ps_c1_LS_goodperiod.pkl")
-        os.system("rm -f ps_c2_LS_blends.pkl")
-        os.system("rm -f ps_c2_LS_goodperiod.pkl")
-        os.system("rm -f ps_c3_LS_blends.pkl")
-        os.system("rm -f ps_c3_LS_goodperiod.pkl")
-
 
         self.col_c.run_ls(startp=0.5,endp=2.,stepsize=5e-5,autofreq=False,
                           medianfilter=False,
@@ -278,9 +260,6 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
 
     
     def test_longperiod(self):
-       # Remove save files so subsequent tests work no problem
-        os.system("rm -f ps_d1_LS_blends.pkl")
-        os.system("rm -f ps_d1_LS_goodperiod.pkl")
 
         # Test a long period object
         self.col_d.run_ls(startp=20.,endp=50.,autofreq=False,
@@ -296,14 +275,6 @@ class test_data_processing_ls_sinusoidal_single_signal(unittest.TestCase):
 
     
     def test_multipleblend(self):
-        os.system("rm -f ps_e1_LS_blends.pkl")
-        os.system("rm -f ps_e1_LS_goodperiod.pkl")
-        os.system("rm -f ps_e2_LS_blends.pkl")
-        os.system("rm -f ps_e2_LS_goodperiod.pkl")
-        os.system("rm -f ps_e3_LS_blends.pkl")
-        os.system("rm -f ps_e3_LS_goodperiod.pkl")
-        os.system("rm -f ps_e4_LS_blends.pkl")
-        os.system("rm -f ps_e4_LS_goodperiod.pkl")
 
         # Test a long period object and also objects with multiple blends
         self.col_e.run_ls(startp=2.5,endp=4.7,autofreq=False,
@@ -408,18 +379,6 @@ class test_data_processing_run_sinusoidal_multiple_signals(unittest.TestCase):
 
         
     def test_blended_ls_run(self):
-        # Remove save files so tests work no problem
-        os.system("rm -f ps_o1_LS_blends.pkl")
-        os.system("rm -f ps_o1_LS_goodperiod.pkl")
-        os.system("rm -f ps_o2_LS_blends.pkl")
-        os.system("rm -f ps_o2_LS_goodperiod.pkl")
-        os.system("rm -f ps_o3_LS_blends.pkl")
-        os.system("rm -f ps_o3_LS_goodperiod.pkl")
-        os.system("rm -f ps_o4_LS_blends.pkl")
-        os.system("rm -f ps_o4_LS_goodperiod.pkl")
-        os.system("rm -f ps_o5_LS_blends.pkl")
-        os.system("rm -f ps_o5_LS_goodperiod.pkl")
-
 
         self.col_b.run_ls(startp=2.,endp=11.,stepsize=1e-5,autofreq=False,
                           medianfilter=False,freq_window_epsilon_snr=4.,
@@ -514,13 +473,6 @@ class test_data_processing_ls_rrlyrae_signal(unittest.TestCase):
 
 
     def test_rrblend(self):
-        # Remove save files so it will actually run
-        os.system("rm -f ps_rr1_LS_blends.pkl")
-        os.system("rm -f ps_rr1_LS_goodperiod.pkl")
-        os.system("rm -f ps_rr2_LS_blends.pkl")
-        os.system("rm -f ps_rr2_LS_goodperiod.pkl")
-
-
 
         # Test an RRab and a blend
         self.col.run_ls(startp=.2,endp=1.,stepsize=1e-4,autofreq=False,
@@ -570,12 +522,6 @@ class test_close_amplitudes_signal(unittest.TestCase):
                             [sigma]*sample_len,0.,0.,'object2')
 
     def test_close_amplitudes_signal(self):
-        # Remove save files so it will actually run
-        os.system("rm -f ps_object1_LS_blends.pkl")
-        os.system("rm -f ps_object1_LS_goodperiod.pkl")
-        os.system("rm -f ps_object2_LS_blends.pkl")
-        os.system("rm -f ps_object2_LS_goodperiod.pkl")
-
 
         self.col.run_ls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False,
                         medianfilter=False,

@@ -57,11 +57,6 @@ class test_data_processing_basic_bls_run(unittest.TestCase):
 
 
     def test_basic_ls_run(self):
-        # Remove save files so tests work no problem
-        os.system("rm -f ps_object1_BLS_blends.pkl")
-        os.system("rm -f ps_object1_BLS_goodperiod.pkl")
-        os.system("rm -f ps_object2_BLS_blends.pkl")
-        os.system("rm -f ps_object2_BLS_goodperiod.pkl")
 
         # Test a basic run of the iterative deblending
         self.col_a.run_bls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False,
@@ -90,11 +85,6 @@ class test_data_processing_basic_bls_run(unittest.TestCase):
 
 
     def test_basic_ls_run_medianfilter(self):
-        # Remove save files so tests work no problem
-        os.system("rm -f ps_object1_BLS_blends.pkl")
-        os.system("rm -f ps_object1_BLS_goodperiod.pkl")
-        os.system("rm -f ps_object2_BLS_blends.pkl")
-        os.system("rm -f ps_object2_BLS_goodperiod.pkl")
 
         # Test a basic run of the iterative deblending
         self.col_a2.run_bls(startp=6.,endp=7.,stepsize=0.00001,autofreq=False,
@@ -172,13 +162,6 @@ class test_data_processing_simple_blended_bls_run(unittest.TestCase):
 
 
     def test_simple_blended_ls_run(self):
-        # Remove save files so tests work no problem
-        os.system("rm -f ps_c1_BLS_blends.pkl")
-        os.system("rm -f ps_c1_BLS_goodperiod.pkl")
-        os.system("rm -f ps_c2_BLS_blends.pkl")
-        os.system("rm -f ps_c2_BLS_goodperiod.pkl")
-        os.system("rm -f ps_c3_BLS_blends.pkl")
-        os.system("rm -f ps_c3_BLS_goodperiod.pkl")
 
         self.col_c.run_bls(startp=0.5,endp=2.,stepsize=5e-5,autofreq=False,
                            nphasebins=200,
@@ -236,9 +219,6 @@ class test_long_period_bls(unittest.TestCase):
 
 
     def test_longperiod(self):
-        # Remove save files so tests work no problem
-        os.system("rm -f ps_d1_BLS_blends.pkl")
-        os.system("rm -f ps_d1_BLS_goodperiod.pkl")
 
         # Test a long period object
         self.col_d.run_bls(startp=20.,endp=50.,autofreq=False,
@@ -305,15 +285,6 @@ class test_multiple_blends_bls(unittest.TestCase):
 
     
     def test_multipleblend(self):
-        # Remove save files so tests work no problem
-        os.system("rm -f ps_e1_BLS_blends.pkl")
-        os.system("rm -f ps_e1_BLS_goodperiod.pkl")
-        os.system("rm -f ps_e2_BLS_blends.pkl")
-        os.system("rm -f ps_e2_BLS_goodperiod.pkl")
-        os.system("rm -f ps_e3_BLS_blends.pkl")
-        os.system("rm -f ps_e3_BLS_goodperiod.pkl")
-        os.system("rm -f ps_e4_BLS_blends.pkl")
-        os.system("rm -f ps_e4_BLS_goodperiod.pkl")
 
         # Test a long period object and also objects with multiple blends
         self.col_e.run_bls(startp=2.5,endp=4.7,autofreq=False,
@@ -374,9 +345,6 @@ class test_sinusoid_with_transit_bls(unittest.TestCase):
 
 
     def test_sinusoid_with_transit(self):
-        # Remove save files so tests work no problem
-        os.system("rm -f ps_s_BLS_blends.pkl")
-        os.system("rm -f ps_s_BLS_goodperiod.pkl")
 
         # Test a long period object
         self.col.run_bls(startp=1.5,endp=15.,autofreq=False,
@@ -448,15 +416,6 @@ class test_multiple_blends_bls_with_spn(unittest.TestCase):
 
     
     def test_multipleblend_spn(self):
-        # Remove save files so tests work no problem
-        os.system("rm -f ps_f1_BLS_blends.pkl")
-        os.system("rm -f ps_f1_BLS_goodperiod.pkl")
-        os.system("rm -f ps_f2_BLS_blends.pkl")
-        os.system("rm -f ps_f2_BLS_goodperiod.pkl")
-        os.system("rm -f ps_f3_BLS_blends.pkl")
-        os.system("rm -f ps_f3_BLS_goodperiod.pkl")
-        os.system("rm -f ps_f4_BLS_blends.pkl")
-        os.system("rm -f ps_f4_BLS_goodperiod.pkl")
 
         # Test a long period object and also objects with multiple blends
         self.col_f.run_bls(startp=2.5,endp=4.7,autofreq=False,
