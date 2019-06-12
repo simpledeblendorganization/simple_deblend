@@ -1,6 +1,6 @@
 # simple_deblend
 
-[![Travis CI build status](https://travis-ci.org/johnh2o2/simple_deblend)](https://travis-ci.org/johnh2o2/simple_deblend.svg?branch=master)
+[![Travis CI build status](https://travis-ci.org/johnh2o2/simple_deblend.svg?branch=master)](https://travis-ci.org/johnh2o2/simple_deblend)
 
 This code, originally written by John Hoffman and extended by Joshua
 Wallace, is a simple deblending script for performing deblending of
