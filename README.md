@@ -1,5 +1,7 @@
 # simple_deblend
 
+[![Travis CI](https://travis-ci.org/johnh2o2/simple_deblend.svg?branch=master)](https://travis-ci.org/johnh2o2/simple_deblend.svg?branch=master)
+
 This code, originally written by John Hoffman and extended by Joshua
 Wallace, is a simple deblending script for performing deblending of
 astrophysical light curves.  (Light curves = brightness measurements
@@ -34,7 +36,7 @@ welcome.
 ## Dependencies
 
 This code, written in Python, is dependent on the following Python packages: 
-Numpy, Scipy, multiprocessing, matplotlib, and astrobase.  For astrobase in 
+NumPy, SciPy, multiprocessing, Matplotlib, and astrobase.  For astrobase in 
 particular, v0.4.0 was used in development of the (current) master branch,
 and features included in v0.4.1 were used in the development of some of
 the other branches.
