@@ -99,25 +99,6 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
                                   dproc.periodsearch_results)
 
                              
-    def test_basic_pdm_run(self):
-
-        # Test a basic run of the iterative deblending
-        self.col_a.run_pdm(startp=6.,endp=7.,stepsize=0.0000001,
-                           autofreq=False,medianfilter=False,
-                           freq_window_epsilon_snr=10.,
-                           snr_filter_size=50000,snr_threshold=[12.,7.])
-
-        with self.assertRaises(KeyError):
-            self.col_a.results['object1']['BLS']
-        self.assertEqual(len(self.col_a.results['object1'].keys()),1)
-        self.assertEqual(len(self.col_a.results['object2'].keys()),0)
-
-        self.assertAlmostEqual(self.col_a.results['object1']['PDM'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi,places=3)
-        self.assertEqual(len(self.col_a.results['object1']['PDM'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
-        self.assertEqual(len(self.col_a.results['object1']),1)
-        self.assertEqual(len(self.col_a.results['object1']['PDM'].good_periods_info),1)
-        self.assertEqual(len(self.col_a.results['object1']['PDM'].blends_info),0)
-
 
 
     def test_basic_pdm_run_medianfilter(self):
@@ -141,33 +122,6 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
         self.assertEqual(len(self.col_a2.results['object1']['PDM'].good_periods_info),1)
         self.assertEqual(len(self.col_a2.results['object1']['PDM'].blends_info),0)
 
-    def test_simple_blended_pdm_run(self):
-
-        self.col_c.run_pdm(startp=0.5,endp=2.,stepsize=5e-5,
-                           autofreq=False,medianfilter=False,
-                          freq_window_epsilon_snr=5.,
-                          snr_filter_size=1500,snr_threshold=12.)
-
-        # Check c1
-        self.assertEqual(len(self.col_c.results['c1']['PDM'].good_periods_info),1)
-        self.assertEqual(len(self.col_c.results['c1']['PDM'].blends_info),0)
-        self.assertAlmostEqual(self.col_c.results['c1']['PDM'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
-        self.assertEqual(len(self.col_c.results['c1']['PDM'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
-        self.assertEqual(self.col_c.results['c1']['PDM'].good_periods_info[0]['num_previous_blends'],0)
-
-        # Check c2
-        self.assertEqual(len(self.col_c.results['c2']['PDM'].good_periods_info),0)
-        self.assertEqual(len(self.col_c.results['c2']['PDM'].blends_info),1)
-        self.assertEqual(self.col_c.results['c2']['PDM'].blends_info[0]['ID_of_blend'],'c1')
-        self.assertAlmostEqual(self.col_c.results['c2']['PDM'].blends_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=4)
-        self.assertEqual(len(self.col_c.results['c2']['PDM'].blends_info[0]['lsp_dict']['nbestperiods']),1)
-
-        #Check c3
-        self.assertEqual(len(self.col_c.results['c3']['PDM'].good_periods_info),1)
-        self.assertEqual(len(self.col_c.results['c3']['PDM'].blends_info),0)
-        self.assertAlmostEqual(self.col_c.results['c3']['PDM'].good_periods_info[0]['lsp_dict']['bestperiod'],2.*np.pi/self.omegac,places=3)
-        self.assertEqual(len(self.col_c.results['c3']['PDM'].good_periods_info[0]['lsp_dict']['nbestperiods']),1)
-        self.assertEqual(self.col_c.results['c3']['PDM'].good_periods_info[0]['num_previous_blends'],0)
 
 
     def test_longperiod(self):
