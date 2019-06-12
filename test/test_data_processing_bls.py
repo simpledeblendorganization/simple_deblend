@@ -56,13 +56,13 @@ class test_data_processing_basic_bls_run(unittest.TestCase):
         self.col_a2 = copy.deepcopy(self.col_a)
 
 
-    def test_basic_ls_run(self):
+    def test_basic_bls_run(self):
 
         # Test a basic run of the iterative deblending
         self.col_a.run_bls(startp=6.,endp=7.,stepsize=0.0000001,autofreq=False,
                            nphasebins=200,
                           medianfilter=False,
-                           verbose=True,nworkers=1,
+                           verbose=True,
                           freq_window_epsilon_snr=10.,
                            snr_filter_size=50000,snr_threshold=40.)
 

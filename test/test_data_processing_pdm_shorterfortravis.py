@@ -128,7 +128,7 @@ class test_data_processing_pdm_sinusoidal_single_signal(unittest.TestCase):
                            freq_window_epsilon_mf=10.,
                            median_filter_size=500,
                            freq_window_epsilon_snr=10.,
-                            snr_filter_size=500,snr_threshold=[12.,7.],nworkers=1)
+                            snr_filter_size=500,snr_threshold=[12.,7.])
 
         with self.assertRaises(KeyError):
             self.col_a2.results['object1']['BLS']
