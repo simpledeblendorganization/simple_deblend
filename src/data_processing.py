@@ -673,7 +673,7 @@ class periodsearch_results():
         if s_pinknoise is not None:
             dict_to_add['s_pinknoise'] = s_pinknoise
         if fap_baluev is not None:
-            dict_to_add['fap_baluev'] = fap_baluev
+            dict_to_add['fap_baluev_log'] = fap_baluev
         self.good_periods_info.append(dict_to_add)
 
     def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,
@@ -705,7 +705,7 @@ class periodsearch_results():
         if s_pinknoise is not None:
             dict_to_add['s_pinknoise'] = s_pinknoise
         if fap_baluev is not None:
-            dict_to_add['fap_baluev'] = fap_baluev
+            dict_to_add['fap_baluev_log'] = fap_baluev
         self.blends_info.append(dict_to_add)
 
 
