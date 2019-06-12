@@ -7,7 +7,7 @@ This is an example for how to run the simple_deblend code.
 import numpy as np
 import sys, os
 sys.path.insert(1,os.path.abspath('../src'))
-import data_processing as dproc
+import data_processing as dproc # one of the simple_deblend codes
 
 
 
@@ -42,10 +42,18 @@ def get_xy(list_of_ids,list_of_x,list_of_y):
     return return_dict
 
 
+def sample_threshold(period):
+    
+    if period < 10.:
+        return 2.
+    else:
+        return 1.
+
+
 def main():
 
     # Radius to consider things neighbors
-    neighbor_radius = 12
+    neighbor_radius = 10
 
     # Number of master processes
     n_control_workers = 1
@@ -61,6 +69,7 @@ def main():
     stepsize_ls = None
     stepsize_pdm = None
     stepsize_bls = None
+    nphasebins_bls = None
 
     # Various parameters for the median filtering
     freq_window_epsilon = 4.
@@ -78,11 +87,23 @@ def main():
 
     IDs = ['A','B','C','D']
 
+    n = 1002
+    times = [np.linspace(0,90,n),np.linspace(0,90,n),
+             np.linspace(0,90,n),np.linspace(0,90,n)]
+    mags = [ np.sin(times[0]) + 10., 0.1*np.sin(times[1]) + 10.,
+             np.sin(times[2]/2.) + 10., np.sin(times[3]) + 10.]
+    errs = [[0.01]*n,[0.01]*n,[0.01]*n,[0.01]*n]
+    
+    
+    x = [0,1,1,100]
+    y = [0,0,1,100]
+
+
     # Get the light curves
-    lcs = get_input_light_curves(path_to_input_files)
+    lcs = get_input_light_curves(IDs,times,mags,errs)
 
     # Get xy positions
-    xy = get_xy(file_xy)
+    xy = get_xy(IDs,x,y)
 
 
     ##################################################################
@@ -101,33 +122,33 @@ def main():
     
     # Run Lomb-Scargle
     
-    col.run_ls(startp=start_p,endp=end_p,autofreq=autofreq,
+    col.run_ls(startp=min_p,endp=max_p,autofreq=autofreq,
                stepsize=stepsize_ls,
                sigclip=np.inf,verbose=False,medianfilter=True,
                freq_window_epsilon_mf=freq_window_epsilon,
                freq_window_epsilon_snr=freq_window_epsilon,
                median_filter_size=median_filter_window_ls,
                snr_filter_size=median_filter_window_ls,
-               snr_threshold=thresh.ls_cutoff)
+               snr_threshold=sample_threshold)
 
 
     # Run Phase Dispersion Minimization
 
-    col.run_pdm(startp=start_p,endp=end_p,autofreq=autofreq,
+    col.run_pdm(startp=min_p,endp=max_p,autofreq=autofreq,
                 stepsize=stepsize_pdm,
                 sigclip=np.inf,verbose=False,medianfilter=True,
                 freq_window_epsilon_mf=freq_window_epsilon,
                 freq_window_epsilon_snr=freq_window_epsilon,
                 median_filter_size=median_filter_window_pdm,
                 snr_filter_size=median_filter_window_pdm,
-                snr_threshold=thresh.pdm_cutoff)
+                snr_threshold=sample_threshold)
 
 
     # Run Box-fitting Least Squares
 
-    col.run_bls(startp=start_p,endp=end_p,autofreq=autofreq,
+    col.run_bls(startp=min_p,endp=max_p,autofreq=autofreq,
                 stepsize=stepsize_bls,
-                nphasebins=200,
+                nphasebins=nphasebins_bls,
                 mintransitduration=min_transit_duration,
                 maxtransitduration=max_transit_duration,
                 sigclip=np.inf,medianfilter=True,
@@ -135,7 +156,7 @@ def main():
                 freq_window_epsilon_snr=freq_window_epsilon,
                 median_filter_size=median_filter_window_bls,
                 snr_filter_size=median_filter_window_bls,
-                snr_threshold=thresh.bls_cutoff)
+                snr_threshold=sample_threshold)
     
 
 
