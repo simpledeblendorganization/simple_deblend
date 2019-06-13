@@ -641,7 +641,8 @@ class periodsearch_results():
                         ff_params,
                         notmax=False,s_pinknoise=None,
                         fap_baluev=None,
-                        ignore_blend=False):
+                        ignore_blend=False,
+                        tooalrgeamp_neighbors=[]):
         '''add a good period for the object
 
         lsp_dict   - the astrobase lsp_dict
@@ -660,6 +661,8 @@ class periodsearch_results():
         s_pinknoise -signal to pink noise value, only for BLS
         ignore_blend - ID of blend being ignore if its being
                        ignored, False otherwise
+        toolargeamp_neighbors - list of IDs of neighbors with
+                       too large amplitudes to be counted
         '''
         dict_to_add = {'lsp_dict':lsp_dict,
                        'period':period,'times':times,
@@ -674,13 +677,15 @@ class periodsearch_results():
             dict_to_add['s_pinknoise'] = s_pinknoise
         if fap_baluev is not None:
             dict_to_add['fap_baluev_log'] = fap_baluev
+        if toolargeamp_neighbors:
+            dict_to_add['toolargeamp_neighbors'] = toolargeamp_neighbors
         self.good_periods_info.append(dict_to_add)
 
     def add_blend(self,lsp_dict,times,mags,errs,neighbor_ID,
                   period,snr_value,
                   flux_amplitude,neighbor_flux_amplitude,
                   ff_params,s_pinknoise=None,
-                  fap_baluev=None):
+                  fap_baluev=None,toolargeamp_neighbors=[]):
         '''add info where the object is blended with another object,
         that object being determined as the variability source
 
@@ -695,6 +700,8 @@ class periodsearch_results():
         neighbor_flux_amplitude - flux amplitude of blended neighbor
         ffparams - Fourier fit parameters for the *current* LC
         s_pinknoise -signal to pink noise value, only for BLS
+        toolargeamp_neighbors - list of IDs of neighbors with
+                       too large amplitudes to be counted
         '''
         dict_to_add = {'lsp_dict':lsp_dict,
                        'ID_of_blend':neighbor_ID,
@@ -709,6 +716,8 @@ class periodsearch_results():
             dict_to_add['s_pinknoise'] = s_pinknoise
         if fap_baluev is not None:
             dict_to_add['fap_baluev_log'] = fap_baluev
+        if toolargeamp_neighbors:
+            dict_to_add['toolargeamp_neighbors'] = toolargeamp_neighbors
         self.blends_info.append(dict_to_add)
 
 
