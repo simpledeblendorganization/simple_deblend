@@ -136,7 +136,7 @@ class FourierFit(object):
         return self
 
     def flux_amplitude(self,return_df_f0=False):
-        # delta flux / f0
+        # delta flux by default, can be switched to delta flux / f0
 
         phase = np.linspace(0, 1, 200)
 
