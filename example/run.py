@@ -45,9 +45,9 @@ def get_xy(list_of_ids,list_of_x,list_of_y):
 def sample_threshold(period):
     
     if period < 10.:
-        return 2.
+        return 12.
     else:
-        return 1.
+        return 13.
 
 
 def main():
@@ -60,7 +60,7 @@ def main():
 
     # Minimum and maximum period to search, in days
     min_p = 1.
-    max_p = 50.
+    max_p = 30.
 
     # Automatically determine frequency search step size
     autofreq = True
@@ -88,11 +88,17 @@ def main():
     IDs = ['A','B','C','D']
 
     n = 1002
+    sigma = 0.1
+
+    rand1 = np.random.RandomState(seed=1)
+
     times = [np.linspace(0,90,n),np.linspace(0,90,n),
              np.linspace(0,90,n),np.linspace(0,90,n)]
-    mags = [ np.sin(times[0]) + 10., 0.1*np.sin(times[1]) + 10.,
-             np.sin(times[2]/2.) + 10., np.sin(times[3]) + 10.]
-    errs = [[0.01]*n,[0.01]*n,[0.01]*n,[0.01]*n]
+    mags = [ np.sin(times[0]) + 10. + sigma*rand1.randn(n),
+             0.1*np.sin(times[1]) + 10. + sigma*rand1.randn(n),
+             np.sin(times[2]/2.227349239) + 10. + sigma*rand1.randn(n),
+             np.sin(times[3]) + 10. + sigma*rand1.randn(n)]
+    errs = [[sigma]*n,[sigma]*n,[sigma]*n,[sigma]*n]
     
     
     x = [0,1,1,100]
