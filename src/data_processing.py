@@ -642,7 +642,7 @@ class periodsearch_results():
                         notmax=False,s_pinknoise=None,
                         fap_baluev=None,
                         ignore_blend=False,
-                        tooalrgeamp_neighbors=[]):
+                        toolargeamp_neighbors=[]):
         '''add a good period for the object
 
         lsp_dict   - the astrobase lsp_dict

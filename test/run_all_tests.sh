@@ -16,3 +16,4 @@ rm -f ps_{c,d,e,o}{1,2,3,4,5}_*_{blends,goodperiod}.pkl
 rm -f ps_object{1,2}_*_{blends,goodperiod}.pkl
 rm -f ps_rr{1,2}_*_{blends,goodperiod}.pkl
 rm -f ps_s_*_{blends,goodperiod}.pkl
+rm -f ps_f{1,2,3,4}_BLS_{blends,goodperiod}.pkl
