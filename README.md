@@ -1,5 +1,9 @@
 # simple_deblend
 
+
+
+[![DOI](https://zenodo.org/badge/192551348.svg)](https://zenodo.org/badge/latestdoi/192551348)
+
 [![Travis CI build status](https://travis-ci.org/johnh2o2/simple_deblend.svg?branch=master)](https://travis-ci.org/johnh2o2/simple_deblend)
 
 This code, originally written by John Hoffman and extended by Joshua
